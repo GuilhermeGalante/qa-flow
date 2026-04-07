@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
-import Papa from 'papaparse';
-import { useTestStore } from '../../store/useTestStore';
-import { Upload, FileSpreadsheet, User, CheckCircle2 } from 'lucide-react';
-import type { TestPlan, TestScenario, TestStep } from '../../types';
+import React, { useRef, useState } from "react";
+import Papa from "papaparse";
+import { useTestStore } from "../../store/useTestStore";
+import { Upload, FileSpreadsheet, User, CheckCircle2 } from "lucide-react";
+import type { TestPlan, TestScenario, TestStep } from "../../types";
 
 interface CsvRow {
   Project: string;
@@ -14,8 +14,8 @@ interface CsvRow {
   Status: string;
   Reference: string;
   Action: string;
-  'Expected result': string;
-  'Custom field 1': string;
+  "Expected result": string;
+  "Custom field 1": string;
 }
 
 interface Props {
@@ -26,13 +26,13 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
   const addPlan = useTestStore((s) => s.addPlan);
   const setCurrentPlan = useTestStore((s) => s.setCurrentPlan);
 
-  const [createdBy, setCreatedBy] = useState('');
-  const [planName, setPlanName] = useState('');
+  const [createdBy, setCreatedBy] = useState("");
+  const [planName, setPlanName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName, setFileName] = useState('');
+  const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState<TestScenario[] | null>(null);
   const [rawRows, setRawRows] = useState<CsvRow[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /** Parseia as linhas do CSV no nosso modelo de dados */
@@ -42,7 +42,7 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
     let caseCounter = 0;
 
     for (const row of rows) {
-      const isNewCase = row.Project.trim() !== '' && row.Title.trim() !== '';
+      const isNewCase = row.Project.trim() !== "" && row.Title.trim() !== "";
 
       if (isNewCase) {
         caseCounter++;
@@ -53,23 +53,23 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
           subsection: row.Subsection.trim(),
           suite: row.Suite.trim(),
           initialStatus: row.Status.trim(),
-          priority: row['Custom field 1']?.trim() ?? '',
+          priority: row["Custom field 1"]?.trim() ?? "",
           reference: row.Reference.trim(),
           precondition: row.Precondition.trim(),
-          status: 'pending',
+          status: "pending",
           steps: [],
         };
         scenarios.push(currentScenario);
       }
 
       // Toda linha com Action preenchida vira um step (nova ou de continuação)
-      if (currentScenario && row.Action.trim() !== '') {
+      if (currentScenario && row.Action.trim() !== "") {
         const step: TestStep = {
           id: crypto.randomUUID(),
-          type: 'Dado',        // CSV não tem prefixo BDD; usamos Dado como padrão
+          type: "Dado", // CSV não tem prefixo BDD; usamos Dado como padrão
           action: row.Action.trim(),
-          expectedResult: row['Expected result']?.trim() ?? '',
-          status: 'pending',
+          expectedResult: row["Expected result"]?.trim() ?? "",
+          status: "pending",
         };
         currentScenario.steps.push(step);
       }
@@ -79,7 +79,7 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
   };
 
   const handleFile = (file: File) => {
-    setError('');
+    setError("");
     setFileName(file.name);
 
     Papa.parse<CsvRow>(file, {
@@ -87,16 +87,19 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
       skipEmptyLines: false, // keep continuation rows
       complete: (result) => {
         // Remove linhas completamente vazias (sem nenhum campo)
-        const rows = (result.data as CsvRow[]).filter(
-          (r) => Object.values(r).some((v) => v && v.trim() !== '')
+        const rows = (result.data as CsvRow[]).filter((r) =>
+          Object.values(r).some((v) => v && v.trim() !== ""),
         );
         setRawRows(rows);
 
         // Extrai nome do plano a partir do arquivo se não digitado ainda
         if (!planName) {
-          const projectVal = rows.find((r) => r.Project?.trim())?.Project ?? '';
-          const sectionVal = rows.find((r) => r.Section?.trim())?.Section ?? '';
-          setPlanName(`${projectVal} - ${sectionVal}`.trim() || file.name.replace(/\.csv$/i, ''));
+          const projectVal = rows.find((r) => r.Project?.trim())?.Project ?? "";
+          const sectionVal = rows.find((r) => r.Section?.trim())?.Section ?? "";
+          setPlanName(
+            `${projectVal} - ${sectionVal}`.trim() ||
+              file.name.replace(/\.csv$/i, ""),
+          );
         }
 
         const scenarios = parseRows(rows);
@@ -121,13 +124,13 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
     const firstRow = rawRows.find((r) => r.Project?.trim());
     const plan: TestPlan = {
       id: crypto.randomUUID(),
-      name: planName || 'Plano Importado',
+      name: planName || "Plano Importado",
       description: `Importado via CSV — ${fileName}`,
       createdAt: new Date().toISOString(),
       meta: {
-        project: firstRow?.Project?.trim() ?? '',
-        section: firstRow?.Section?.trim() ?? '',
-        createdBy: createdBy.trim() || 'Não informado',
+        project: firstRow?.Project?.trim() ?? "",
+        section: firstRow?.Section?.trim() ?? "",
+        createdBy: createdBy.trim() || "Não informado",
         createdAt: new Date().toISOString(),
       },
       scenarios: preview,
@@ -142,12 +145,12 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-slate-200">
       <header className="mb-8 border-b border-slate-100 pb-6">
         <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
-          <FileSpreadsheet className="text-emerald-600" />
+          <FileSpreadsheet style={{ color: "#5A9EB7" }} />
           Importar CSV de Testes
         </h2>
         <p className="text-slate-500 mt-1">
-          Faça upload do seu arquivo CSV no formato padrão (colunas: Project, Suite, Section,
-          Subsection, Title, Action, Expected result…).
+          Faça upload do seu arquivo CSV no formato padrão (colunas: Project,
+          Suite, Section, Subsection, Title, Action, Expected result…).
         </p>
       </header>
 
@@ -163,7 +166,8 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
               value={planName}
               onChange={(e) => setPlanName(e.target.value)}
               placeholder="Preenchido automaticamente pelo CSV"
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 outline-none"
+              style={{ "--tw-ring-color": "#5A9EB7" } as React.CSSProperties}
             />
           </div>
           <div>
@@ -175,21 +179,25 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
               value={createdBy}
               onChange={(e) => setCreatedBy(e.target.value)}
               placeholder="Ex: Guilherme Galante"
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 outline-none"
+              style={{ "--tw-ring-color": "#5A9EB7" } as React.CSSProperties}
             />
           </div>
         </div>
 
         {/* Área de Drop */}
         <div
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={`relative flex flex-col items-center justify-center gap-3 p-10 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
             isDragging
-              ? 'border-emerald-500 bg-emerald-50'
-              : 'border-slate-300 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/40'
+              ? "border-[#5A9EB7] bg-[#5A9EB7]/10"
+              : "border-slate-300 bg-slate-50 hover:border-[#5A9EB7]/60 hover:bg-[#5A9EB7]/5"
           }`}
         >
           <input
@@ -197,23 +205,35 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
             type="file"
             accept=".csv"
             className="hidden"
-            onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
+            onChange={(e) => {
+              if (e.target.files?.[0]) handleFile(e.target.files[0]);
+            }}
           />
           <Upload
             size={36}
-            className={isDragging ? 'text-emerald-500' : 'text-slate-400'}
+            style={isDragging ? { color: "#5A9EB7" } : {}}
+            className={isDragging ? "" : "text-slate-400"}
           />
           {fileName ? (
             <div className="text-center">
-              <p className="font-semibold text-emerald-700">{fileName}</p>
-              <p className="text-sm text-slate-500">Clique para trocar o arquivo</p>
+              <p className="font-semibold" style={{ color: "#5A9EB7" }}>
+                {fileName}
+              </p>
+              <p className="text-sm text-slate-500">
+                Clique para trocar o arquivo
+              </p>
             </div>
           ) : (
             <div className="text-center">
               <p className="font-medium text-slate-600">
-                Arraste o CSV aqui ou <span className="text-emerald-600 underline">clique para selecionar</span>
+                Arraste o CSV aqui ou{" "}
+                <span className="underline" style={{ color: "#5A9EB7" }}>
+                  clique para selecionar
+                </span>
               </p>
-              <p className="text-sm text-slate-400 mt-1">Apenas arquivos .csv</p>
+              <p className="text-sm text-slate-400 mt-1">
+                Apenas arquivos .csv
+              </p>
             </div>
           )}
         </div>
@@ -228,7 +248,7 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
         {preview && preview.length > 0 && (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
             <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-              <CheckCircle2 size={18} className="text-emerald-500" />
+              <CheckCircle2 size={18} style={{ color: "#5A9EB7" }} />
               {preview.length} casos de teste detectados — pré-visualização:
             </h3>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
@@ -243,7 +263,8 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
                   <div>
                     <p className="font-medium text-slate-800">{s.title}</p>
                     <p className="text-slate-400 text-xs">
-                      {s.suite} · {s.subsection} · {s.steps.length} passo(s) · Prioridade: {s.priority || '—'}
+                      {s.suite} · {s.subsection} · {s.steps.length} passo(s) ·
+                      Prioridade: {s.priority || "—"}
                     </p>
                   </div>
                 </div>
@@ -257,7 +278,8 @@ export const CsvImporter: React.FC<Props> = ({ onImportSuccess }) => {
           <button
             onClick={handleImport}
             disabled={!preview || preview.length === 0}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-emerald-500/30"
+            className="flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-medium transition-opacity shadow-sm hover:opacity-90"
+            style={{ backgroundColor: "#5A9EB7" }}
           >
             <FileSpreadsheet size={18} />
             Importar e Executar Testes

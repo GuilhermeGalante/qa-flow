@@ -1,8 +1,16 @@
 // Status de execução de cada passo/cenário
-export type RunStatus = 'pending' | 'passed' | 'failed' | 'blocked';
+// untested = estado inicial (nunca executado)
+// paused   = execução interrompida temporariamente
+export type RunStatus =
+  | "untested"
+  | "pending"
+  | "passed"
+  | "failed"
+  | "blocked"
+  | "paused";
 
 // Prefixo BDD do passo
-export type StepType = 'Dado' | 'Quando' | 'Então' | 'E';
+export type StepType = "Dado" | "Quando" | "Então" | "E";
 
 // Um passo individual com prefixo BDD + ação + resultado esperado
 export interface TestStep {
@@ -45,5 +53,12 @@ export interface TestPlan {
   description: string;
   meta: PlanMeta;
   scenarios: TestScenario[];
+  createdAt: string;
+}
+
+// Registro de relatório gerado a partir de um plano de testes.
+export interface Report {
+  id: string;
+  testPlanId: string;
   createdAt: string;
 }
