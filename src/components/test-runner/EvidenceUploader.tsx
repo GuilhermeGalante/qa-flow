@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { Upload, Clipboard, Trash2, ImageIcon, Loader2 } from 'lucide-react';
-import { compressImageToBase64 } from '../../utils/compressImage';
+import React, { useRef, useState } from "react";
+import { Upload, Clipboard, Trash2, ImageIcon, Loader2 } from "lucide-react";
+import { compressImageToBase64 } from "../../utils/compressImage";
 
 interface Props {
   evidence?: string;
@@ -13,25 +13,29 @@ interface Props {
  * Aceita: clique para selecionar arquivo, Ctrl+V para colar da área de transferência.
  * Comprime a imagem antes de salvar no estado.
  */
-export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear }) => {
-  const fileRef  = useRef<HTMLInputElement>(null);
-  const areaRef  = useRef<HTMLDivElement>(null);
+export const EvidenceUploader: React.FC<Props> = ({
+  evidence,
+  onSave,
+  onClear,
+}) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [error, setError]   = useState('');
+  const [error, setError] = useState("");
 
   const processBlob = async (blob: Blob) => {
-    if (!blob.type.startsWith('image/')) {
-      setError('O arquivo deve ser uma imagem.');
+    if (!blob.type.startsWith("image/")) {
+      setError("O arquivo deve ser uma imagem.");
       return;
     }
-    setError('');
+    setError("");
     setLoading(true);
     try {
-      const b64 = await compressImageToBase64(blob, 1200, 900, 0.78);
+      const b64 = await compressImageToBase64(blob);
       onSave(b64);
     } catch {
-      setError('Falha ao processar a imagem. Tente novamente.');
+      setError("Falha ao processar a imagem. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -40,7 +44,9 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
   const handleFile = (file: File) => processBlob(file);
 
   const handlePaste = async (e: React.ClipboardEvent) => {
-    const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'));
+    const item = Array.from(e.clipboardData.items).find((i) =>
+      i.type.startsWith("image/"),
+    );
     if (!item) return;
     const blob = item.getAsFile();
     if (blob) processBlob(blob);
@@ -89,15 +95,19 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
         ref={areaRef}
         tabIndex={0}
         onPaste={handlePaste}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
         onClick={() => fileInputRef_workaround(fileRef)}
         className={`flex items-center gap-3 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer transition-all select-none outline-none
           focus:ring-2 focus:ring-red-300/40
-          ${dragOver
-            ? 'border-red-400 bg-red-50'
-            : 'border-red-200 bg-red-50/30 hover:border-red-400 hover:bg-red-50'
+          ${
+            dragOver
+              ? "border-red-400 bg-red-50"
+              : "border-red-200 bg-red-50/30 hover:border-red-400 hover:bg-red-50"
           }`}
       >
         {loading ? (
@@ -108,13 +118,13 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
 
         <div className="flex-1 min-w-0">
           <p className="text-xs text-red-600 font-medium">
-            {loading ? 'Comprimindo imagem...' : 'Adicionar Evidência (print)'}
+            {loading ? "Comprimindo imagem..." : "Adicionar Evidência (print)"}
           </p>
           <p className="text-xs text-red-300 mt-0.5">
-            Clique para selecionar · Arraste · ou{' '}
+            Clique para selecionar · Arraste · ou{" "}
             <kbd className="font-mono bg-white border border-red-200 px-1 py-0.5 rounded text-[10px]">
               Ctrl+V
-            </kbd>{' '}
+            </kbd>{" "}
             para colar
           </p>
         </div>
@@ -122,7 +132,10 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
         <div className="flex gap-1.5 shrink-0">
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              fileRef.current?.click();
+            }}
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           >
             <Upload size={12} /> Upload
@@ -134,7 +147,9 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
               try {
                 const items = await navigator.clipboard.read();
                 for (const item of items) {
-                  const imageType = item.types.find((t) => t.startsWith('image/'));
+                  const imageType = item.types.find((t) =>
+                    t.startsWith("image/"),
+                  );
                   if (imageType) {
                     const blob = await item.getType(imageType);
                     processBlob(blob);
@@ -142,7 +157,9 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
                   }
                 }
               } catch {
-                setError('Sem permissão para ler a área de transferência. Use Ctrl+V no campo acima.');
+                setError(
+                  "Sem permissão para ler a área de transferência. Use Ctrl+V no campo acima.",
+                );
               }
             }}
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -157,17 +174,19 @@ export const EvidenceUploader: React.FC<Props> = ({ evidence, onSave, onClear })
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
+        onChange={(e) => {
+          if (e.target.files?.[0]) handleFile(e.target.files[0]);
+        }}
       />
 
-      {error && (
-        <p className="text-xs text-red-500 mt-1.5 ml-1">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-500 mt-1.5 ml-1">{error}</p>}
     </div>
   );
 };
 
 // Tiny helper pois onClick direto em input hidden pode ter bloqueio em alguns browsers
-function fileInputRef_workaround(ref: React.RefObject<HTMLInputElement | null>) {
+function fileInputRef_workaround(
+  ref: React.RefObject<HTMLInputElement | null>,
+) {
   ref.current?.click();
 }

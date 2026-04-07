@@ -18,13 +18,21 @@ async function downloadPdf(
 ): Promise<void> {
   const blob = await pdf(element).toBlob();
   const url = URL.createObjectURL(blob);
+
+  // Cria o link fora do DOM principal para evitar navegação no browser
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  // rel="noopener" garante que o browser não abra o blob inline
+  a.rel = "noopener";
+  a.style.display = "none";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+
+  // Revoga após 60 s — tempo suficiente para o download iniciar,
+  // mas sem manter o objectURL (que causaria "Loading document...")
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 // ── PDF 1: Resumo Executivo (leve, sem steps detalhados e sem imagens) ────────
