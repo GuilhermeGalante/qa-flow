@@ -1,25 +1,58 @@
-import { pdf } from '@react-pdf/renderer';
-import { ReportDocument } from './ReportDocument';
-import type { TestPlan } from '../types';
+import { pdf } from "@react-pdf/renderer";
+import { ExecutiveSummaryDocument } from "./ExecutiveSummaryDocument";
+import { TechnicalReportDocument } from "./TechnicalReportDocument";
+import type { TestPlan } from "../types";
 
-/**
- * Gera o PDF usando @react-pdf/renderer e dispara o download no browser.
- * É async porque pdf().toBlob() retorna uma Promise.
- */
-export async function generatePdfReport(plan: TestPlan): Promise<void> {
+// ── Utilitário interno ────────────────────────────────────────────────────────
+
+function safeName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9\s]/g, "")
+    .replace(/\s+/g, "_")
+    .slice(0, 40);
+}
+
+async function downloadPdf(
+  element: React.ReactElement,
+  filename: string,
+): Promise<void> {
+  const blob = await pdf(element).toBlob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── PDF 1: Resumo Executivo (leve, sem steps detalhados e sem imagens) ────────
+
+export async function generateExecutiveSummary(plan: TestPlan): Promise<void> {
   try {
-    const blob = await pdf(<ReportDocument plan={plan} />).toBlob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const safe = plan.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').slice(0, 40);
-    a.href     = url;
-    a.download = `QAFlow_${safe}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const safe = safeName(plan.name);
+    await downloadPdf(
+      <ExecutiveSummaryDocument plan={plan} />,
+      `QAFlow_Resumo_Executivo_${safe}.pdf`,
+    );
   } catch (err) {
-    console.error('[generatePdfReport]', err);
-    alert('Erro ao gerar o PDF. Veja o console para detalhes.');
+    console.error("[generateExecutiveSummary]", err);
+    alert("Erro ao gerar o Resumo Executivo. Veja o console para detalhes.");
+  }
+}
+
+// ── PDF 2: Relatório Técnico de Evidências (passos + imagens) ─────────────────
+
+export async function generateEvidenceReport(plan: TestPlan): Promise<void> {
+  try {
+    const safe = safeName(plan.name);
+    await downloadPdf(
+      <TechnicalReportDocument plan={plan} />,
+      `QAFlow_Relatorio_Tecnico_${safe}.pdf`,
+    );
+  } catch (err) {
+    console.error("[generateEvidenceReport]", err);
+    alert("Erro ao gerar o Relatório Técnico. Veja o console para detalhes.");
   }
 }
