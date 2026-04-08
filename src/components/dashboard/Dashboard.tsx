@@ -9,6 +9,7 @@ import {
   Clock,
   Hourglass,
   PauseCircle,
+  Trash2,
 } from "lucide-react";
 import { useTestStore } from "../../store/useTestStore";
 import type { RunStatus, TestPlan } from "../../types";
@@ -65,6 +66,7 @@ interface Props {
 export const Dashboard: React.FC<Props> = ({ onRunPlan }) => {
   const plans = useTestStore((s) => s.plans);
   const setCurrentPlan = useTestStore((s) => s.setCurrentPlan);
+  const removePlan = useTestStore((s) => s.removePlan);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggleExpand = (id: string) =>
@@ -81,6 +83,24 @@ export const Dashboard: React.FC<Props> = ({ onRunPlan }) => {
   const handleRun = async (plan: TestPlan) => {
     await setCurrentPlan(plan);
     onRunPlan(plan);
+  };
+
+  const handleDelete = async (testId: string) => {
+    const confirmed = window.confirm(
+      "Tem certeza que deseja excluir o plano de teste? Esta ação é irreversível.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await removePlan(testId);
+
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.delete(testId);
+      return next;
+    });
   };
 
   // ── Estado vazio ────────────────────────────────────────────────────────────
@@ -103,13 +123,14 @@ export const Dashboard: React.FC<Props> = ({ onRunPlan }) => {
       {/* Tabela header */}
       <div
         className="grid text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-2"
-        style={{ gridTemplateColumns: "1fr 160px 180px 110px 120px" }}
+        style={{ gridTemplateColumns: "1fr 160px 180px 110px 120px 56px" }}
       >
         <span>Name</span>
         <span>Project</span>
         <span className="text-center">Tested</span>
         <span className="text-center">ID</span>
         <span className="text-center">Status</span>
+        <span className="text-center">Ações</span>
       </div>
 
       {plans.map((plan) => {
@@ -137,7 +158,7 @@ export const Dashboard: React.FC<Props> = ({ onRunPlan }) => {
             {/* Linha do plano (accordion header) */}
             <div
               className="grid items-center px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
-              style={{ gridTemplateColumns: "1fr 160px 180px 110px 120px" }}
+              style={{ gridTemplateColumns: "1fr 160px 180px 110px 120px 56px" }}
               onClick={() => toggleExpand(plan.id)}
             >
               {/* Nome + botão Run */}
@@ -203,6 +224,20 @@ export const Dashboard: React.FC<Props> = ({ onRunPlan }) => {
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
                   Open
                 </span>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  title="Excluir plano de teste"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleDelete(plan.id);
+                  }}
+                  className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
 
