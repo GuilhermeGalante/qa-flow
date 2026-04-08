@@ -561,8 +561,8 @@ export const TestRunner: React.FC = () => {
                           <div className="pt-3">
                             <EvidenceUploader
                               evidence={step.evidence}
-                              onSave={(b64) =>
-                                updateStepEvidence(scenario.id, step.id, b64)
+                              onSave={(file) =>
+                                updateStepEvidence(scenario.id, step.id, file)
                               }
                               onClear={() =>
                                 clearStepEvidence(scenario.id, step.id)

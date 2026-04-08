@@ -1,44 +1,36 @@
 /**
- * Converte uma imagem (File | Blob) para PNG sem perdas (lossless).
- *
- * - Sem redimensionamento: o canvas é criado com as dimensões naturais da
- *   imagem, preservando 100% da resolução original (incluindo telas Retina/4K).
- * - PNG não possui compressão destrutiva, garantindo nitidez perfeita em textos.
- *
- * @param source File ou Blob da imagem
+ * Converte uma imagem (File | Blob) para PNG Base64 de alta qualidade.
+ * O retorno é persistido no IndexedDB junto com o restante do estado da app.
  */
 export async function compressImageToBase64(
   source: File | Blob,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(source);
-    const img = new Image();
+    const objectUrl = URL.createObjectURL(source);
+    const image = new Image();
 
-    img.onload = () => {
-      URL.revokeObjectURL(url);
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
 
-      // Usa as dimensões naturais — sem nenhum downscaling
       const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
 
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Não foi possível criar contexto 2D"));
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("Não foi possível criar contexto 2D."));
         return;
       }
 
-      ctx.drawImage(img, 0, 0);
-
-      // PNG lossless — sem parâmetro de qualidade
+      context.drawImage(image, 0, 0);
       resolve(canvas.toDataURL("image/png"));
     };
 
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Falha ao carregar imagem"));
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Falha ao carregar imagem."));
     };
 
-    img.src = url;
+    image.src = objectUrl;
   });
 }

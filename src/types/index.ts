@@ -20,7 +20,7 @@ export interface TestStep {
   expectedResult: string;
   status: RunStatus;
   comment?: string;
-  evidence?: string; // Base64 da imagem de evidência (capturada ao reprovar)
+  evidence?: string; // Imagem em Base64 PNG armazenada no IndexedDB
 }
 
 // Um cenário agrupa uma ou mais linhas com seus steps

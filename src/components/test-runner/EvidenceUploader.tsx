@@ -1,17 +1,16 @@
 import React, { useRef, useState } from "react";
 import { Upload, Clipboard, Trash2, ImageIcon, Loader2 } from "lucide-react";
-import { compressImageToBase64 } from "../../utils/compressImage";
 
 interface Props {
   evidence?: string;
-  onSave: (base64: string) => void;
+  onSave: (file: File | Blob) => Promise<void> | void;
   onClear: () => void;
 }
 
 /**
  * Componente de upload/paste de evidência.
  * Aceita: clique para selecionar arquivo, Ctrl+V para colar da área de transferência.
- * Comprime a imagem antes de salvar no estado.
+ * Envia o arquivo bruto para a store, que converte para Base64 PNG e persiste no IndexedDB.
  */
 export const EvidenceUploader: React.FC<Props> = ({
   evidence,
@@ -32,10 +31,9 @@ export const EvidenceUploader: React.FC<Props> = ({
     setError("");
     setLoading(true);
     try {
-      const b64 = await compressImageToBase64(blob);
-      onSave(b64);
+      await onSave(blob);
     } catch {
-      setError("Falha ao processar a imagem. Tente novamente.");
+      setError("Falha ao salvar a imagem. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -118,7 +116,7 @@ export const EvidenceUploader: React.FC<Props> = ({
 
         <div className="flex-1 min-w-0">
           <p className="text-xs text-red-600 font-medium">
-            {loading ? "Comprimindo imagem..." : "Adicionar Evidência (print)"}
+            {loading ? "Salvando imagem..." : "Adicionar Evidência (print)"}
           </p>
           <p className="text-xs text-red-300 mt-0.5">
             Clique para selecionar · Arraste · ou{" "}

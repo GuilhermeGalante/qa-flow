@@ -316,7 +316,7 @@ export function TechnicalReportDocument({ plan }: { plan: TestPlan }) {
                           </View>
                         )}
 
-                        {/* Imagem de evidência (Base64) — max 210pt de altura */}
+                        {/* Imagem de evidência (Base64 PNG) — max 210pt de altura */}
                         {hasEvidence && (
                           <View style={T.evidWrap}>
                             <Image src={step.evidence!} style={T.evidImg} />
