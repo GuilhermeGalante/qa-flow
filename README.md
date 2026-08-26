@@ -1,66 +1,92 @@
-# 🚀 QA Flow - Test Management System
+# QA Flow v2
 
-Um Sistema de Gestão de Testes (TMS) moderno, rápido e seguro, focado em alta produtividade para analistas de Qualidade (QA). O QA Flow permite a criação de planos de testes, execução de cenários com rastreabilidade detalhada, gestão de status e exportação profissional de relatórios em PDF.
+QA Flow é um gerenciador local-first para casos, planos e execuções de testes manuais. A versão 2 separa a definição reutilizável do teste de cada tentativa executada, preservando o histórico mesmo quando o catálogo evolui.
 
-## 🏗️ Arquitetura e Segurança (Local-First)
+## O que mudou na v2
 
-Este projeto foi construído sob o paradigma **Local-First Architecture**. Isso significa que a aplicação funciona inteiramente no navegador do usuário, sem a necessidade de um servidor back-end ou banco de dados em nuvem.
+- Biblioteca pesquisável de casos com pastas recolhidas por padrão, filtros, tags, prioridade, revisão e arquivamento seguro.
+- Importação CSV/JSON com pré-visualização, validação forte e diagnóstico de linhas incompletas.
+- Planos compostos por referências de caso, com ordem explícita e aviso quando uma revisão fica desatualizada.
+- Execuções por tentativa com contexto de ambiente, snapshot imutável, pausa, retomada, conclusão e aborto.
+- Status de passo consistentes: `not_run`, `passed`, `failed`, `blocked` e `skipped`.
+- Resultado obtido obrigatório para falha e bloqueio.
+- Evidências múltiplas armazenadas separadamente do estado principal, com metadados e SHA-256.
+- Registros exploratórios independentes dos passos previstos.
+- Relatórios e exportações gerados a partir da tentativa histórica, não do plano mutável.
+- Backup completo, restauração com prévia e modos de mesclagem ou substituição.
+- Adaptador opcional de repositório usando a File System Access API, com arquivos determinísticos em `.qaflow/`.
+- Migração idempotente do armazenamento `qaflow-store` da v1 para `qaflow-v2-store`.
 
-* **Zero Latência:** Como não há requisições de rede (API), a interface responde instantaneamente.
-* **Privacidade e Segurança:** Os dados não trafegam na internet. Isso mitiga riscos comuns do OWASP Top 10 (como Broken Access Control ou vazamento de dados).
-* **IndexedDB:** Utilizamos o banco de dados nativo do navegador para armazenamento assíncrono e persistente. Ele suporta o armazenamento de imagens em alta qualidade (Base64) sem estourar os limites de cota tradicionais do `localStorage`.
+## Modelo mental
 
-## ✨ Funcionalidades Implementadas
+```text
+Caso revisionado ──referência──> Plano revisionado
+        │                              │
+        └──────── snapshot ────────────┴──> Tentativa imutável ──> Relatórios
+                                                  │
+                                                  ├── resultados por passo
+                                                  ├── evidências
+                                                  └── registros exploratórios
+```
 
-* **Dashboard de Planos de Teste:** Visão geral e gerencial de todos os testes criados, com barra de progresso de execução.
-* **Test Runner (Execução Avançada):**
-  * Passos (Steps) independentes com status visuais (`Passed`, `Failed`, `Untested`, `Paused`).
-  * Inserção de Comentários e Evidências (imagens) por passo.
-  * Lógica de *Toggle* (clique duplo para reverter status).
-  * Design limpo com *Progressive Disclosure* (campos ocultos até serem requisitados).
-* **Exportação Profissional (PDF):**
-  * **Relatório Executivo:** Documento gerencial focado em estatísticas, taxa de aprovação e status geral (ideal para POs e Gerentes).
-  * **Relatório Técnico (Evidências):** Documento detalhado contendo a rastreabilidade completa (Dado/Quando/Então), comentários de falha e capturas de tela (prints) em alta resolução (ideal para Desenvolvedores).
-* **Gestão de Relatórios:** Histórico de relatórios gerados com funcionalidade de exclusão e barra de progresso de aprovação.
+Editar um caso cria uma nova revisão. Planos existentes continuam apontando para a revisão anterior até que alguém revise e atualize as referências. Uma tentativa só inicia quando todas as referências estão atuais; depois disso seu snapshot nunca deriva novamente do catálogo.
 
-## 🛠️ Tecnologias Utilizadas
+## Persistência
 
-* **Front-end:** React, TypeScript.
-* **Estilização:** Tailwind CSS (Design System com layout flexível e Sidebar).
-* **Gerenciamento de Estado:** Zustand.
-* **Persistência de Dados:** `idb-keyval` e middleware `persist` (Zustand + IndexedDB).
-* **Geração de PDF:** `@react-pdf/renderer`.
+No modo navegador, Zustand persiste metadados no IndexedDB. As imagens são gravadas em chaves separadas (`qaflow-v2:evidence:*`) para evitar reserializar todo o workspace a cada alteração.
 
-## ⚠️ Atenção Usuários: Cuidados Importantes
+No modo repositório, selecione uma pasta nas configurações e grave a estrutura:
 
-Como o QA Flow utiliza uma arquitetura Local-First, os seus dados ficam salvos **exclusivamente no disco rígido do computador e navegador que você está usando**. 
+```text
+.qaflow/
+├── workspace.json
+├── cases/       # um JSON por caso e revisão
+├── plans/       # um JSON por plano e revisão
+├── runs/        # tentativas imutáveis
+├── reports/     # registros de relatório
+└── evidence/    # binários separados
+```
 
-Para evitar perda de dados, siga estas diretrizes rigorosamente:
+O manifesto `workspace.json` é escrito por último e referencia os arquivos determinísticos. O acesso à pasta depende da File System Access API disponível em navegadores Chromium; o backup JSON funciona nos demais navegadores.
 
-1. **Não limpe os dados do navegador:** Evite usar softwares de limpeza profunda (como CCleaner) ou limpar os dados de site/cookies do seu navegador para esta URL. Isso **apagará** todo o seu banco de dados local (IndexedDB).
-2. **Abas Anônimas (Incognito):** O sistema funciona em abas anônimas, porém, **assim que a janela for fechada, todos os testes e relatórios serão perdidos para sempre**. Use apenas abas normais para trabalho contínuo.
-3. **Migração de Máquina:** Os testes criados no "Computador A" não aparecerão no "Computador B".
-4. **Desempenho com Imagens:** O sistema suporta imagens em alta qualidade (100% PNG Lossless). No entanto, dezenas de prints pesados (telas 4K) no mesmo Plano de Testes podem tornar a geração do PDF Técnico levemente mais lenta. Mantenha as evidências focadas no necessário.
+## Migração da v1
 
-## 🚀 Como Executar o Projeto Localmente
+Na primeira abertura, se a v2 estiver vazia, a aplicação procura o estado `qaflow-store` da versão anterior. A migração:
 
-1. Clone este repositório:
-   ```bash
-   git clone [https://github.com/GuilhermeGalante/qa-flow.git](https://github.com/GuilhermeGalante/qa-flow.git)
-   ```
+1. deduplica casos equivalentes reutilizados em planos;
+2. converte planos embutidos para referências;
+3. transforma resultados existentes em tentativas com snapshot;
+4. separa evidências Base64 em chaves próprias;
+5. registra um relatório de migração nas configurações.
 
-2. Instale as dependências:
-   ```bash
-   npm install
-   # ou
-   yarn install
-   ```
+O estado antigo não é apagado nem sobrescrito.
 
-3. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   # ou
-   yarn dev
-   ```
+## Desenvolvimento
 
-4. Acesse `http://localhost:5173` (ou a porta indicada) no seu navegador.
+Requer Node.js 24 ou mais recente para executar os testes TypeScript nativos.
+
+```bash
+npm install
+npm run dev
+```
+
+Validação completa:
+
+```bash
+npm run check
+```
+
+Comandos individuais:
+
+- `npm run lint` — ESLint.
+- `npm test` — testes do domínio, importação, migração e integridade dos schemas.
+- `npm run build` — TypeScript e build de produção.
+
+Os contratos JSON Schema Draft 2020-12 ficam em [`schemas/`](schemas/). As decisões e o plano que originaram esta implementação ficam em [`specs/qa-flow-v2/`](specs/qa-flow-v2/).
+
+## Cuidados com dados locais
+
+- Exporte backups regularmente, especialmente antes de limpar dados do navegador.
+- Não use janela anônima para trabalho permanente.
+- Substituir um workspace durante a importação remove o estado atual após confirmação; mesclar preserva e atualiza entidades pelo ID.
+- Arquivar casos e planos preserva referências, snapshots, tentativas e relatórios.

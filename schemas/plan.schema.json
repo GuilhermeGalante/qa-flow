@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qaflow.local/schemas/plan.schema.json",
+  "title": "QA Flow v2 Test Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "revision", "name", "description", "objective", "project", "status", "tags", "caseRefs", "createdBy", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "id": { "type": "string", "minLength": 1 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "objective": { "type": "string" },
+    "project": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["active", "draft", "archived"] },
+    "tags": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "caseRefs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["caseId", "caseRevision"],
+        "properties": {
+          "caseId": { "type": "string", "minLength": 1 },
+          "caseRevision": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "createdBy": { "type": "string" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}
