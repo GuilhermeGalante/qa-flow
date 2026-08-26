@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --test src/domain/validation.test.ts src/domain/importers.test.ts src/domain/migration.test.ts && node scripts/verify-schemas.mjs",
+    "check": "npm run lint && npm run test && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {

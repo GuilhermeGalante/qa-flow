@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qaflow.local/schemas/workspace.schema.json",
+  "title": "QA Flow v2 Workspace Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "exportedAt", "cases", "plans", "runs", "reports", "evidence", "settings"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "cases": { "type": "array", "items": { "$ref": "case.schema.json" } },
+    "plans": { "type": "array", "items": { "$ref": "plan.schema.json" } },
+    "runs": { "type": "array", "items": { "$ref": "run.schema.json" } },
+    "reports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "runId", "title", "notes", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "runId": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["meta", "dataUrl"],
+        "properties": {
+          "meta": {
+            "type": "object",
+            "required": ["id", "ownerType", "ownerId", "runId", "name", "mimeType", "size", "sha256", "createdAt"],
+            "properties": {
+              "id": { "type": "string" },
+              "ownerType": { "enum": ["step", "exploratory"] },
+              "ownerId": { "type": "string" },
+              "runId": { "type": "string" },
+              "name": { "type": "string" },
+              "mimeType": { "type": "string" },
+              "size": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            }
+          },
+          "dataUrl": { "type": "string", "pattern": "^data:" }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "name", "repositoryPath", "compactEvidence"],
+      "properties": {
+        "mode": { "enum": ["browser", "repository"] },
+        "name": { "type": "string" },
+        "repositoryPath": { "type": "string" },
+        "compactEvidence": { "type": "boolean" }
+      }
+    }
+  }
+}

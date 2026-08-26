@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- helpers de documento são usados por dois templates PDF */
 /**
  * PDF 1 — Resumo Executivo
  * Leve, sem steps detalhados e sem imagens.
@@ -39,8 +40,8 @@ export const C = {
   hbg: '#f2f2f2', rowAlt: '#fafafa', failBg: '#fff5f5',
   indigo: '#4f46e5', violet: '#7c3aed',
 };
-export const SC: Record<RunStatus, string> = { passed: C.passed, failed: C.failed, blocked: C.blocked, pending: C.grey };
-export const SL: Record<RunStatus, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Blocked', pending: 'Pending' };
+export const SC: Record<RunStatus, string> = { passed: C.passed, failed: C.failed, blocked: C.blocked, pending: C.grey, paused: C.grey, untested: C.pending };
+export const SL: Record<RunStatus, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Blocked', pending: 'Pending', paused: 'Paused', untested: 'Untested' };
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 

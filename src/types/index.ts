@@ -62,3 +62,5 @@ export interface Report {
   testPlanId: string;
   createdAt: string;
 }
+// Compatibilidade da v1 para migração e templates PDF.
+// O domínio ativo da v2 vive em src/domain/types.ts.

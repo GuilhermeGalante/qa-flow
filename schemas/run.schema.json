@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qaflow.local/schemas/run.schema.json",
+  "title": "QA Flow v2 Test Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "attempt", "planId", "planRevision", "status", "context", "snapshot", "results", "exploratoryRecords", "startedAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "id": { "type": "string", "minLength": 1 },
+    "attempt": { "type": "integer", "minimum": 1 },
+    "sourceRunId": { "type": "string" },
+    "planId": { "type": "string", "minLength": 1 },
+    "planRevision": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["draft", "in_progress", "paused", "completed", "aborted"] },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "build", "platform", "device", "browser", "tester", "notes"],
+      "properties": {
+        "environment": { "type": "string" },
+        "build": { "type": "string" },
+        "platform": { "type": "string" },
+        "device": { "type": "string" },
+        "browser": { "type": "string" },
+        "tester": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan", "cases"],
+      "properties": {
+        "plan": { "$ref": "plan.schema.json" },
+        "cases": { "type": "array", "items": { "$ref": "case.schema.json" } }
+      }
+    },
+    "results": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "actualResult", "evidenceIds", "updatedAt"],
+        "properties": {
+          "status": { "enum": ["not_run", "passed", "failed", "blocked", "skipped"] },
+          "actualResult": { "type": "string" },
+          "evidenceIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "status": { "enum": ["failed", "blocked"] } } },
+            "then": { "properties": { "actualResult": { "minLength": 1 } } }
+          }
+        ]
+      }
+    },
+    "exploratoryRecords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "notes", "classification", "severity", "evidenceIds", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string", "minLength": 1 },
+          "classification": { "enum": ["note", "bug", "risk", "idea"] },
+          "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+          "evidenceIds": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" }
+  }
+}

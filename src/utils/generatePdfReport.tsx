@@ -16,7 +16,7 @@ async function downloadPdf(
   element: React.ReactElement,
   filename: string,
 ): Promise<void> {
-  const blob = await pdf(element).toBlob();
+  const blob = await pdf(element as Parameters<typeof pdf>[0]).toBlob();
   const url = URL.createObjectURL(blob);
 
   // Cria o link fora do DOM principal para evitar navegação no browser
