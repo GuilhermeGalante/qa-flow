@@ -12,6 +12,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import { APP_VERSION } from "../../version";
 
 export type QaView = "dashboard" | "demands" | "cases" | "plans" | "runs" | "reports" | "settings";
 
@@ -132,7 +133,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
           >
             <PanelLeftOpen size={19} aria-hidden="true" />
           </button>
-        ) : "QA Flow v2 · local-first"}
+        ) : `QA Flow ${APP_VERSION} · local-first`}
       </div>
     </>
   );

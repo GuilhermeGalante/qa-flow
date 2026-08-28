@@ -34,3 +34,10 @@ dist-ssr
 specs/
 
 #Specs
+
+# Agente local de release (nao versionado)
+.claude/agents/
+.claude/commands/
+.release/
+.codex/
+AGENTS.override.md
