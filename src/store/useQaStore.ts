@@ -2,15 +2,19 @@ import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { del as idbDel, get as idbGet, set as idbSet } from "idb-keyval";
 import { migrateLegacyState } from "../domain/migration";
+import { createDefaultDemandColumns, moveDemandToColumn } from "../domain/demands";
 import {
   QA_FLOW_SCHEMA_VERSION,
   type CaseDefinition,
   type EvidenceBundleItem,
   type EvidenceMeta,
+  type DemandColumn,
+  type DemandColumnSemantic,
   type ExploratoryRecord,
   type MigrationReport,
   type OperationResult,
   type PlanDefinition,
+  type QaDemand,
   type ReportArtifact,
   type RunContext,
   type RunStatus,
@@ -47,6 +51,8 @@ interface QaState {
   runs: TestRun[];
   reports: ReportArtifact[];
   evidence: EvidenceMeta[];
+  demandColumns: DemandColumn[];
+  demands: QaDemand[];
   settings: WorkspaceSettings;
   migrationReport: MigrationReport | null;
   activeRunId: string | null;
@@ -88,6 +94,13 @@ interface QaState {
   ) => Promise<OperationResult<ExploratoryRecord>>;
   createReport: (runId: string, title: string, notes: string) => Promise<OperationResult<ReportArtifact>>;
   removeReport: (reportId: string) => Promise<OperationResult>;
+  saveDemand: (demand: QaDemand) => Promise<OperationResult<QaDemand>>;
+  deleteDemand: (demandId: string) => Promise<OperationResult>;
+  moveDemand: (demandId: string, columnId: string, order?: number) => Promise<OperationResult<QaDemand>>;
+  addDemandColumn: (name: string, semantic: DemandColumnSemantic) => Promise<OperationResult<DemandColumn>>;
+  updateDemandColumn: (columnId: string, name: string, semantic: DemandColumnSemantic) => Promise<OperationResult<DemandColumn>>;
+  moveDemandColumn: (columnId: string, direction: -1 | 1) => void;
+  deleteDemandColumn: (columnId: string) => Promise<OperationResult>;
   updateSettings: (settings: Partial<WorkspaceSettings>) => void;
   exportWorkspace: () => Promise<WorkspaceBundle>;
   importWorkspace: (bundle: unknown, mode: ImportMode) => Promise<OperationResult>;
@@ -172,6 +185,8 @@ export const useQaStore = create<QaState>()(
       runs: [],
       reports: [],
       evidence: [],
+      demandColumns: createDefaultDemandColumns(),
+      demands: [],
       settings: {
         mode: "browser",
         name: "Meu workspace",
@@ -525,6 +540,122 @@ export const useQaStore = create<QaState>()(
         return { ok: true, message: "Registro de relatório removido. A execução foi preservada." };
       },
 
+      saveDemand: async (candidate) => {
+        const title = normalizeText(candidate.title);
+        if (!title) return { ok: false, message: "Informe o título da demanda." };
+        if (!get().demandColumns.some((column) => column.id === candidate.columnId)) {
+          return { ok: false, message: "Selecione uma coluna válida." };
+        }
+        const existing = get().demands.find((item) => item.id === candidate.id);
+        const targetColumn = get().demandColumns.find((item) => item.id === candidate.columnId);
+        const now = new Date().toISOString();
+        const normalized: QaDemand = {
+          ...candidate,
+          id: normalizeText(candidate.id) || createId("DEM"),
+          title,
+          description: candidate.description.trim(),
+          assignee: normalizeText(candidate.assignee),
+          tags: normalizeTags(candidate.tags),
+          checklist: candidate.checklist
+            .map((item) => ({ ...item, label: normalizeText(item.label) }))
+            .filter((item) => item.label),
+          links: candidate.links.filter((link) => link.id && link.label),
+          createdAt: existing?.createdAt ?? candidate.createdAt ?? now,
+          updatedAt: now,
+          completedAt: targetColumn?.semantic === "done" ? (existing?.completedAt ?? candidate.completedAt ?? now) : undefined,
+        };
+        set((state) => ({ demands: existing
+          ? state.demands.map((item) => item.id === normalized.id ? normalized : item)
+          : [...state.demands, normalized] }));
+        return { ok: true, value: normalized, message: existing ? "Demanda salva." : "Demanda criada." };
+      },
+
+      deleteDemand: async (demandId) => {
+        if (!get().demands.some((item) => item.id === demandId)) return { ok: false, message: "Demanda não encontrada." };
+        set((state) => ({ demands: state.demands.filter((item) => item.id !== demandId) }));
+        return { ok: true, message: "Demanda excluída." };
+      },
+
+      moveDemand: async (demandId, columnId, requestedOrder) => {
+        const demand = get().demands.find((item) => item.id === demandId);
+        const column = get().demandColumns.find((item) => item.id === columnId);
+        if (!demand || !column) return { ok: false, message: "Demanda ou coluna não encontrada." };
+        const destination = get().demands
+          .filter((item) => item.columnId === columnId && item.id !== demandId)
+          .sort((left, right) => left.order - right.order);
+        const order = Math.max(0, Math.min(requestedOrder ?? destination.length, destination.length));
+        const moved = moveDemandToColumn(demand, column, order);
+        set((state) => {
+          const sourceColumnId = demand.columnId;
+          const source = state.demands
+            .filter((item) => item.columnId === sourceColumnId && item.id !== demandId)
+            .sort((left, right) => left.order - right.order);
+          const target = sourceColumnId === columnId
+            ? source
+            : state.demands.filter((item) => item.columnId === columnId && item.id !== demandId).sort((left, right) => left.order - right.order);
+          target.splice(order, 0, moved);
+          const unaffected = state.demands.filter((item) => item.id !== demandId && item.columnId !== sourceColumnId && item.columnId !== columnId);
+          const normalizedTarget = target.map((item, itemOrder) => ({ ...item, order: itemOrder }));
+          const normalizedSource = sourceColumnId === columnId ? [] : source.map((item, itemOrder) => ({ ...item, order: itemOrder }));
+          return { demands: [...unaffected, ...normalizedSource, ...normalizedTarget] };
+        });
+        return { ok: true, value: moved, message: `Demanda movida para ${column.name}.` };
+      },
+
+      addDemandColumn: async (name, semantic) => {
+        const normalizedName = normalizeText(name);
+        if (!normalizedName) return { ok: false, message: "Informe o nome da coluna." };
+        const now = new Date().toISOString();
+        const column: DemandColumn = {
+          id: createId("COL"),
+          name: normalizedName,
+          semantic,
+          order: get().demandColumns.length,
+          createdAt: now,
+          updatedAt: now,
+        };
+        set((state) => ({ demandColumns: [...state.demandColumns, column] }));
+        return { ok: true, value: column, message: "Coluna criada." };
+      },
+
+      updateDemandColumn: async (columnId, name, semantic) => {
+        const existing = get().demandColumns.find((item) => item.id === columnId);
+        const normalizedName = normalizeText(name);
+        if (!existing) return { ok: false, message: "Coluna não encontrada." };
+        if (!normalizedName) return { ok: false, message: "Informe o nome da coluna." };
+        const updated = { ...existing, name: normalizedName, semantic, updatedAt: new Date().toISOString() };
+        const enteringDone = semantic === "done" && existing.semantic !== "done";
+        const leavingDone = semantic !== "done" && existing.semantic === "done";
+        set((state) => ({
+          demandColumns: state.demandColumns.map((item) => item.id === columnId ? updated : item),
+          demands: state.demands.map((item) => item.columnId === columnId
+            ? { ...item, completedAt: enteringDone ? (item.completedAt ?? updated.updatedAt) : leavingDone ? undefined : item.completedAt }
+            : item),
+        }));
+        return { ok: true, value: updated, message: "Coluna atualizada." };
+      },
+
+      moveDemandColumn: (columnId, direction) => set((state) => {
+        const ordered = [...state.demandColumns].sort((left, right) => left.order - right.order);
+        const currentIndex = ordered.findIndex((column) => column.id === columnId);
+        const targetIndex = currentIndex + direction;
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ordered.length) return state;
+        [ordered[currentIndex], ordered[targetIndex]] = [ordered[targetIndex], ordered[currentIndex]];
+        return { demandColumns: ordered.map((column, order) => ({ ...column, order })) };
+      }),
+
+      deleteDemandColumn: async (columnId) => {
+        if (get().demands.some((item) => item.columnId === columnId)) {
+          return { ok: false, message: "Mova as demandas desta coluna antes de excluí-la." };
+        }
+        if (get().demandColumns.length === 1) return { ok: false, message: "O quadro precisa ter ao menos uma coluna." };
+        set((state) => ({ demandColumns: state.demandColumns
+          .filter((item) => item.id !== columnId)
+          .sort((left, right) => left.order - right.order)
+          .map((item, order) => ({ ...item, order })) }));
+        return { ok: true, message: "Coluna excluída." };
+      },
+
       updateSettings: (updates) => set((state) => ({ settings: { ...state.settings, ...updates } })),
 
       exportWorkspace: async () => {
@@ -541,6 +672,8 @@ export const useQaStore = create<QaState>()(
           plans: cloneJson(state.plans),
           runs: cloneJson(state.runs),
           reports: cloneJson(state.reports),
+          demandColumns: cloneJson(state.demandColumns),
+          demands: cloneJson(state.demands),
           evidence,
           settings: cloneJson(state.settings),
         };
@@ -561,6 +694,10 @@ export const useQaStore = create<QaState>()(
           plans: mode === "replace" ? bundle.plans : mergeById(state.plans, bundle.plans),
           runs: mode === "replace" ? bundle.runs : mergeById(state.runs, bundle.runs),
           reports: mode === "replace" ? bundle.reports : mergeById(state.reports, bundle.reports),
+          demandColumns: mode === "replace"
+            ? (bundle.demandColumns ?? createDefaultDemandColumns())
+            : mergeById(state.demandColumns, bundle.demandColumns ?? []),
+          demands: mode === "replace" ? (bundle.demands ?? []) : mergeById(state.demands, bundle.demands ?? []),
           evidence: mode === "replace"
             ? bundle.evidence.map((item) => item.meta)
             : mergeById(state.evidence, bundle.evidence.map((item) => item.meta)),
@@ -569,7 +706,7 @@ export const useQaStore = create<QaState>()(
         }));
         return {
           ok: true,
-          message: `${bundle.cases.length} caso(s), ${bundle.plans.length} plano(s) e ${bundle.runs.length} execução(ões) importados.`,
+          message: `${bundle.cases.length} caso(s), ${bundle.plans.length} plano(s), ${bundle.runs.length} execução(ões) e ${(bundle.demands ?? []).length} demanda(s) importados.`,
         };
       },
     }),
@@ -583,6 +720,8 @@ export const useQaStore = create<QaState>()(
         runs: state.runs,
         reports: state.reports,
         evidence: state.evidence,
+        demandColumns: state.demandColumns,
+        demands: state.demands,
         settings: state.settings,
         migrationReport: state.migrationReport,
         activeRunId: state.activeRunId,

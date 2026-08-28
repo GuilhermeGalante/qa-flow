@@ -28,6 +28,7 @@ export function SettingsScreen() {
   const plans = useQaStore((state) => state.plans);
   const runs = useQaStore((state) => state.runs);
   const evidence = useQaStore((state) => state.evidence);
+  const demands = useQaStore((state) => state.demands);
   const migrationReport = useQaStore((state) => state.migrationReport);
   const storageError = useQaStore((state) => state.storageError);
   const updateSettings = useQaStore((state) => state.updateSettings);
@@ -117,7 +118,7 @@ export function SettingsScreen() {
           </div>
           <label className="mt-4 block text-xs font-bold text-slate-600">Nome do workspace<input className={`${inputClass} mt-1`} value={settings.name} onChange={(event) => updateSettings({ name: event.target.value })} /></label>
           <label className="mt-4 flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-700"><input type="checkbox" checked={settings.compactEvidence} onChange={(event) => updateSettings({ compactEvidence: event.target.checked })} className="mt-1 h-4 w-4 accent-cyan-600" /><span><strong className="block text-slate-950">Compactar novas evidências</strong><span className="mt-1 block text-xs text-slate-500">Reduz imagens para aliviar o IndexedDB e os backups. Desative apenas quando a resolução original for indispensável.</span></span></label>
-          <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><strong className="text-slate-950">Estado atual</strong><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>{cases.length} caso(s)</span><span>{plans.length} plano(s)</span><span>{runs.length} execução(ões)</span><span>{evidence.length} evidência(s)</span></div></div>
+          <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><strong className="text-slate-950">Estado atual</strong><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>{cases.length} caso(s)</span><span>{plans.length} plano(s)</span><span>{runs.length} execução(ões)</span><span>{demands.length} demanda(s)</span><span>{evidence.length} evidência(s)</span></div></div>
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -131,7 +132,7 @@ export function SettingsScreen() {
           <h2 className="font-black text-slate-950">Backup e restauração</h2><p className="mt-1 text-sm text-slate-500">O backup é autocontido e validado antes de qualquer alteração.</p>
           <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={(event) => void readBackup(event)} />
           <div className="mt-4 flex flex-wrap gap-2"><button type="button" className={buttonPrimary} disabled={busy} onClick={() => void exportBackup()}><Download size={16} /> Exportar backup</button><button type="button" className={buttonSecondary} disabled={busy} onClick={() => fileRef.current?.click()}><Upload size={16} /> Selecionar backup</button></div>
-          {preview && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="font-black text-amber-950">Prévia validada</p><p className="mt-1 text-sm text-amber-900">{preview.cases.length} casos, {preview.plans.length} planos, {preview.runs.length} execuções, {preview.evidence.length} evidências.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" className={buttonPrimary} onClick={() => void applyImport("merge")}>Mesclar por ID</button><button type="button" className={buttonDanger} onClick={() => void applyImport("replace")}>Substituir workspace</button><button type="button" className={buttonSecondary} onClick={() => setPreview(null)}>Cancelar</button></div></div>}
+          {preview && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="font-black text-amber-950">Prévia validada</p><p className="mt-1 text-sm text-amber-900">{preview.cases.length} casos, {preview.plans.length} planos, {preview.runs.length} execuções, {(preview.demands ?? []).length} demandas, {preview.evidence.length} evidências.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" className={buttonPrimary} onClick={() => void applyImport("merge")}>Mesclar por ID</button><button type="button" className={buttonDanger} onClick={() => void applyImport("replace")}>Substituir workspace</button><button type="button" className={buttonSecondary} onClick={() => setPreview(null)}>Cancelar</button></div></div>}
         </section>
 
         {migrationReport && <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 xl:col-span-2"><h2 className="font-black text-emerald-950">Migração v1 concluída</h2><p className="mt-1 text-sm text-emerald-900">Em {new Date(migrationReport.migratedAt).toLocaleString("pt-BR")}: {migrationReport.casesCreated} casos, {migrationReport.plansCreated} planos e {migrationReport.runsCreated} execuções.</p>{migrationReport.warnings.length > 0 && <ul className="mt-3 list-disc pl-5 text-xs text-emerald-900">{migrationReport.warnings.slice(0, 10).map((warning) => <li key={warning}>{warning}</li>)}</ul>}</section>}

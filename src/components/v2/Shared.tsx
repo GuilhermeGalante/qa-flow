@@ -79,10 +79,10 @@ export function Notice({ tone = "info", children }: { tone?: "info" | "success" 
     warning: "border-amber-200 bg-amber-50 text-amber-950",
     error: "border-rose-200 bg-rose-50 text-rose-900",
   };
-  return <div role="status" className={`rounded-xl border px-4 py-3 text-sm ${colors[tone]}`}>{children}</div>;
+  return <div role="status" aria-live="polite" aria-atomic="true" className={`rounded-xl border px-4 py-3 text-sm ${colors[tone]}`}>{children}</div>;
 }
 
 export const buttonPrimary = "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40";
 export const buttonSecondary = "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40";
 export const buttonDanger = "inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40";
-export const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100";
+export const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100";

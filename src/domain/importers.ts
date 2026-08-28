@@ -42,6 +42,7 @@ export function parseCsvCases(rows: CsvRecord[], now = new Date().toISOString())
         id: field(row, "Case ID", "CaseId", "ID") || createId("TC"),
         revision: 1,
         title,
+        description: field(row, "Description", "Descrição", "Descricao"),
         path: normalizePath([
           field(row, "Project", "Projeto"),
           field(row, "Suite", "Suíte", "Suite de teste"),
