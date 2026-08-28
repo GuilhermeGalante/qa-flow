@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   BarChart3,
   BookOpenCheck,
@@ -12,6 +12,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import { useDialogBehavior } from "../../ui/useDialogBehavior";
 import { APP_VERSION } from "../../version";
 
 export type QaView = "dashboard" | "demands" | "cases" | "plans" | "runs" | "reports" | "settings";
@@ -41,7 +42,6 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
     catch { return false; }
   });
   const drawerRef = useRef<HTMLElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const navigate = (target: QaView) => {
     onNavigate(target);
@@ -57,38 +57,19 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
     });
   };
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const drawer = drawerRef.current;
-    const menuButton = menuButtonRef.current;
-    const focusable = () => [...(drawer?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') ?? [])]
-      .filter((element) => !element.hasAttribute("disabled"));
-    const frame = window.requestAnimationFrame(() => focusable()[0]?.focus());
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); setDrawerOpen(false); return; }
-      if (event.key !== "Tab") return;
-      const elements = focusable();
-      if (!elements.length) return;
-      const first = elements[0];
-      const last = elements[elements.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener("keydown", handleKeyDown);
-      menuButton?.focus();
-    };
-  }, [drawerOpen]);
+  useDialogBehavior({
+    open: drawerOpen,
+    onClose: () => setDrawerOpen(false),
+    containerRef: drawerRef,
+  });
 
   const renderNav = (compact = false) => (
     <>
-      <div className={`flex h-18 items-center border-b border-slate-800 ${compact ? "justify-center px-2" : "px-5"}`}>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500 text-sm font-black text-slate-950">QA</div>
+      <div className={`flex h-18 items-center border-b border-ink-hover ${compact ? "justify-center px-2" : "px-5"}`}>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-run-mark text-sm font-bold text-body">QA</div>
         <div className={`${compact ? "hidden" : "ml-3 min-w-0"}`}>
-          <p className="text-lg font-black tracking-tight text-white">Flow</p>
-          <p className="truncate text-xs text-slate-400" title={workspaceName}>{workspaceName}</p>
+          <p className="text-lg font-bold tracking-tight text-white">Flow</p>
+          <p className="truncate text-xs text-faint" title={workspaceName}>{workspaceName}</p>
         </div>
         {compact ? null : (
           <button
@@ -96,7 +77,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
             aria-label="Recolher menu lateral"
             title="Recolher menu lateral"
             onClick={toggleSidebar}
-            className="ml-auto hidden min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-800 hover:text-white lg:flex"
+            className="ml-auto hidden min-h-11 min-w-11 items-center justify-center rounded-xl text-faint transition hover:bg-ink-hover hover:text-white lg:flex"
           >
             <PanelLeftClose size={19} aria-hidden="true" />
           </button>
@@ -114,7 +95,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
               aria-label={compact ? item.label : undefined}
               title={compact ? item.label : undefined}
               onClick={() => navigate(item.id)}
-              className={`flex min-h-11 w-full items-center rounded-xl text-left text-sm font-semibold transition ${compact ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-cyan-300 text-slate-950 shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"}`}
+              className={`flex min-h-11 w-full items-center rounded-xl text-left text-sm font-semibold transition ${compact ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-cyan-300 text-body shadow-sm" : "text-slate-300 hover:bg-ink-hover hover:text-white"}`}
             >
               <Icon size={18} aria-hidden="true" />
               {compact ? <span className="sr-only">{item.label}</span> : item.label}
@@ -122,14 +103,14 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
           );
         })}
       </nav>
-      <div className={`border-t border-slate-800 text-xs leading-relaxed text-slate-500 ${compact ? "p-2" : "p-4"}`}>
+      <div className={`border-t border-ink-hover text-xs leading-relaxed text-muted ${compact ? "p-2" : "p-4"}`}>
         {compact ? (
           <button
             type="button"
             aria-label="Expandir menu lateral"
             title="Expandir menu lateral"
             onClick={toggleSidebar}
-            className="flex min-h-11 w-full items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            className="flex min-h-11 w-full items-center justify-center rounded-xl text-faint transition hover:bg-ink-hover hover:text-white"
           >
             <PanelLeftOpen size={19} aria-hidden="true" />
           </button>
@@ -139,8 +120,8 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-950">
-      <aside className={`fixed inset-y-0 left-0 z-30 flex-col bg-slate-950 transition-[width] duration-200 ${immersive ? "hidden w-52 md:flex" : `hidden lg:flex ${sidebarCollapsed ? "w-20" : "w-64"}`}`}>
+    <div className="min-h-screen bg-shell text-body">
+      <aside className={`fixed inset-y-0 left-0 z-30 flex-col bg-ink transition-[width] duration-200 ${immersive ? "hidden w-52 md:flex" : `hidden lg:flex ${sidebarCollapsed ? "w-20" : "w-64"}`}`}>
         {renderNav(immersive ? false : sidebarCollapsed)}
       </aside>
 
@@ -149,15 +130,15 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
           <button
             type="button"
             aria-label="Fechar menu"
-            className="absolute inset-0 bg-slate-950/60"
+            className="absolute inset-0 bg-ink/60"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside ref={drawerRef} role="dialog" aria-modal="true" aria-label="Menu principal" className="relative flex h-full w-72 max-w-[88vw] flex-col bg-slate-950 shadow-2xl">
+          <aside ref={drawerRef} role="dialog" aria-modal="true" aria-label="Menu principal" className="relative flex h-full w-72 max-w-[88vw] flex-col bg-ink shadow-2xl">
             <button
               type="button"
               aria-label="Fechar menu"
               onClick={() => setDrawerOpen(false)}
-              className="absolute right-3 top-3 z-10 rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="absolute right-3 top-3 z-10 rounded-lg p-2 text-faint hover:bg-ink-hover hover:text-white"
             >
               <X size={20} />
             </button>
@@ -167,23 +148,22 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
       )}
 
       <div className={`${immersive ? "md:pl-52" : sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"} transition-[padding] duration-200`} inert={drawerOpen ? true : undefined}>
-        <header className={`sticky top-0 z-20 h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:px-7 ${immersive ? "hidden" : view === "demands" ? "flex lg:hidden" : "flex"}`}>
+        <header className={`sticky top-0 z-20 h-16 items-center justify-between border-b border-hairline bg-raised/95 px-4 backdrop-blur md:px-7 ${immersive ? "hidden" : view === "demands" ? "flex lg:hidden" : "flex"}`}>
           <div className="flex min-w-0 items-center gap-3">
             <button
-              ref={menuButtonRef}
               type="button"
               aria-label="Abrir menu"
               onClick={() => setDrawerOpen(true)}
-              className="rounded-lg border border-slate-200 p-2 text-slate-700 lg:hidden"
+              className="rounded-lg border border-hairline p-2 text-control lg:hidden"
             >
               <Menu size={20} />
             </button>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-slate-900">{view === "demands" ? workspaceName : items.find((item) => item.id === view)?.label}</p>
-              <p className="hidden text-xs text-slate-500 sm:block">{view === "demands" ? "Workspace local" : "Casos reutilizáveis, tentativas auditáveis e histórico preservado."}</p>
+              <p className="truncate text-sm font-bold text-body">{view === "demands" ? workspaceName : items.find((item) => item.id === view)?.label}</p>
+              <p className="hidden text-xs text-muted sm:block">{view === "demands" ? "Workspace local" : "Casos reutilizáveis, tentativas auditáveis e histórico preservado."}</p>
             </div>
           </div>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Salvo localmente</span>
+          <span className="rounded-full bg-pass-tint px-3 py-1 text-xs font-bold text-pass">Salvo localmente</span>
         </header>
         <main className={`mx-auto w-full ${view === "demands" ? "max-w-none p-4 md:p-6 xl:p-8" : "max-w-[1500px]"} ${immersive ? "p-0" : view === "demands" ? "" : "p-4 md:p-7"}`}>{children}</main>
       </div>
