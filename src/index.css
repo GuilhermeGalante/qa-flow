@@ -1,5 +1,64 @@
 @import "tailwindcss";
 
+/*
+ * Tokens do QA Flow — contrato em specs/qa-flow-ui-v3/01-design-tokens.md
+ *
+ * Os valores vêm do DESIGN.md, que por sua vez usa exatamente a paleta padrão do
+ * Tailwind v4. Tokenizar, portanto, não altera nenhum pixel: o ganho é ter um
+ * ponto único onde a cor de um estado é decidida.
+ */
+@theme {
+  /* Neutros — a rampa que o produto realmente usa */
+  --color-ink: oklch(12.9% 0.042 264.695);
+  --color-ink-hover: oklch(27.9% 0.041 260.031);
+  --color-body: oklch(20.8% 0.042 265.755);
+  --color-control: oklch(37.2% 0.044 257.287);
+  --color-subtle: oklch(44.6% 0.043 257.281);
+  --color-muted: oklch(55.4% 0.046 257.417);
+  --color-faint: oklch(70.4% 0.04 256.788);
+  --color-hairline-strong: oklch(86.9% 0.022 252.894);
+  --color-hairline: oklch(92.9% 0.013 255.508);
+  --color-shell: oklch(96.8% 0.007 247.896);
+  --color-surface: oklch(98.4% 0.003 247.858);
+  --color-raised: #ffffff;
+
+  /* Execução em andamento */
+  --color-run-deep: oklch(39.8% 0.07 227.392);
+  --color-run: oklch(52% 0.105 223.128);
+  --color-run-mark: oklch(71.5% 0.143 215.221);
+  --color-run-accent: oklch(78.9% 0.154 211.53);
+  --color-run-line: oklch(91.7% 0.08 205.041);
+  --color-run-halo: oklch(95.6% 0.045 203.388);
+  --color-run-tint: oklch(98.4% 0.019 200.873);
+
+  /* Aprovado, ativo, concluído */
+  --color-pass-deep: oklch(37.8% 0.077 168.94);
+  --color-pass: oklch(50.8% 0.118 165.612);
+  --color-pass-mark: oklch(69.6% 0.17 162.48);
+  --color-pass-line: oklch(90.5% 0.093 164.15);
+  --color-pass-tint: oklch(97.9% 0.021 166.113);
+
+  /* Bloqueado, atenção, prazo */
+  --color-warn-deep: oklch(41.4% 0.112 45.904);
+  --color-warn: oklch(55.5% 0.163 48.998);
+  --color-warn-line: oklch(92.4% 0.12 95.746);
+  --color-warn-tint: oklch(98.7% 0.022 95.277);
+
+  /* Reprovado, abortado, destrutivo */
+  --color-fail-deep: oklch(41% 0.159 10.272);
+  --color-fail: oklch(51.4% 0.222 16.935);
+  --color-fail-mark: oklch(64.5% 0.246 16.439);
+  --color-fail-line: oklch(89.2% 0.058 10.001);
+  --color-fail-halo: oklch(94.1% 0.03 12.58);
+  --color-fail-tint: oklch(96.9% 0.015 12.422);
+
+  /* Exploratório, ignorado */
+  --color-explore-deep: oklch(38% 0.189 293.745);
+  --color-explore: oklch(49.1% 0.27 292.581);
+  --color-explore-line: oklch(89.4% 0.057 293.283);
+  --color-explore-tint: oklch(96.9% 0.016 293.756);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,7 +69,7 @@
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-surface text-body;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
@@ -77,9 +136,56 @@ summary:focus-visible {
   animation: qa-state-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Entrada dos toasts: desliza a partir da borda em que a fila está ancorada. */
+@keyframes qa-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.qa-toast-enter {
+  animation: qa-toast-enter 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes qa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.qa-spin {
+  animation: qa-spin 720ms linear infinite;
+}
+
+@keyframes qa-skeleton {
+  0%, 100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.qa-skeleton {
+  animation: qa-skeleton 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .qa-state-enter {
+  .qa-state-enter,
+  .qa-toast-enter {
     animation: none;
+  }
+
+  .qa-spin,
+  .qa-skeleton {
+    animation-duration: 2s;
   }
 
   *,
@@ -87,7 +193,5 @@ summary:focus-visible {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
   }
 }

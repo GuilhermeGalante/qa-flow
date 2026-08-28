@@ -7,7 +7,50 @@ import { QaLayout, type QaView } from "./components/v2/QaLayout";
 import { ReportsScreen } from "./components/v2/ReportsScreen";
 import { RunsScreen } from "./components/v2/RunsScreen";
 import { SettingsScreen } from "./components/v2/SettingsScreen";
+import { ConfirmProvider } from "./ui/ConfirmProvider";
+import { Skeleton } from "./ui/Skeleton";
+import { ToastProvider } from "./ui/ToastProvider";
 import { useQaStore } from "./store/useQaStore";
+
+/**
+ * Carregamento inicial no formato do layout que vai aparecer, em vez de uma tela cheia
+ * sem relação com ela: o usuário já entende onde as coisas vão estar.
+ */
+function BootSkeleton() {
+  return (
+    <div className="min-h-screen bg-shell" role="status" aria-live="polite">
+      <span className="sr-only">Preparando o workspace: validando o armazenamento e procurando dados da versão anterior.</span>
+      <aside aria-hidden="true" className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-ink p-4 lg:flex">
+        <div className="flex items-center gap-3 border-b border-ink-hover pb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-run-mark text-sm font-black text-ink">QA</div>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-16 bg-ink-hover" />
+            <Skeleton className="h-2.5 w-24 bg-ink-hover" />
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          {Array.from({ length: 7 }, (_, index) => <Skeleton key={index} className="h-11 bg-ink-hover" />)}
+        </div>
+      </aside>
+      <div className="lg:pl-64">
+        <header aria-hidden="true" className="flex h-16 items-center gap-3 border-b border-hairline bg-raised px-4 md:px-7">
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="h-2.5 w-56" />
+          </div>
+          <Skeleton className="ml-auto h-7 w-32 rounded-full" />
+        </header>
+        <main aria-hidden="true" className="mx-auto w-full max-w-[1500px] space-y-5 p-4 md:p-7">
+          <Skeleton className="h-9 w-52" />
+          <Skeleton className="h-40 rounded-2xl" />
+          <div className="grid gap-5 lg:grid-cols-3">
+            {Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-28 rounded-2xl" />)}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [view, setView] = useState<QaView>("dashboard");
@@ -20,17 +63,7 @@ function App() {
 
   useEffect(() => { void initialize(); }, [initialize]);
 
-  if (!ready) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-center text-white">
-        <div>
-          <div className="mx-auto flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl bg-cyan-400 font-black text-slate-950">QA</div>
-          <h1 className="mt-4 text-xl font-black">Preparando seu workspace</h1>
-          <p className="mt-1 text-sm text-slate-400">Validando o armazenamento e procurando dados da versão anterior.</p>
-        </div>
-      </div>
-    );
-  }
+  if (!ready) return <BootSkeleton />;
 
   const runPlan = (planId: string) => {
     setRequestedPlanId(planId);
@@ -43,21 +76,25 @@ function App() {
   };
 
   return (
-    <QaLayout view={view} onNavigate={setView} workspaceName={workspaceName} immersive={view === "cases" && caseEditorOpen}>
-      {view === "dashboard" && <DashboardScreen onNavigate={setView} onCreateCase={createCase} />}
-      {view === "demands" && <DemandsScreen />}
-      {view === "cases" && (
-        <CasesScreen
-          newCaseRequested={newCaseRequested}
-          onNewCaseRequestHandled={() => setNewCaseRequested(false)}
-          onEditorStateChange={setCaseEditorOpen}
-        />
-      )}
-      {view === "plans" && <PlansScreen onRun={runPlan} />}
-      {view === "runs" && <RunsScreen requestedPlanId={requestedPlanId} onRequestHandled={() => setRequestedPlanId(undefined)} />}
-      {view === "reports" && <ReportsScreen />}
-      {view === "settings" && <SettingsScreen />}
-    </QaLayout>
+    <ToastProvider>
+      <ConfirmProvider>
+        <QaLayout view={view} onNavigate={setView} workspaceName={workspaceName} immersive={view === "cases" && caseEditorOpen}>
+          {view === "dashboard" && <DashboardScreen onNavigate={setView} onCreateCase={createCase} />}
+          {view === "demands" && <DemandsScreen />}
+          {view === "cases" && (
+            <CasesScreen
+              newCaseRequested={newCaseRequested}
+              onNewCaseRequestHandled={() => setNewCaseRequested(false)}
+              onEditorStateChange={setCaseEditorOpen}
+            />
+          )}
+          {view === "plans" && <PlansScreen onRun={runPlan} />}
+          {view === "runs" && <RunsScreen requestedPlanId={requestedPlanId} onRequestHandled={() => setRequestedPlanId(undefined)} />}
+          {view === "reports" && <ReportsScreen />}
+          {view === "settings" && <SettingsScreen />}
+        </QaLayout>
+      </ConfirmProvider>
+    </ToastProvider>
   );
 }
 

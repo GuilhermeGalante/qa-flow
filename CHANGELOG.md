@@ -6,6 +6,23 @@ Passo de versão: **major** para quebra do contrato de dados ou remoção de cap
 
 Mantido pelo comando `/release`.
 
+## 2.0.1 — 2026-08-28
+
+<!-- release-baseline: f6c1eb9 -->
+
+### Alterado
+- Feedback de salvamento, importação, relatórios, evidências, backups e repositórios passa a usar mensagens contextuais e indicadores de progresso que evitam ações duplicadas.
+- Filtros e seletores de casos, planos, execuções e demandas passam a expor opções, contagens e busca contextual sem ocultar o estado atual.
+- A execução de tentativas passa a oferecer navegação explícita entre passos, escolha direta de status e progresso ao aplicar resultados pendentes antes do encerramento.
+- A interface passa a usar cores semânticas consistentes e um esqueleto do workspace durante a inicialização.
+
+### Corrigido
+- Falhas na preparação ou geração de PDFs deixam de ser seguidas por uma mensagem de sucesso e permanecem visíveis para diagnóstico.
+
+### Acessibilidade
+- Diálogos, drawers e bottom sheets passam a conter o foco, responder a Escape, bloquear a rolagem de fundo e devolver o foco ao controle de origem.
+- Filtros segmentados, seletores e estados de passo passam a aceitar navegação por teclado, com anúncios diferenciados para estado e erro e respeito à redução de movimento.
+
 ## 2.0.0 — 2026-08-28
 
 <!-- release-baseline: d60723d -->
