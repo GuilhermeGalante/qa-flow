@@ -3,6 +3,8 @@ import {
   type CaseDefinition,
   type CasePriority,
   type CaseStep,
+  type DemandColumn,
+  type QaDemand,
   type LifecycleStatus,
   type PlanDefinition,
   type StepStatus,
@@ -70,6 +72,9 @@ export function validateCaseDefinition(value: unknown): ValidationResult<CaseDef
   }
   requiredString(issues, "id", candidate.id, "ID");
   requiredString(issues, "title", candidate.title, "Título");
+  if (candidate.description !== undefined && typeof candidate.description !== "string") {
+    issues.push({ path: "description", message: "Descrição deve ser texto." });
+  }
   if (!Number.isInteger(candidate.revision) || Number(candidate.revision) < 1) {
     issues.push({ path: "revision", message: "Revisão deve ser um inteiro maior que zero." });
   }
@@ -210,6 +215,9 @@ export function validateWorkspaceBundle(value: unknown): ValidationResult<Worksp
   if (!Array.isArray(candidate.runs)) issues.push({ path: "runs", message: "Lista de execuções ausente." });
   if (!Array.isArray(candidate.reports)) issues.push({ path: "reports", message: "Lista de relatórios ausente." });
   if (!Array.isArray(candidate.evidence)) issues.push({ path: "evidence", message: "Lista de evidências ausente." });
+  if (candidate.demandColumns !== undefined && !Array.isArray(candidate.demandColumns)) issues.push({ path: "demandColumns", message: "Lista de colunas inválida." });
+  if (candidate.demands !== undefined && !Array.isArray(candidate.demands)) issues.push({ path: "demands", message: "Lista de demandas inválida." });
+  if ((candidate.demands?.length ?? 0) > 0 && !candidate.demandColumns?.length) issues.push({ path: "demandColumns", message: "Demandas importadas exigem suas colunas." });
   candidate.cases?.forEach((item, index) => {
     validateCaseDefinition(item).issues.forEach((issue) => issues.push({ ...issue, path: `cases[${index}].${issue.path}` }));
   });
@@ -219,7 +227,32 @@ export function validateWorkspaceBundle(value: unknown): ValidationResult<Worksp
   candidate.runs?.forEach((item, index) => {
     validateRun(item).issues.forEach((issue) => issues.push({ ...issue, path: `runs[${index}].${issue.path}` }));
   });
+  const columnIds = new Set<string>();
+  candidate.demandColumns?.forEach((column, index) => validateDemandColumn(column, index, columnIds, issues));
+  candidate.demands?.forEach((demand, index) => validateDemand(demand, index, columnIds, issues));
   return { ok: issues.length === 0, value: issues.length === 0 ? candidate as WorkspaceBundle : undefined, issues };
+}
+
+function validateDemandColumn(column: Partial<DemandColumn>, index: number, ids: Set<string>, issues: ValidationIssue[]): void {
+  const path = `demandColumns[${index}]`;
+  if (requiredString(issues, `${path}.id`, column.id, "ID da coluna")) {
+    if (ids.has(column.id)) issues.push({ path: `${path}.id`, message: "ID de coluna duplicado." });
+    ids.add(column.id);
+  }
+  requiredString(issues, `${path}.name`, column.name, "Nome da coluna");
+  if (!column.semantic || !["neutral", "active", "blocked", "done"].includes(column.semantic)) issues.push({ path: `${path}.semantic`, message: "Significado de coluna inválido." });
+  if (!Number.isInteger(column.order) || Number(column.order) < 0) issues.push({ path: `${path}.order`, message: "Ordem de coluna inválida." });
+}
+
+function validateDemand(demand: Partial<QaDemand>, index: number, columnIds: Set<string>, issues: ValidationIssue[]): void {
+  const path = `demands[${index}]`;
+  requiredString(issues, `${path}.id`, demand.id, "ID da demanda");
+  requiredString(issues, `${path}.title`, demand.title, "Título da demanda");
+  if (!demand.columnId || (columnIds.size > 0 && !columnIds.has(demand.columnId))) issues.push({ path: `${path}.columnId`, message: "Coluna da demanda não encontrada." });
+  if (!demand.priority || !priorities.includes(demand.priority)) issues.push({ path: `${path}.priority`, message: "Prioridade da demanda inválida." });
+  if (!Array.isArray(demand.tags) || demand.tags.some((tag) => typeof tag !== "string")) issues.push({ path: `${path}.tags`, message: "Tags da demanda inválidas." });
+  if (!Array.isArray(demand.checklist)) issues.push({ path: `${path}.checklist`, message: "Checklist da demanda inválido." });
+  if (!Array.isArray(demand.links)) issues.push({ path: `${path}.links`, message: "Vínculos da demanda inválidos." });
 }
 
 export function resultKey(caseId: string, stepId: string): string {

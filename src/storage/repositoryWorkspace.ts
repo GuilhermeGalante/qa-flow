@@ -8,6 +8,8 @@ interface WorkspaceManifest {
   plans: { id: string; revision: number; file: string }[];
   runs: { id: string; file: string }[];
   reports: { id: string; file: string }[];
+  demandColumns?: { id: string; file: string }[];
+  demands?: { id: string; file: string }[];
   evidence: { meta: EvidenceMeta; file: string }[];
 }
 
@@ -85,6 +87,7 @@ export async function writeRepositoryWorkspace(bundle: WorkspaceBundle): Promise
   const plansDirectory = await subdirectory(root, "plans");
   const runsDirectory = await subdirectory(root, "runs");
   const reportsDirectory = await subdirectory(root, "reports");
+  const demandsDirectory = await subdirectory(root, "demands");
   const evidenceDirectory = await subdirectory(root, "evidence");
   const manifest: WorkspaceManifest = {
     schemaVersion: 2,
@@ -94,6 +97,8 @@ export async function writeRepositoryWorkspace(bundle: WorkspaceBundle): Promise
     plans: [],
     runs: [],
     reports: [],
+    demandColumns: [],
+    demands: [],
     evidence: [],
   };
 
@@ -117,6 +122,16 @@ export async function writeRepositoryWorkspace(bundle: WorkspaceBundle): Promise
     await writeJson(reportsDirectory, file, report);
     manifest.reports.push({ id: report.id, file });
   }
+  for (const column of [...(bundle.demandColumns ?? [])].sort((left, right) => left.order - right.order)) {
+    const file = `column-${safeFileName(column.id)}.json`;
+    await writeJson(demandsDirectory, file, column);
+    manifest.demandColumns?.push({ id: column.id, file });
+  }
+  for (const demand of [...(bundle.demands ?? [])].sort((left, right) => left.id.localeCompare(right.id))) {
+    const file = `${safeFileName(demand.id)}.json`;
+    await writeJson(demandsDirectory, file, demand);
+    manifest.demands?.push({ id: demand.id, file });
+  }
   for (const item of [...bundle.evidence].sort((left, right) => left.meta.id.localeCompare(right.meta.id))) {
     const file = `${safeFileName(item.meta.id)}.${extensionForMime(item.meta.mimeType)}`;
     await writeFile(evidenceDirectory, file, dataUrlBytes(item.dataUrl));
@@ -133,6 +148,7 @@ export async function readRepositoryWorkspace(): Promise<WorkspaceBundle> {
   const plansDirectory = await subdirectory(root, "plans");
   const runsDirectory = await subdirectory(root, "runs");
   const reportsDirectory = await subdirectory(root, "reports");
+  const demandsDirectory = await subdirectory(root, "demands");
   const evidenceDirectory = await subdirectory(root, "evidence");
   const manifest = await readJson<WorkspaceManifest>(root, "workspace.json");
   if (manifest.schemaVersion !== 2) throw new Error("Versão do workspace de repositório não suportada.");
@@ -145,10 +161,14 @@ export async function readRepositoryWorkspace(): Promise<WorkspaceBundle> {
   for (const item of manifest.runs) runs.push(await readJson<WorkspaceBundle["runs"][number]>(runsDirectory, item.file));
   const reports = [];
   for (const item of manifest.reports) reports.push(await readJson<WorkspaceBundle["reports"][number]>(reportsDirectory, item.file));
+  const demandColumns: NonNullable<WorkspaceBundle["demandColumns"]> = [];
+  for (const item of manifest.demandColumns ?? []) demandColumns.push(await readJson<NonNullable<WorkspaceBundle["demandColumns"]>[number]>(demandsDirectory, item.file));
+  const demands: NonNullable<WorkspaceBundle["demands"]> = [];
+  for (const item of manifest.demands ?? []) demands.push(await readJson<NonNullable<WorkspaceBundle["demands"]>[number]>(demandsDirectory, item.file));
   const evidence: WorkspaceBundle["evidence"] = [];
   for (const item of manifest.evidence) {
     const file = await (await evidenceDirectory.getFileHandle(item.file)).getFile();
     evidence.push({ meta: item.meta, dataUrl: bytesDataUrl(new Uint8Array(await file.arrayBuffer()), item.meta.mimeType) });
   }
-  return { schemaVersion: 2, exportedAt: manifest.exportedAt, settings: manifest.settings, cases, plans, runs, reports, evidence };
+  return { schemaVersion: 2, exportedAt: manifest.exportedAt, settings: manifest.settings, cases, plans, runs, reports, demandColumns, demands, evidence };
 }

@@ -16,6 +16,46 @@ export type RunStatus =
   | "completed"
   | "aborted";
 export type WorkspaceMode = "browser" | "repository";
+export type DemandColumnSemantic = "neutral" | "active" | "blocked" | "done";
+export type DemandLinkType = "case" | "plan" | "run" | "report";
+
+export interface DemandColumn {
+  id: string;
+  name: string;
+  semantic: DemandColumnSemantic;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DemandChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+export interface DemandLink {
+  type: DemandLinkType;
+  id: string;
+  label: string;
+}
+
+export interface QaDemand {
+  id: string;
+  title: string;
+  description: string;
+  columnId: string;
+  order: number;
+  priority: CasePriority;
+  assignee: string;
+  dueDate?: string;
+  tags: string[];
+  checklist: DemandChecklistItem[];
+  links: DemandLink[];
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+}
 
 export interface CaseStep {
   id: string;
@@ -41,6 +81,7 @@ export interface CaseDefinition {
   id: string;
   revision: number;
   title: string;
+  description?: string;
   path: string[];
   priority: CasePriority;
   status: LifecycleStatus;
@@ -171,6 +212,8 @@ export interface WorkspaceBundle {
   plans: PlanDefinition[];
   runs: TestRun[];
   reports: ReportArtifact[];
+  demandColumns?: DemandColumn[];
+  demands?: QaDemand[];
   evidence: EvidenceBundleItem[];
   settings: WorkspaceSettings;
 }

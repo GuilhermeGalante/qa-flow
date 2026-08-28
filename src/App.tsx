@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CasesScreen } from "./components/v2/CasesScreen";
 import { DashboardScreen } from "./components/v2/DashboardScreen";
+import { DemandsScreen } from "./components/v2/DemandsScreen";
 import { PlansScreen } from "./components/v2/PlansScreen";
 import { QaLayout, type QaView } from "./components/v2/QaLayout";
 import { ReportsScreen } from "./components/v2/ReportsScreen";
@@ -11,6 +12,8 @@ import { useQaStore } from "./store/useQaStore";
 function App() {
   const [view, setView] = useState<QaView>("dashboard");
   const [requestedPlanId, setRequestedPlanId] = useState<string>();
+  const [newCaseRequested, setNewCaseRequested] = useState(false);
+  const [caseEditorOpen, setCaseEditorOpen] = useState(false);
   const ready = useQaStore((state) => state.ready);
   const initialize = useQaStore((state) => state.initialize);
   const workspaceName = useQaStore((state) => state.settings.name);
@@ -34,10 +37,22 @@ function App() {
     setView("runs");
   };
 
+  const createCase = () => {
+    setNewCaseRequested(true);
+    setView("cases");
+  };
+
   return (
-    <QaLayout view={view} onNavigate={setView} workspaceName={workspaceName}>
-      {view === "dashboard" && <DashboardScreen onNavigate={setView} />}
-      {view === "cases" && <CasesScreen />}
+    <QaLayout view={view} onNavigate={setView} workspaceName={workspaceName} immersive={view === "cases" && caseEditorOpen}>
+      {view === "dashboard" && <DashboardScreen onNavigate={setView} onCreateCase={createCase} />}
+      {view === "demands" && <DemandsScreen />}
+      {view === "cases" && (
+        <CasesScreen
+          newCaseRequested={newCaseRequested}
+          onNewCaseRequestHandled={() => setNewCaseRequested(false)}
+          onEditorStateChange={setCaseEditorOpen}
+        />
+      )}
       {view === "plans" && <PlansScreen onRun={runPlan} />}
       {view === "runs" && <RunsScreen requestedPlanId={requestedPlanId} onRequestHandled={() => setRequestedPlanId(undefined)} />}
       {view === "reports" && <ReportsScreen />}
