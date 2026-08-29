@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import {
+  AppWindow,
   ArrowLeft,
   ArrowRight,
-  ArrowDown,
-  ArrowUp,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -14,7 +13,10 @@ import {
   Link2,
   ListChecks,
   LockKeyhole,
+  Maximize2,
   MoreHorizontal,
+  PanelRight,
+  PanelsTopLeft,
   Plus,
   Search,
   Settings2,
@@ -145,7 +147,6 @@ function DemandCard({
   columns,
   onSelect,
   onMove,
-  onReorder,
   onDropAt,
 }: {
   demand: QaDemand;
@@ -153,7 +154,6 @@ function DemandCard({
   columns: DemandColumn[];
   onSelect: () => void;
   onMove: (columnId: string) => void;
-  onReorder: (order: number) => void;
   onDropAt: (event: DragEvent) => void;
 }) {
   const [dropTarget, setDropTarget] = useState(false);
@@ -204,19 +204,77 @@ function DemandCard({
         <div className="mt-1 rounded-xl border border-hairline bg-surface p-2">
           <label className="block text-xs font-bold text-subtle" htmlFor={`move-${demand.id}`}>Mover para</label>
           <Select id={`move-${demand.id}`} className="mt-1" ariaLabel={`Mover ${demand.title} para outra coluna`} value={demand.columnId} onChange={onMove} options={columnOptions} />
-          <div className="mt-2 grid grid-cols-2 gap-1">
-            <button type="button" onClick={() => onReorder(demand.order - 1)} className="flex items-center justify-center gap-1 rounded-lg border border-hairline bg-raised p-2 text-xs font-bold text-subtle hover:bg-surface"><ArrowUp size={14} />Subir</button>
-            <button type="button" onClick={() => onReorder(demand.order + 1)} className="flex items-center justify-center gap-1 rounded-lg border border-hairline bg-raised p-2 text-xs font-bold text-subtle hover:bg-surface"><ArrowDown size={14} />Descer</button>
-          </div>
         </div>
       </details>
     </article>
   );
 }
 
-function DemandEditor({ demand, columns, onClose, onSaved }: {
+type DemandViewMode = "modal" | "fullscreen" | "sidebar";
+
+const DEMAND_SIDEBAR_MIN = 360;
+const DEMAND_SIDEBAR_MAX = 720;
+
+function storedDemandViewMode(): DemandViewMode {
+  try {
+    const value = window.localStorage.getItem("qa-flow-demand-view-mode");
+    return value === "modal" || value === "sidebar" || value === "fullscreen" ? value : "fullscreen";
+  } catch {
+    return "fullscreen";
+  }
+}
+
+function storedDemandSidebarWidth(): number {
+  try {
+    const value = Number(window.localStorage.getItem("qa-flow-demand-sidebar-width"));
+    return Number.isFinite(value) && value >= DEMAND_SIDEBAR_MIN && value <= DEMAND_SIDEBAR_MAX ? value : 480;
+  } catch {
+    return 480;
+  }
+}
+
+const demandViewOptions: { value: DemandViewMode; label: string; icon: typeof AppWindow }[] = [
+  { value: "modal", label: "Modal", icon: AppWindow },
+  { value: "fullscreen", label: "Tela cheia", icon: Maximize2 },
+  { value: "sidebar", label: "Barra lateral", icon: PanelRight },
+];
+
+function DemandLayoutChooser({ value, onChange }: { value: DemandViewMode; onChange: (value: DemandViewMode) => void }) {
+  const current = demandViewOptions.find((option) => option.value === value)?.label ?? "Tela cheia";
+  return (
+    <details className="relative hidden sm:block">
+      <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-xl text-muted transition hover:bg-shell hover:text-body" aria-label={`Alterar layout. Atual: ${current}`} title="Alterar layout">
+        <PanelsTopLeft size={19} aria-hidden="true" />
+      </summary>
+      <div className="absolute right-0 top-12 z-20 w-72 rounded-2xl border border-hairline bg-raised p-2 shadow-2xl">
+        <p className="px-2 pb-2 pt-1 text-xs font-semibold text-muted">Como abrir demandas</p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {demandViewOptions.map(({ value: optionValue, label, icon: Icon }) => (
+            <button
+              key={optionValue}
+              type="button"
+              aria-pressed={value === optionValue}
+              onClick={(event) => {
+                onChange(optionValue);
+                event.currentTarget.closest("details")?.removeAttribute("open");
+              }}
+              className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center text-xs font-semibold transition ${value === optionValue ? "bg-run-tint text-run-deep ring-1 ring-inset ring-run-line" : "text-subtle hover:bg-surface hover:text-body"}`}
+            >
+              <Icon size={21} aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function DemandEditor({ demand, columns, viewMode, onViewModeChange, onClose, onSaved }: {
   demand: QaDemand;
   columns: DemandColumn[];
+  viewMode: DemandViewMode;
+  onViewModeChange: (value: DemandViewMode) => void;
   onClose: () => void;
   onSaved: (demand: QaDemand, message: string) => void;
 }) {
@@ -292,15 +350,19 @@ function DemandEditor({ demand, columns, onClose, onSaved }: {
 
   return (
     <form onSubmit={submit} className="flex h-full flex-col bg-raised">
-      <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
-        <div>
+      <div className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-3 sm:px-6">
+        <div className="min-w-0">
           <h2 tabIndex={-1} className="text-lg font-semibold text-body">{existing ? "Detalhes da demanda" : "Registrar demanda"}</h2>
-          {existing && <p className="mt-1 font-mono text-xs font-semibold text-muted">{draft.id.slice(0, 18)}</p>}
+          {existing && <p className="mt-1 truncate font-mono text-xs font-semibold text-muted">{draft.id.slice(0, 18)}</p>}
         </div>
-        <button type="button" aria-label="Fechar detalhes" onClick={onClose} className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-muted hover:bg-shell"><X size={19} /></button>
+        <div className="flex shrink-0 items-center gap-1">
+          <DemandLayoutChooser value={viewMode} onChange={onViewModeChange} />
+          <button type="button" aria-label="Fechar detalhes" onClick={onClose} className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-muted hover:bg-shell"><X size={19} /></button>
+        </div>
       </div>
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+      <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+        <div className={`mx-auto space-y-5 ${viewMode === "sidebar" ? "max-w-none" : "max-w-4xl"}`}>
         {error && <div role="alert" className="rounded-xl border border-fail-line bg-fail-tint px-3 py-2 text-sm text-fail">{error}</div>}
         <label className="block text-xs font-bold text-control">Título
           <input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} className={`${inputClass} mt-1.5`} placeholder="Ex.: Validar smoke Android" />
@@ -374,6 +436,7 @@ function DemandEditor({ demand, columns, onClose, onSaved }: {
             ))}
           </div>
         </section>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 border-t border-hairline px-5 py-4">
@@ -447,10 +510,13 @@ export function DemandsScreen() {
   const [panel, setPanel] = useState<"demand" | "columns" | null>(null);
   const [mobileColumnId, setMobileColumnId] = useState(columns[0]?.id ?? "");
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
+  const [demandViewMode, setDemandViewMode] = useState<DemandViewMode>(storedDemandViewMode);
+  const [demandSidebarWidth, setDemandSidebarWidth] = useState(storedDemandSidebarWidth);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const surfaceWidth = useSurfaceWidth(surfaceRef);
   const boardExpanded = surfaceWidth >= 880;
   const wideInspector = surfaceWidth >= 1120;
+  const effectiveDemandViewMode: DemandViewMode = surfaceWidth > 0 && surfaceWidth < 640 ? "fullscreen" : demandViewMode;
   const panelRef = useRef<HTMLElement>(null);
   const metrics = useMemo(() => demandMetrics(demands, columns), [columns, demands]);
   const selected = draft ?? demands.find((item) => item.id === selectedId) ?? null;
@@ -481,6 +547,34 @@ export function DemandsScreen() {
     setPanel("demand");
   };
   const closePanel = () => { setPanel(null); setDraft(null); };
+  const changeDemandViewMode = (value: DemandViewMode) => {
+    setDemandViewMode(value);
+    try { window.localStorage.setItem("qa-flow-demand-view-mode", value); }
+    catch { /* A preferência continua válida durante a sessão. */ }
+  };
+  const sidebarWidthLimit = () => Math.max(DEMAND_SIDEBAR_MIN, Math.min(DEMAND_SIDEBAR_MAX, window.innerWidth - 280));
+  const setClampedSidebarWidth = (value: number) => {
+    const next = Math.min(sidebarWidthLimit(), Math.max(DEMAND_SIDEBAR_MIN, value));
+    setDemandSidebarWidth(next);
+    return next;
+  };
+  const beginSidebarResize = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = demandSidebarWidth;
+    let finalWidth = startWidth;
+    const move = (pointerEvent: PointerEvent) => {
+      finalWidth = setClampedSidebarWidth(startWidth + startX - pointerEvent.clientX);
+    };
+    const stop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      try { window.localStorage.setItem("qa-flow-demand-sidebar-width", String(finalWidth)); }
+      catch { /* O redimensionamento continua funcional sem persistência. */ }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop, { once: true });
+  };
   const handleMove = async (demandId: string, columnId: string) => {
     const result = await moveDemand(demandId, columnId);
     toast.fromResult(result);
@@ -497,9 +591,10 @@ export function DemandsScreen() {
     open: Boolean(panel),
     onClose: closePanel,
     containerRef: panelRef,
-    // Em tela larga o inspetor fica lado a lado: não é modal, não prende foco nem trava a rolagem.
-    trapFocus: !wideInspector,
-    lockScroll: !wideInspector,
+    // Demandas abertas são superfícies focais em todos os layouts. Apenas o
+    // gerenciador de colunas pode ficar lado a lado e não modal em telas largas.
+    trapFocus: panel === "demand" || !wideInspector,
+    lockScroll: panel === "demand" || !wideInspector,
     initialFocusSelector: 'input, textarea, [role="combobox"], h2[tabindex="-1"]',
   });
 
@@ -516,7 +611,7 @@ export function DemandsScreen() {
     >
       <div className="flex min-h-10 items-center gap-2 px-1 pb-2"><span className={`h-2 w-2 shrink-0 rounded-full ${semanticDots[column.semantic]}`} aria-hidden="true" /><h2 id={`column-${column.id}`} className="min-w-0 truncate text-sm font-semibold text-ink-hover" title={column.name}>{column.name}</h2><span className="ml-auto rounded-full bg-raised/80 px-2 py-0.5 text-xs font-semibold text-subtle ring-1 ring-inset ring-hairline">{items.length}</span></div>
       <div className="space-y-3">
-        {items.map((demand) => <DemandCard key={demand.id} demand={demand} selected={selectedId === demand.id} columns={columns} onSelect={() => openDemand(demand)} onMove={(columnId) => void handleMove(demand.id, columnId)} onReorder={(order) => void moveDemand(demand.id, demand.columnId, order).then((result) => toast.fromResult(result))} onDropAt={(event) => {
+        {items.map((demand) => <DemandCard key={demand.id} demand={demand} selected={selectedId === demand.id} columns={columns} onSelect={() => openDemand(demand)} onMove={(columnId) => void handleMove(demand.id, columnId)} onDropAt={(event) => {
           setDragOverColumnId(null);
           const demandId = event.dataTransfer.getData("text/qaflow-demand");
           if (demandId) void moveDemand(demandId, column.id, demand.order).then((result) => toast.fromResult(result));
@@ -529,12 +624,12 @@ export function DemandsScreen() {
 
   const panelContent = panel === "columns"
     ? <ColumnManager columns={columns} onClose={closePanel} onResult={(result) => toast.fromResult(result)} />
-    : selected ? <DemandEditor key={`${selected.id}-${selected.updatedAt}`} demand={selected} columns={columns} onClose={closePanel} onSaved={(saved, message) => { setDraft(null); setSelectedId(saved.id); toast.show({ tone: "success", message }); }} /> : null;
+    : selected ? <DemandEditor key={`${selected.id}-${selected.updatedAt}`} demand={selected} columns={columns} viewMode={effectiveDemandViewMode} onViewModeChange={changeDemandViewMode} onClose={closePanel} onSaved={(saved, message) => { setDraft(null); setSelectedId(saved.id); toast.show({ tone: "success", message }); }} /> : null;
 
   return (
     <div ref={surfaceRef} className="qa-demand-surface min-h-[calc(100vh-8rem)]">
-      <div className={`grid items-start gap-6 ${panel && wideInspector ? "grid-cols-[minmax(0,1fr)_24rem]" : "grid-cols-1"}`}>
-        <div className="min-w-0" inert={panel && !wideInspector ? true : undefined}>
+      <div className={`grid items-start gap-6 ${panel === "columns" && wideInspector ? "grid-cols-[minmax(0,1fr)_24rem]" : "grid-cols-1"}`}>
+        <div className="min-w-0" inert={panel && (panel === "demand" || !wideInspector) ? true : undefined}>
           <header className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <div className="flex flex-wrap items-center gap-3">
@@ -586,10 +681,45 @@ export function DemandsScreen() {
           </section>
         </div>
 
-        {panelContent && <aside ref={panelRef} role={wideInspector ? undefined : "dialog"} aria-modal={wideInspector ? undefined : true} className={wideInspector ? "sticky top-6 h-[calc(100vh-3rem)] max-h-[calc(100vh-3rem)] overflow-hidden rounded-2xl border border-hairline bg-raised shadow-sm" : "fixed inset-x-0 bottom-0 z-50 h-[58dvh] max-h-[58dvh] overflow-hidden rounded-t-3xl border border-hairline bg-raised shadow-2xl before:absolute before:left-1/2 before:top-2 before:z-10 before:h-1 before:w-10 before:-translate-x-1/2 before:rounded-full before:bg-hairline-strong sm:inset-y-0 sm:left-auto sm:h-auto sm:w-[26rem] sm:max-h-none sm:rounded-none sm:before:hidden"} aria-label={panel === "columns" ? "Gerenciar colunas" : "Detalhes da demanda"}>{panelContent}</aside>}
+        {panelContent && <aside
+          ref={panelRef}
+          role={panel === "demand" || !wideInspector ? "dialog" : undefined}
+          aria-modal={panel === "demand" || !wideInspector ? true : undefined}
+          style={panel === "demand" && effectiveDemandViewMode === "sidebar" ? { width: `${demandSidebarWidth}px`, maxWidth: "calc(100vw - 1rem)" } : undefined}
+          className={panel === "demand"
+            ? effectiveDemandViewMode === "fullscreen"
+              ? "fixed inset-0 z-50 overflow-hidden bg-raised"
+              : effectiveDemandViewMode === "modal"
+                ? "fixed left-1/2 top-1/2 z-50 h-[min(46rem,calc(100dvh-2rem))] w-[min(60rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-hairline bg-raised shadow-2xl"
+                : "fixed inset-y-0 right-0 z-50 overflow-visible border-l border-hairline bg-raised shadow-2xl"
+            : wideInspector
+              ? "sticky top-6 h-[calc(100vh-3rem)] max-h-[calc(100vh-3rem)] overflow-hidden rounded-2xl border border-hairline bg-raised shadow-sm"
+              : "fixed inset-x-0 bottom-0 z-50 h-[58dvh] max-h-[58dvh] overflow-hidden rounded-t-3xl border border-hairline bg-raised shadow-2xl before:absolute before:left-1/2 before:top-2 before:z-10 before:h-1 before:w-10 before:-translate-x-1/2 before:rounded-full before:bg-hairline-strong sm:inset-y-0 sm:left-auto sm:h-auto sm:w-[26rem] sm:max-h-none sm:rounded-none sm:before:hidden"}
+          aria-label={panel === "columns" ? "Gerenciar colunas" : "Detalhes da demanda"}
+        >
+          {panel === "demand" && effectiveDemandViewMode === "sidebar" && (
+            <button
+              type="button"
+              aria-label="Redimensionar barra lateral"
+              title="Arraste para redimensionar. Use as setas do teclado para ajustes finos."
+              onPointerDown={beginSidebarResize}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                event.preventDefault();
+                const next = setClampedSidebarWidth(demandSidebarWidth + (event.key === "ArrowLeft" ? 24 : -24));
+                try { window.localStorage.setItem("qa-flow-demand-sidebar-width", String(next)); }
+                catch { /* O ajuste por teclado continua funcional sem persistência. */ }
+              }}
+              className="absolute inset-y-0 -left-3 z-10 hidden w-6 cursor-col-resize items-center justify-center text-faint transition hover:text-run focus:text-run sm:flex"
+            >
+              <span className="flex h-12 w-5 items-center justify-center rounded-full border border-hairline bg-raised shadow-sm"><GripVertical size={14} aria-hidden="true" /></span>
+            </button>
+          )}
+          <div className="h-full overflow-hidden">{panelContent}</div>
+        </aside>}
       </div>
 
-      {panelContent && !wideInspector && <button type="button" aria-label="Fechar painel" className="fixed inset-0 z-40 bg-ink/45" onClick={closePanel} />}
+      {panelContent && ((panel === "columns" && !wideInspector) || (panel === "demand" && effectiveDemandViewMode !== "fullscreen")) && <button type="button" aria-label="Fechar painel" className="fixed inset-0 z-40 bg-ink/45" onClick={closePanel} />}
     </div>
   );
 }
