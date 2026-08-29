@@ -6,6 +6,23 @@ Passo de versão: **major** para quebra do contrato de dados ou remoção de cap
 
 Mantido pelo comando `/release`.
 
+## 2.1.0 — 2026-08-29
+
+<!-- release-baseline: 2c29379 -->
+
+### Adicionado
+- Aplicativo Windows Tauri executa a interface completa sem servidor Vite e sem depender do armazenamento do navegador.
+- Casos de teste e configurações do workspace passam a sobreviver ao fechamento em um banco SQLite local, com histórico de revisões, migrations físicas e verificação de integridade.
+- Conflitos de revisão, lock entre instâncias, falhas de disco, permissões e corrupção passam a produzir respostas legíveis sem substituir os dados por um workspace vazio.
+
+### Alterado
+- Operações do produto passam por application services commit-first: a interface só muda o estado confirmado depois que o adapter do runtime conclui a gravação.
+- A versão web mantém IndexedDB e JSON v2 atrás de adapters próprios, enquanto o bundle desktop permanece isolado de IndexedDB e Web Storage.
+- A interface desktop identifica quais entidades já são duráveis e mantém indisponíveis os fluxos de arquivos nativos ainda não implementados.
+
+### Interno
+- Toolchains Node, Rust e Tauri, smoke test Windows, contratos IPC camelCase e testes de rollback/failpoints passam a fazer parte do gate desktop.
+
 ## 2.0.1 — 2026-08-28
 
 <!-- release-baseline: f6c1eb9 -->

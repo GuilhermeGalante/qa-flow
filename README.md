@@ -33,7 +33,7 @@ Editar um caso cria uma nova revisão. Planos existentes continuam apontando par
 
 ## Persistência
 
-No modo navegador, Zustand persiste metadados no IndexedDB. As imagens são gravadas em chaves separadas (`qaflow-v2:evidence:*`) para evitar reserializar todo o workspace a cada alteração.
+No modo navegador, o adapter web persiste o snapshot confirmado no IndexedDB. As imagens são gravadas em chaves separadas (`qaflow-v2:evidence:*`) para evitar reserializar todo o workspace a cada alteração.
 
 No modo repositório, selecione uma pasta nas configurações e grave a estrutura:
 
@@ -74,6 +74,20 @@ Validação completa:
 
 ```bash
 npm run check
+```
+
+## Desktop M3 (Tauri 2 + SQLite)
+
+O marco M3 executa a aplicação completa em uma composição Windows isolada e liga o frontend ao backend Rust por IPC estreito. Casos de teste e configurações do workspace são persistidos em SQLite dentro de `app_data_dir`, com histórico de revisões, transações atômicas, lock exclusivo, CAS global/por caso e abertura segura diante de corrupção.
+
+O lote ainda não representa paridade completa: planos, execuções, relatórios, demandas e preferências locais entram na Fase 4. Evidências ficam fora do banco, em arquivos nativos referenciados pelo SQLite, e entram na Fase 5. Até esses lotes, essas áreas não devem ser usadas como armazenamento desktop definitivo.
+
+Pré-requisitos e decisões: [`docs/desktop/README.md`](docs/desktop/README.md).
+
+```powershell
+npm run doctor:desktop
+npm run dev:desktop
+npm run check:desktop
 ```
 
 Comandos individuais:

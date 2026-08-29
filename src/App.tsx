@@ -52,16 +52,38 @@ function BootSkeleton() {
   );
 }
 
-function App() {
+interface AppProps {
+  runtimeMarker?: string;
+}
+
+function App({ runtimeMarker }: AppProps) {
   const [view, setView] = useState<QaView>("dashboard");
   const [requestedPlanId, setRequestedPlanId] = useState<string>();
   const [newCaseRequested, setNewCaseRequested] = useState(false);
   const [caseEditorOpen, setCaseEditorOpen] = useState(false);
   const ready = useQaStore((state) => state.ready);
   const initialize = useQaStore((state) => state.initialize);
+  const storageError = useQaStore((state) => state.storageError);
   const workspaceName = useQaStore((state) => state.settings.name);
+  const saveState = useQaStore((state) => state.saveState);
+  const runtimeInfo = useQaStore((state) => state.runtimeInfo);
+  const sidebarCollapsed = useQaStore((state) => state.preferences.sidebarCollapsed === true);
+  const setPreference = useQaStore((state) => state.setPreference);
 
   useEffect(() => { void initialize(); }, [initialize]);
+
+  if (storageError) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-shell p-5" role="alert">
+        <section className="w-full max-w-xl rounded-2xl border border-danger-line bg-raised p-6 shadow-sm">
+          <h1 className="text-xl font-bold text-body">Não foi possível abrir o workspace</h1>
+          <p className="mt-2 text-sm leading-relaxed text-subtle">{storageError}</p>
+          <p className="mt-3 text-xs leading-relaxed text-muted">Nenhum workspace vazio foi aplicado sobre os dados existentes.</p>
+          <button type="button" className="mt-5 min-h-11 rounded-xl bg-run px-4 text-sm font-bold text-white" onClick={() => void initialize()}>Tentar novamente</button>
+        </section>
+      </main>
+    );
+  }
 
   if (!ready) return <BootSkeleton />;
 
@@ -75,10 +97,29 @@ function App() {
     setView("cases");
   };
 
+  const persistenceLabel = saveState.kind === "saving"
+    ? "Salvando…"
+    : saveState.kind === "conflict"
+      ? "Conflito de gravação"
+      : saveState.kind === "error"
+        ? "Falha ao salvar"
+        : runtimeInfo?.persistence === "memory"
+          ? "Sessão temporária"
+          : "Salvo localmente";
+
   return (
+    <div data-runtime={runtimeMarker ?? "qaflow-web"}>
     <ToastProvider>
       <ConfirmProvider>
-        <QaLayout view={view} onNavigate={setView} workspaceName={workspaceName} immersive={view === "cases" && caseEditorOpen}>
+        <QaLayout
+          view={view}
+          onNavigate={setView}
+          workspaceName={workspaceName}
+          immersive={view === "cases" && caseEditorOpen}
+          persistenceLabel={persistenceLabel}
+          sidebarCollapsed={sidebarCollapsed}
+          onSidebarCollapsedChange={(collapsed) => { void setPreference({ sidebarCollapsed: collapsed }); }}
+        >
           {view === "dashboard" && <DashboardScreen onNavigate={setView} onCreateCase={createCase} />}
           {view === "demands" && <DemandsScreen />}
           {view === "cases" && (
@@ -95,6 +136,7 @@ function App() {
         </QaLayout>
       </ConfirmProvider>
     </ToastProvider>
+    </div>
   );
 }
 

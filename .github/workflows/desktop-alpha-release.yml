@@ -1,0 +1,125 @@
+name: Desktop alpha release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag existente no formato v2.x.x"
+        required: true
+        type: string
+      publish_alpha:
+        description: "Publicar como prerelease após criar/verificar o draft"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-alpha-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows-alpha:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout da tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar Rust
+        shell: pwsh
+        run: rustup toolchain install 1.98.0 --profile minimal --component rustfmt --component clippy --target x86_64-pc-windows-msvc
+
+      - name: Resolver e validar a tag
+        id: release
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $releaseTag = "${{ inputs.tag }}"
+          } else {
+            $releaseTag = "${{ github.ref_name }}"
+          }
+          if (-not (git tag --list $releaseTag)) {
+            throw "A tag $releaseTag não existe no checkout."
+          }
+          npm run verify:release-version -- --tag $releaseTag
+          "tag=$releaseTag" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gate compartilhado
+        run: npm run check
+
+      - name: Gate desktop
+        run: npm run check:desktop
+
+      - name: Gerar instalador NSIS
+        run: npm run build:desktop
+
+      - name: Preparar instalador e checksum
+        id: artifact
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem "src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" -File)
+          if ($installers.Count -ne 1) {
+            throw "Esperado exatamente um instalador NSIS; encontrados $($installers.Count)."
+          }
+          $artifactDirectory = Join-Path $env:RUNNER_TEMP "qaflow-alpha"
+          New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
+          Copy-Item -LiteralPath $installers[0].FullName -Destination $artifactDirectory
+          $hash = Get-FileHash -LiteralPath $installers[0].FullName -Algorithm SHA256
+          "$($hash.Hash)  $($installers[0].Name)" | Set-Content -LiteralPath (Join-Path $artifactDirectory "SHA256SUMS.txt") -Encoding ascii
+          "directory=$artifactDirectory" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Preservar artefatos do workflow
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-flow-${{ steps.release.outputs.tag }}-windows-x64
+          path: ${{ steps.artifact.outputs.directory }}/*
+          if-no-files-found: error
+
+      - name: Criar ou atualizar GitHub Release draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseTag = "${{ steps.release.outputs.tag }}"
+          $assets = @(Get-ChildItem -LiteralPath "${{ steps.artifact.outputs.directory }}" -File | ForEach-Object FullName)
+          $notes = @"
+          ## QA Flow Desktop — alpha não assinado
+
+          Esta versão é destinada somente a testes controlados. O Windows pode exibir aviso de editor desconhecido.
+
+          Persistência desktop disponível neste marco: casos de teste e configurações do workspace. Planos, execuções, relatórios, demandas, preferências, evidências, backup e recovery ainda não possuem paridade desktop completa.
+
+          Verifique o arquivo `SHA256SUMS.txt` antes da instalação. Não use esta alpha como armazenamento único de dados importantes.
+          "@
+          gh release view $releaseTag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $releaseTag $assets --clobber
+          } else {
+            gh release create $releaseTag $assets --draft --title "QA Flow $releaseTag — Alpha" --notes $notes
+          }
+
+      - name: Publicar como prerelease quando solicitado
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_alpha
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ steps.release.outputs.tag }}" --draft=false --prerelease

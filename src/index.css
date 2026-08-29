@@ -105,12 +105,12 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgb(34 211 238 / 0.45);
+  outline: 3px solid rgb(8 145 178);
   outline-offset: 2px;
 }
 
 summary:focus-visible {
-  outline: 3px solid rgb(34 211 238 / 0.45);
+  outline: 3px solid rgb(8 145 178);
   outline-offset: 2px;
 }
 

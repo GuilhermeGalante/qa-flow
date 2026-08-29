@@ -1,6 +1,7 @@
 # Logs
 logs
 *.log
+*.stackdump
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -9,9 +10,41 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-desktop
 dist-ssr
 *.local
 .qaflow/**/*.tmp
+
+# Local environment and signing secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Local desktop data
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Generated desktop installers and updater metadata
+*.exe
+*.msi
+*.msix
+*.appx
+*.appxbundle
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.sig
+latest.json
 
 # Editor directories and files
 .vscode/*
@@ -29,11 +62,11 @@ dist-ssr
 .github/agents/impeccable-*.agent.md
 .github/hooks/impeccable.json
 .impeccable/
+/DESIGN.md
 
 # Local specifications
-specs/
-
-#Specs
+/specs/
+/qa-flow-tauri-specs/
 
 # Agente local de release (nao versionado)
 .claude/agents/
