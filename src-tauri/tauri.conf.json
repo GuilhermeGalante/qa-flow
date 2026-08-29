@@ -1,0 +1,57 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "QA Flow",
+  "mainBinaryName": "qa-flow",
+  "version": "2.1.0",
+  "identifier": "dev.qaflow.app",
+  "build": {
+    "beforeDevCommand": "npm run dev:desktop:frontend",
+    "beforeBuildCommand": "npm run build:desktop:frontend",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist-desktop"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "QA Flow",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 720,
+        "minHeight": 560,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "Guilherme Galante",
+    "homepage": "https://github.com/GuilhermeGalante/qa-flow",
+    "copyright": "Copyright © 2026 Guilherme Galante",
+    "category": "Productivity",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "allowDowngrades": false,
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["PortugueseBR", "English"]
+      }
+    }
+  }
+}

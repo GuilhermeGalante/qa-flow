@@ -1,29 +1,11 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import { Database, Download, FolderGit2, RefreshCw, Upload } from "lucide-react";
-import type { WorkspaceBundle, WorkspaceMode } from "../../domain/types";
-import { validateWorkspaceBundle } from "../../domain/validation";
-import {
-  connectRepository,
-  connectedRepositoryName,
-  readRepositoryWorkspace,
-  repositoryApiAvailable,
-  writeRepositoryWorkspace,
-} from "../../storage/repositoryWorkspace";
+import type { ImportPreview, RepositoryPreview } from "../../platform/contracts/dtos";
 import { useQaStore } from "../../store/useQaStore";
 import { Button } from "../../ui/Button";
 import { useConfirm } from "../../ui/ConfirmProvider";
 import { useToast } from "../../ui/ToastProvider";
 import { Notice, PageHeader, buttonDanger, buttonSecondary, inputClass } from "./Shared";
-
-function downloadBundle(bundle: WorkspaceBundle): void {
-  const date = new Date().toISOString().slice(0, 10);
-  const url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `qaflow-backup-${date}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
 
 export function SettingsScreen() {
   const settings = useQaStore((state) => state.settings);
@@ -34,60 +16,51 @@ export function SettingsScreen() {
   const demands = useQaStore((state) => state.demands);
   const migrationReport = useQaStore((state) => state.migrationReport);
   const storageError = useQaStore((state) => state.storageError);
+  const runtimeInfo = useQaStore((state) => state.runtimeInfo);
   const updateSettings = useQaStore((state) => state.updateSettings);
-  const exportWorkspace = useQaStore((state) => state.exportWorkspace);
-  const importWorkspace = useQaStore((state) => state.importWorkspace);
+  const exportBackup = useQaStore((state) => state.exportBackup);
+  const inspectBackup = useQaStore((state) => state.inspectBackup);
+  const applyImport = useQaStore((state) => state.applyImport);
+  const pushRepository = useQaStore((state) => state.pushRepository);
+  const inspectRepository = useQaStore((state) => state.inspectRepository);
+  const pullRepository = useQaStore((state) => state.pullRepository);
   const toast = useToast();
   const confirm = useConfirm();
-  const [preview, setPreview] = useState<WorkspaceBundle | null>(null);
-  const [busy, setBusy] = useState<"export" | "import" | "push" | "pull" | "connect" | null>(null);
-  const [repositoryName, setRepositoryName] = useState(connectedRepositoryName());
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [repositoryPreview, setRepositoryPreview] = useState<RepositoryPreview | null>(null);
+  const [workspaceNameDraft, setWorkspaceNameDraft] = useState(settings.name);
+  const [busy, setBusy] = useState<"export" | "inspect" | "import" | "push" | "pull" | null>(null);
+  const nativeFilesPending = runtimeInfo?.runtime === "desktop" && runtimeInfo.nativeFiles !== true;
 
-  const exportBackup = async () => {
+  useEffect(() => setWorkspaceNameDraft(settings.name), [settings.name]);
+
+  const exportCurrentBackup = async () => {
     setBusy("export");
+    try { toast.fromResult(await exportBackup()); } finally { setBusy(null); }
+  };
+
+  const selectBackup = async () => {
+    setBusy("inspect");
     try {
-      downloadBundle(await exportWorkspace());
-      toast.show({ tone: "success", message: "Backup completo exportado.", description: "Inclui metadados e evidências." });
-    } catch (error) {
-      toast.show({ tone: "error", message: "Falha ao exportar o backup.", description: error instanceof Error ? error.message : undefined });
+      const result = await inspectBackup();
+      if (!result.ok) toast.fromResult(result);
+      else if (result.value) setPreview(result.value);
     } finally { setBusy(null); }
   };
 
-  const readBackup = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const parsed = JSON.parse(await file.text()) as unknown;
-      const validation = validateWorkspaceBundle(parsed);
-      if (!validation.ok || !validation.value) {
-        toast.show({
-          tone: "error",
-          message: "Backup inválido.",
-          description: validation.issues.slice(0, 3).map((issue) => `${issue.path} ${issue.message}`).join("; "),
-        });
-        return;
-      }
-      setPreview(validation.value);
-    } catch (error) {
-      toast.show({ tone: "error", message: "Não foi possível ler o backup.", description: error instanceof Error ? error.message : undefined });
-    } finally { event.target.value = ""; }
-  };
-
-  const applyImport = async (mode: "merge" | "replace") => {
+  const importPreview = async (mode: "merge" | "replace") => {
     if (!preview) return;
     if (mode === "replace") {
-      // O usuário precisa ver o que perde, não só a palavra "substituir".
       const confirmed = await confirm({
         title: "Substituir todo o workspace local?",
-        description: "O conteúdo atual deste dispositivo é descartado e trocado pelo backup. Exporte um backup antes se quiser preservá-lo.",
+        description: "O conteúdo atual deste dispositivo será trocado pelo backup validado. Exporte um backup antes se quiser preservá-lo.",
         impactTitle: "Será substituído",
         impact: [
-          `${cases.length} caso(s) → ${preview.cases.length}`,
-          `${plans.length} plano(s) → ${preview.plans.length}`,
-          `${runs.length} execução(ões) → ${preview.runs.length}`,
-          `${demands.length} demanda(s) → ${(preview.demands ?? []).length}`,
-          `${evidence.length} evidência(s) → ${preview.evidence.length}`,
+          `${cases.length} caso(s) → ${preview.summary.cases}`,
+          `${plans.length} plano(s) → ${preview.summary.plans}`,
+          `${runs.length} execução(ões) → ${preview.summary.runs}`,
+          `${demands.length} demanda(s) → ${preview.summary.demands}`,
+          `${evidence.length} evidência(s) → ${preview.summary.evidence}`,
         ],
         confirmLabel: "Substituir workspace",
         tone: "danger",
@@ -96,84 +69,84 @@ export function SettingsScreen() {
     }
     setBusy("import");
     try {
-      const result = await importWorkspace(preview, mode);
+      const result = await applyImport(preview.previewToken, mode);
       toast.fromResult(result);
       if (result.ok) setPreview(null);
     } finally { setBusy(null); }
   };
 
-  const connect = async () => {
-    setBusy("connect");
-    try {
-      const name = await connectRepository();
-      setRepositoryName(name);
-      updateSettings({ mode: "repository", name, repositoryPath: `${name}/.qaflow` });
-      toast.show({ tone: "success", message: `Repositório “${name}” conectado nesta sessão.` });
-    } catch (error) {
-      toast.show({ tone: "error", message: "Não foi possível conectar a pasta.", description: error instanceof Error ? error.message : undefined });
-    } finally { setBusy(null); }
-  };
-
-  const pushRepository = async () => {
+  const pushCurrentRepository = async () => {
     setBusy("push");
-    try {
-      await writeRepositoryWorkspace(await exportWorkspace());
-      toast.show({ tone: "success", message: "Workspace gravado em .qaflow.", description: "O manifesto foi atualizado por último." });
-    } catch (error) {
-      toast.show({ tone: "error", message: "Falha ao gravar o repositório.", description: error instanceof Error ? error.message : undefined });
-    } finally { setBusy(null); }
+    try { toast.fromResult(await pushRepository()); } finally { setBusy(null); }
   };
 
-  const pullRepository = async () => {
+  const selectRepository = async () => {
     setBusy("pull");
     try {
-      toast.fromResult(await importWorkspace(await readRepositoryWorkspace(), "merge"));
-    } catch (error) {
-      toast.show({ tone: "error", message: "Falha ao ler o repositório.", description: error instanceof Error ? error.message : undefined });
+      const result = await inspectRepository();
+      if (!result.ok) toast.fromResult(result);
+      else if (result.value) setRepositoryPreview(result.value);
+    } finally { setBusy(null); }
+  };
+
+  const mergeRepository = async () => {
+    if (!repositoryPreview) return;
+    setBusy("pull");
+    try {
+      const result = await pullRepository(repositoryPreview.previewToken);
+      toast.fromResult(result);
+      if (result.ok) setRepositoryPreview(null);
     } finally { setBusy(null); }
   };
 
   return (
     <>
-      <PageHeader title="Configurações" description="Controle o workspace local, sincronize uma estrutura versionável e mantenha backups portáveis." />
+      <PageHeader title="Configurações" description="Controle o workspace local, sincronize uma estrutura versionável e mantenha backups portáteis." />
       {storageError && <div className="mb-5"><Notice tone="error" title="Problema de armazenamento">{storageError}</Notice></div>}
+      {nativeFilesPending && (
+        <div className="mb-5">
+          <Notice tone="warning" title="Desktop em preparação">
+            Casos e configurações já são gravados no SQLite. Planos, execuções, relatórios e demandas entram na Fase 4; arquivos nativos entram na Fase 5.
+          </Notice>
+        </div>
+      )}
 
       <div className="grid gap-5 xl:grid-cols-2">
         <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-          <div className="flex items-start gap-3"><span className="rounded-xl bg-run-tint p-2.5 text-run"><Database size={20} /></span><div><h2 className="font-bold text-body">Workspace</h2><p className="mt-1 text-sm text-muted">Escolha como os artefatos saem do navegador.</p></div></div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {(["browser", "repository"] as WorkspaceMode[]).map((mode) => <button key={mode} type="button" onClick={() => updateSettings({ mode })} className={`rounded-xl border p-4 text-left ${settings.mode === mode ? "border-run-accent bg-run-tint ring-2 ring-run-halo" : "border-hairline"}`}><strong className="block text-sm text-body">{mode === "browser" ? "Navegador" : "Repositório"}</strong><span className="mt-1 block text-xs text-muted">{mode === "browser" ? "IndexedDB, sem servidor." : "Arquivos determinísticos em .qaflow."}</span></button>)}
+          <div className="flex items-start gap-3"><span className="rounded-xl bg-run-tint p-2.5 text-run"><Database size={20} /></span><div><h2 className="font-bold text-body">Workspace</h2><p className="mt-1 text-sm text-muted">Dados portáteis e preferências locais ficam em categorias separadas.</p></div></div>
+          <div className="mt-5 rounded-xl border border-hairline p-4 text-sm text-subtle">
+            <strong className="text-body">Runtime atual</strong>
+            <p className="mt-1">{runtimeInfo?.runtime === "desktop" ? "Aplicativo desktop" : "Navegador"} · {runtimeInfo?.persistence === "memory" ? "memória temporária" : "persistência local"}</p>
           </div>
-          <label className="mt-4 block text-xs font-bold text-subtle">Nome do workspace<input className={`${inputClass} mt-1`} value={settings.name} onChange={(event) => updateSettings({ name: event.target.value })} /></label>
-          <label className="mt-4 flex items-start gap-3 rounded-xl border border-hairline p-3 text-sm text-control"><input type="checkbox" checked={settings.compactEvidence} onChange={(event) => updateSettings({ compactEvidence: event.target.checked })} className="mt-1 h-4 w-4 accent-run" /><span><strong className="block text-body">Compactar novas evidências</strong><span className="mt-1 block text-xs text-muted">Reduz imagens para aliviar o IndexedDB e os backups. Desative apenas quando a resolução original for indispensável.</span></span></label>
-          <div className="mt-5 rounded-xl bg-surface p-4 text-sm text-subtle"><strong className="text-body">Estado atual</strong><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>{cases.length} caso(s)</span><span>{plans.length} plano(s)</span><span>{runs.length} execução(ões)</span><span>{demands.length} demanda(s)</span><span>{evidence.length} evidência(s)</span></div></div>
+          <label className="mt-4 block text-xs font-bold text-subtle">Nome do workspace<input className={`${inputClass} mt-1`} value={workspaceNameDraft} onChange={(event) => setWorkspaceNameDraft(event.target.value)} onBlur={() => { if (workspaceNameDraft !== settings.name) void updateSettings({ name: workspaceNameDraft }); }} /></label>
+          <label className="mt-4 flex items-start gap-3 rounded-xl border border-hairline p-3 text-sm text-control"><input type="checkbox" checked={settings.compactEvidence} onChange={(event) => { void updateSettings({ compactEvidence: event.target.checked }); }} className="mt-1 h-4 w-4 accent-run" /><span><strong className="block text-body">Compactar novas evidências</strong><span className="mt-1 block text-xs text-muted">Reduz imagens antes de enviá-las ao adapter do runtime.</span></span></label>
+          <div className="mt-5 rounded-xl bg-surface p-4 text-sm text-subtle"><strong className="text-body">Estado confirmado</strong><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>{cases.length} caso(s)</span><span>{plans.length} plano(s)</span><span>{runs.length} execução(ões)</span><span>{demands.length} demanda(s)</span><span>{evidence.length} evidência(s)</span></div></div>
         </section>
 
         <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-          <div className="flex items-start gap-3"><span className="rounded-xl bg-explore-tint p-2.5 text-explore"><FolderGit2 size={20} /></span><div><h2 className="font-bold text-body">Adaptador de repositório</h2><p className="mt-1 text-sm text-muted">Casos e planos usam nomes revisionados; runs são imutáveis e o manifesto funciona como commit.</p></div></div>
-          {!repositoryApiAvailable() && <div className="mt-4"><Notice tone="warning">A API segura de diretórios não está disponível neste navegador. O backup JSON continua funcional.</Notice></div>}
-          <div className="mt-5 rounded-xl border border-hairline p-4"><p className="text-sm font-bold text-body">{repositoryName ? `Conectado: ${repositoryName}` : "Nenhuma pasta conectada nesta sessão"}</p><p className="mt-1 text-xs text-muted">O navegador sempre solicita sua permissão para acessar a pasta.</p></div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button loading={busy === "connect"} loadingLabel="Conectando…" disabled={!repositoryApiAvailable() || busy !== null} icon={<FolderGit2 size={16} />} onClick={() => void connect()}>Conectar pasta</Button>
-            <Button variant="primary" loading={busy === "push"} loadingLabel="Gravando…" disabled={!repositoryName || busy !== null} icon={<Upload size={16} />} onClick={() => void pushRepository()}>Gravar .qaflow</Button>
-            <Button loading={busy === "pull"} loadingLabel="Mesclando…" disabled={!repositoryName || busy !== null} icon={<RefreshCw size={16} />} onClick={() => void pullRepository()}>Mesclar da pasta</Button>
+          <div className="flex items-start gap-3"><span className="rounded-xl bg-explore-tint p-2.5 text-explore"><FolderGit2 size={20} /></span><div><h2 className="font-bold text-body">Adaptador de repositório</h2><p className="mt-1 text-sm text-muted">O runtime cuida da seleção e do acesso à pasta; a tela não recebe paths internos.</p></div></div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button variant="primary" loading={busy === "push"} loadingLabel="Gravando…" disabled={nativeFilesPending || busy !== null} icon={<Upload size={16} />} onClick={() => void pushCurrentRepository()}>Gravar .qaflow</Button>
+            <Button loading={busy === "pull"} loadingLabel="Validando…" disabled={nativeFilesPending || busy !== null} icon={<RefreshCw size={16} />} onClick={() => void selectRepository()}>Selecionar para mesclar</Button>
           </div>
+          {repositoryPreview && (
+            <div className="mt-4"><Notice tone="warning" title={`Repositório validado: ${repositoryPreview.repositoryName}`}><p>{repositoryPreview.summary.cases} casos, {repositoryPreview.summary.plans} planos e {repositoryPreview.summary.runs} execuções.</p><div className="mt-3 flex gap-2"><Button variant="primary" disabled={busy !== null} onClick={() => void mergeRepository()}>Mesclar agora</Button><button type="button" className={buttonSecondary} onClick={() => setRepositoryPreview(null)}>Cancelar</button></div></Notice></div>
+          )}
         </section>
 
         <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm xl:col-span-2">
-          <h2 className="font-bold text-body">Backup e restauração</h2><p className="mt-1 text-sm text-muted">O backup é autocontido e validado antes de qualquer alteração.</p>
-          <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={(event) => void readBackup(event)} />
+          <h2 className="font-bold text-body">Backup e restauração</h2><p className="mt-1 text-sm text-muted">O adapter valida o backup antes de devolver uma prévia tokenizada.</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="primary" loading={busy === "export"} loadingLabel="Exportando…" disabled={busy !== null} icon={<Download size={16} />} onClick={() => void exportBackup()}>Exportar backup</Button>
-            <button type="button" className={buttonSecondary} disabled={busy !== null} onClick={() => fileRef.current?.click()}><Upload size={16} /> Selecionar backup</button>
+            <Button variant="primary" loading={busy === "export"} loadingLabel="Exportando…" disabled={nativeFilesPending || busy !== null} icon={<Download size={16} />} onClick={() => void exportCurrentBackup()}>Exportar backup</Button>
+            <button type="button" className={buttonSecondary} disabled={nativeFilesPending || busy !== null} onClick={() => void selectBackup()}><Upload size={16} /> Selecionar backup</button>
           </div>
           {preview && (
             <div className="mt-4">
-              <Notice tone="warning" title="Prévia validada">
-                <p>{preview.cases.length} casos, {preview.plans.length} planos, {preview.runs.length} execuções, {(preview.demands ?? []).length} demandas, {preview.evidence.length} evidências.</p>
+              <Notice tone="warning" title={`Prévia validada: ${preview.sourceName}`}>
+                <p>{preview.summary.cases} casos, {preview.summary.plans} planos, {preview.summary.runs} execuções, {preview.summary.demands} demandas, {preview.summary.evidence} evidências.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button variant="primary" loading={busy === "import"} loadingLabel="Mesclando…" disabled={busy !== null} onClick={() => void applyImport("merge")}>Mesclar por ID</Button>
-                  <button type="button" className={buttonDanger} disabled={busy !== null} onClick={() => void applyImport("replace")}>Substituir workspace</button>
+                  <Button variant="primary" loading={busy === "import"} loadingLabel="Mesclando…" disabled={busy !== null} onClick={() => void importPreview("merge")}>Mesclar por ID</Button>
+                  <button type="button" className={buttonDanger} disabled={busy !== null} onClick={() => void importPreview("replace")}>Substituir workspace</button>
                   <button type="button" className={buttonSecondary} disabled={busy !== null} onClick={() => setPreview(null)}>Cancelar</button>
                 </div>
               </Notice>

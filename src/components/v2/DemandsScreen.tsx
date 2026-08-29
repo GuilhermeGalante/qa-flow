@@ -215,24 +215,6 @@ type DemandViewMode = "modal" | "fullscreen" | "sidebar";
 const DEMAND_SIDEBAR_MIN = 360;
 const DEMAND_SIDEBAR_MAX = 720;
 
-function storedDemandViewMode(): DemandViewMode {
-  try {
-    const value = window.localStorage.getItem("qa-flow-demand-view-mode");
-    return value === "modal" || value === "sidebar" || value === "fullscreen" ? value : "fullscreen";
-  } catch {
-    return "fullscreen";
-  }
-}
-
-function storedDemandSidebarWidth(): number {
-  try {
-    const value = Number(window.localStorage.getItem("qa-flow-demand-sidebar-width"));
-    return Number.isFinite(value) && value >= DEMAND_SIDEBAR_MIN && value <= DEMAND_SIDEBAR_MAX ? value : 480;
-  } catch {
-    return 480;
-  }
-}
-
 const demandViewOptions: { value: DemandViewMode; label: string; icon: typeof AppWindow }[] = [
   { value: "modal", label: "Modal", icon: AppWindow },
   { value: "fullscreen", label: "Tela cheia", icon: Maximize2 },
@@ -464,7 +446,7 @@ function ColumnManager({ columns, onClose, onResult }: { columns: DemandColumn[]
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
         <p className="text-sm leading-relaxed text-subtle">O significado alimenta os indicadores, independentemente do nome escolhido.</p>
-        {columns.map((column, index) => <ColumnRow key={column.id} column={column} first={index === 0} last={index === columns.length - 1} onMove={moveColumn} onUpdate={async (name, semantic) => onResult(await updateColumn(column.id, name, semantic))} onDelete={async () => onResult(await deleteColumn(column.id))} />)}
+        {columns.map((column, index) => <ColumnRow key={column.id} column={column} first={index === 0} last={index === columns.length - 1} onMove={async (id, direction) => onResult(await moveColumn(id, direction))} onUpdate={async (name, semantic) => onResult(await updateColumn(column.id, name, semantic))} onDelete={async () => onResult(await deleteColumn(column.id))} />)}
       </div>
       <form className="space-y-3 border-t border-hairline p-5" onSubmit={async (event) => {
         event.preventDefault();
@@ -499,6 +481,8 @@ export function DemandsScreen() {
   const columns = useQaStore((state) => state.demandColumns).slice().sort((left, right) => left.order - right.order);
   const demands = useQaStore((state) => state.demands);
   const moveDemand = useQaStore((state) => state.moveDemand);
+  const preferences = useQaStore((state) => state.preferences);
+  const setPreference = useQaStore((state) => state.setPreference);
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [priority, setPriority] = useState<CasePriority | "all">("all");
@@ -510,8 +494,11 @@ export function DemandsScreen() {
   const [panel, setPanel] = useState<"demand" | "columns" | null>(null);
   const [mobileColumnId, setMobileColumnId] = useState(columns[0]?.id ?? "");
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
-  const [demandViewMode, setDemandViewMode] = useState<DemandViewMode>(storedDemandViewMode);
-  const [demandSidebarWidth, setDemandSidebarWidth] = useState(storedDemandSidebarWidth);
+  const [demandViewMode, setDemandViewMode] = useState<DemandViewMode>(preferences.demandViewMode ?? "fullscreen");
+  const [demandSidebarWidth, setDemandSidebarWidth] = useState(() => {
+    const value = preferences.demandSidebarWidth;
+    return typeof value === "number" && value >= DEMAND_SIDEBAR_MIN && value <= DEMAND_SIDEBAR_MAX ? value : 480;
+  });
   const surfaceRef = useRef<HTMLDivElement>(null);
   const surfaceWidth = useSurfaceWidth(surfaceRef);
   const boardExpanded = surfaceWidth >= 880;
@@ -549,8 +536,7 @@ export function DemandsScreen() {
   const closePanel = () => { setPanel(null); setDraft(null); };
   const changeDemandViewMode = (value: DemandViewMode) => {
     setDemandViewMode(value);
-    try { window.localStorage.setItem("qa-flow-demand-view-mode", value); }
-    catch { /* A preferência continua válida durante a sessão. */ }
+    void setPreference({ demandViewMode: value });
   };
   const sidebarWidthLimit = () => Math.max(DEMAND_SIDEBAR_MIN, Math.min(DEMAND_SIDEBAR_MAX, window.innerWidth - 280));
   const setClampedSidebarWidth = (value: number) => {
@@ -569,8 +555,7 @@ export function DemandsScreen() {
     const stop = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", stop);
-      try { window.localStorage.setItem("qa-flow-demand-sidebar-width", String(finalWidth)); }
-      catch { /* O redimensionamento continua funcional sem persistência. */ }
+      void setPreference({ demandSidebarWidth: finalWidth });
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", stop, { once: true });
@@ -707,8 +692,7 @@ export function DemandsScreen() {
                 if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
                 event.preventDefault();
                 const next = setClampedSidebarWidth(demandSidebarWidth + (event.key === "ArrowLeft" ? 24 : -24));
-                try { window.localStorage.setItem("qa-flow-demand-sidebar-width", String(next)); }
-                catch { /* O ajuste por teclado continua funcional sem persistência. */ }
+                void setPreference({ demandSidebarWidth: next });
               }}
               className="absolute inset-y-0 -left-3 z-10 hidden w-6 cursor-col-resize items-center justify-center text-faint transition hover:text-run focus:text-run sm:flex"
             >

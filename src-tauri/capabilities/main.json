@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "QA Flow desktop with narrow application IPC commands and no broad plugin permissions.",
+  "windows": ["main"],
+  "platforms": ["windows"],
+  "permissions": []
+}

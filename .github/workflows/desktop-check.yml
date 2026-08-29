@@ -1,0 +1,45 @@
+name: Desktop check
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/desktop-check.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "rust-toolchain.toml"
+      - "vite.config.ts"
+      - "scripts/**"
+      - "src/**"
+      - "src-tauri/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install Rust toolchain
+        shell: pwsh
+        run: rustup toolchain install 1.98.0 --profile minimal --component rustfmt --component clippy --target x86_64-pc-windows-msvc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Shared gate
+        run: npm run check
+
+      - name: Desktop gate
+        run: npm run check:desktop

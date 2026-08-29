@@ -23,6 +23,9 @@ interface QaLayoutProps {
   children: ReactNode;
   workspaceName: string;
   immersive?: boolean;
+  persistenceLabel?: string;
+  sidebarCollapsed?: boolean;
+  onSidebarCollapsedChange?: (collapsed: boolean) => void;
 }
 
 const items: { id: QaView; label: string; icon: typeof BarChart3 }[] = [
@@ -35,12 +38,17 @@ const items: { id: QaView; label: string; icon: typeof BarChart3 }[] = [
   { id: "settings", label: "Configurações", icon: Settings },
 ];
 
-export function QaLayout({ view, onNavigate, children, workspaceName, immersive = false }: QaLayoutProps) {
+export function QaLayout({
+  view,
+  onNavigate,
+  children,
+  workspaceName,
+  immersive = false,
+  persistenceLabel = "Salvo localmente",
+  sidebarCollapsed = false,
+  onSidebarCollapsedChange,
+}: QaLayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try { return window.localStorage.getItem("qa-flow-sidebar-collapsed") === "true"; }
-    catch { return false; }
-  });
   const drawerRef = useRef<HTMLElement>(null);
 
   const navigate = (target: QaView) => {
@@ -49,12 +57,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
   };
 
   const toggleSidebar = () => {
-    setSidebarCollapsed((current) => {
-      const next = !current;
-      try { window.localStorage.setItem("qa-flow-sidebar-collapsed", String(next)); }
-      catch { /* A navegação continua funcional mesmo sem persistência. */ }
-      return next;
-    });
+    onSidebarCollapsedChange?.(!sidebarCollapsed);
   };
 
   useDialogBehavior({
@@ -87,6 +90,9 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
         {items.map((item) => {
           const Icon = item.icon;
           const active = view === item.id;
+          const stateClasses = active
+            ? "bg-cyan-300 text-body shadow-sm"
+            : "text-slate-300 hover:bg-ink-hover hover:text-white";
           return (
             <button
               key={item.id}
@@ -95,7 +101,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
               aria-label={compact ? item.label : undefined}
               title={compact ? item.label : undefined}
               onClick={() => navigate(item.id)}
-              className={`flex min-h-11 w-full items-center rounded-xl text-left text-sm font-semibold transition ${compact ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-cyan-300 text-body shadow-sm" : "text-slate-300 hover:bg-ink-hover hover:text-white"}`}
+              className={`flex min-h-11 w-full items-center rounded-xl text-left text-sm font-semibold transition ${compact ? "justify-center px-2" : "gap-3 px-3"} ${stateClasses}`}
             >
               <Icon size={18} aria-hidden="true" />
               {compact ? <span className="sr-only">{item.label}</span> : item.label}
@@ -103,7 +109,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
           );
         })}
       </nav>
-      <div className={`border-t border-ink-hover text-xs leading-relaxed text-muted ${compact ? "p-2" : "p-4"}`}>
+      <div className={`border-t border-ink-hover text-xs leading-relaxed text-faint ${compact ? "p-2" : "p-4"}`}>
         {compact ? (
           <button
             type="button"
@@ -163,7 +169,7 @@ export function QaLayout({ view, onNavigate, children, workspaceName, immersive 
               <p className="hidden text-xs text-muted sm:block">{view === "demands" ? "Workspace local" : "Casos reutilizáveis, tentativas auditáveis e histórico preservado."}</p>
             </div>
           </div>
-          <span className="rounded-full bg-pass-tint px-3 py-1 text-xs font-bold text-pass">Salvo localmente</span>
+          <span className="rounded-full bg-pass-tint px-3 py-1 text-xs font-bold text-pass">{persistenceLabel}</span>
         </header>
         <main className={`mx-auto w-full ${view === "demands" ? "max-w-none p-4 md:p-6 xl:p-8" : "max-w-[1500px]"} ${immersive ? "p-0" : view === "demands" ? "" : "p-4 md:p-7"}`}>{children}</main>
       </div>
