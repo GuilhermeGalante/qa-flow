@@ -22,8 +22,9 @@
     "build:desktop:no-bundle": "tauri build --no-bundle",
     "doctor:desktop": "node scripts/doctor-desktop.mjs",
     "verify:release-version": "node scripts/verify-release-version.mjs",
+    "verify:desktop-distribution": "node scripts/verify-desktop-distribution.mjs",
     "check:desktop:frontend": "npm run build:desktop:frontend && node scripts/verify-desktop-isolation.mjs",
-    "check:desktop": "npm run check:desktop:frontend && npm run doctor:desktop -- --strict && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml && npm run build:desktop:no-bundle",
+    "check:desktop": "npm run check:desktop:frontend && npm run doctor:desktop -- --strict && npm run verify:desktop-distribution && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml && npm run build:desktop:no-bundle",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -54,6 +55,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "js-yaml": "^5.4.1",
     "postcss": "^8.5.26",
     "tailwindcss": "^4.2.2",
     "typescript": "~6.0.2",

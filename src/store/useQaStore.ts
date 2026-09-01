@@ -53,12 +53,15 @@ export function createQaStore(dependencies: QaStoreDependencies): QaStore {
     deleteDemandColumn: (columnId) => services.deleteDemandColumn(columnId),
     updateSettings: (updates) => services.updateSettings(updates),
     setPreference: (changes) => services.setPreference(changes),
+    saveGeneratedFile: (request, bytes) => services.saveGeneratedFile(request, bytes),
     exportBackup: () => services.exportBackup(),
     inspectBackup: () => services.inspectBackup(),
     applyImport: (previewToken, mode) => services.applyImport(previewToken, mode),
     pushRepository: () => services.pushRepository(),
     inspectRepository: () => services.inspectRepository(),
     pullRepository: (previewToken, mode) => services.pullRepository(previewToken, mode),
+    checkForUpdate: () => services.checkForUpdate(),
+    installUpdate: (expectedVersion) => services.installUpdate(expectedVersion),
   }));
 
   services = new QaApplicationServices({

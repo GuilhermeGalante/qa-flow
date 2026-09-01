@@ -44,6 +44,7 @@ No modo repositório, selecione uma pasta nas configurações e grave a estrutur
 ├── plans/       # um JSON por plano e revisão
 ├── runs/        # tentativas imutáveis
 ├── reports/     # registros de relatório
+├── demands/     # colunas e demandas
 └── evidence/    # binários separados
 ```
 
@@ -76,11 +77,11 @@ Validação completa:
 npm run check
 ```
 
-## Desktop M3 (Tauri 2 + SQLite)
+## Desktop — Fase 7 (maturidade operacional)
 
-O marco M3 executa a aplicação completa em uma composição Windows isolada e liga o frontend ao backend Rust por IPC estreito. Casos de teste e configurações do workspace são persistidos em SQLite dentro de `app_data_dir`, com histórico de revisões, transações atômicas, lock exclusivo, CAS global/por caso e abertura segura diante de corrupção.
+A composição Windows isolada liga o frontend ao backend Rust por IPC estreito. Casos, planos, runs, relatórios, demandas, colunas, configurações, preferências e metadados de evidências são persistidos em SQLite dentro de `app_data_dir`, com histórico de revisões, snapshots imutáveis, transações atômicas, lock exclusivo, CAS global e abertura segura diante de corrupção. Imagens de evidência ficam em blobs separados e arquivos gerados usam diálogo nativo allowlisted.
 
-O lote ainda não representa paridade completa: planos, execuções, relatórios, demandas e preferências locais entram na Fase 4. Evidências ficam fora do banco, em arquivos nativos referenciados pelo SQLite, e entram na Fase 5. Até esses lotes, essas áreas não devem ser usadas como armazenamento desktop definitivo.
+Além da portabilidade da Fase 6, o desktop possui retenção configurável de recovery, updater nativo com validação criptográfica e pipeline para instaladores Windows online/offline assinados. Builds locais sem chave pública continuam funcionais, mas mostram o updater como desabilitado; nenhum segredo é mantido no repositório.
 
 Pré-requisitos e decisões: [`docs/desktop/README.md`](docs/desktop/README.md).
 
@@ -102,5 +103,6 @@ Os contratos JSON Schema Draft 2020-12 ficam em [`schemas/`](schemas/). As decis
 
 - Exporte backups regularmente, especialmente antes de limpar dados do navegador.
 - Não use janela anônima para trabalho permanente.
-- Substituir um workspace durante a importação remove o estado atual após confirmação; mesclar preserva e atualiza entidades pelo ID.
+- Substituir um workspace durante a importação troca o estado atual após confirmação; o desktop grava antes uma cópia integral em `recovery/`. Mesclar preserva e atualiza entidades pelo ID.
+- No desktop, a retenção padrão mantém até 20 cópias por 90 dias e nunca remove a cópia válida mais recente; os limites podem ser alterados nas configurações.
 - Arquivar casos e planos preserva referências, snapshots, tentativas e relatórios.

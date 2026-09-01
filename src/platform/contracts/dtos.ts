@@ -193,18 +193,22 @@ export interface RuntimeInfo {
   platform: string;
   appVersion: string;
   nativeFiles?: boolean;
+  workspaceTransfers?: boolean;
 }
 
 export type LocalPreferences = Record<string, unknown> & {
   sidebarCollapsed?: boolean;
   demandViewMode?: "modal" | "fullscreen" | "sidebar";
   demandSidebarWidth?: number;
+  recoveryRetentionCount?: number;
+  recoveryRetentionDays?: number;
 };
 
 export type UpdateState =
   | { status: "unsupported" }
-  | { status: "idle" }
-  | { status: "available"; version: string };
+  | { status: "disabled"; reason: string }
+  | { status: "upToDate" }
+  | { status: "available"; version: string; notes?: string; publishedAt?: string };
 
 export type SaveState =
   | { kind: "idle"; committedAt?: string }

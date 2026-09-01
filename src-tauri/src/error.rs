@@ -140,6 +140,16 @@ impl From<serde_json::Error> for DesktopError {
     }
 }
 
+impl From<tauri_plugin_updater::Error> for DesktopError {
+    fn from(_: tauri_plugin_updater::Error) -> Self {
+        DesktopError::new(
+            DesktopErrorCode::Update,
+            "Não foi possível consultar ou instalar a atualização com segurança.",
+        )
+        .retryable(true)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -39,11 +39,15 @@ export class TauriWorkspaceAdapter implements WorkspacePort {
   }
 
   addEvidence(request: EvidenceRequest, bytes: Uint8Array): Promise<CommitResponse> {
-    return this.ipc.call("evidence_add", { request, bytes });
+    return this.ipc.call("evidence_add", { request, bytes: Array.from(bytes) });
   }
 
-  readEvidence(evidenceId: string): Promise<EvidenceBytes> {
-    return this.ipc.call("evidence_read", { evidenceId });
+  async readEvidence(evidenceId: string): Promise<EvidenceBytes> {
+    const result = await this.ipc.call<Omit<EvidenceBytes, "bytes"> & { bytes: number[] }>(
+      "evidence_read",
+      { evidenceId },
+    );
+    return { ...result, bytes: Uint8Array.from(result.bytes) };
   }
 
   removeEvidence(request: RemoveEvidenceRequest): Promise<CommitResponse> {
@@ -87,7 +91,7 @@ export class TauriTransferAdapter implements TransferPort {
   }
 
   saveGeneratedFile(request: GeneratedFileRequest, bytes: Uint8Array): Promise<TransferResult> {
-    return this.ipc.call("generated_file_save_dialog", { request, bytes });
+    return this.ipc.call("generated_file_save_dialog", { request, bytes: Array.from(bytes) });
   }
 }
 
@@ -112,6 +116,10 @@ export class TauriRuntimeAdapter implements RuntimePort {
 
   checkForUpdate(): Promise<UpdateState> {
     return this.ipc.call("update_check");
+  }
+
+  installUpdate(expectedVersion: string): Promise<void> {
+    return this.ipc.call("update_install", { expectedVersion });
   }
 }
 

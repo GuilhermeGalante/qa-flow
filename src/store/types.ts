@@ -17,11 +17,13 @@ import type {
 import type { ApplicationResult } from "../app/commitCoordinator";
 import type {
   ImportPreview,
+  GeneratedFileRequest,
   LocalPreferences,
   RepositoryPreview,
   RuntimeInfo,
   SaveState,
   TransferResult,
+  UpdateState,
   WorkspaceData,
 } from "../platform/contracts/dtos";
 
@@ -84,12 +86,18 @@ export interface QaActions {
   deleteDemandColumn: (columnId: string) => Promise<ApplicationResult>;
   updateSettings: (settings: Partial<WorkspaceSettings>) => Promise<ApplicationResult<WorkspaceSettings>>;
   setPreference: (changes: LocalPreferences) => Promise<OperationResult>;
+  saveGeneratedFile: (
+    request: GeneratedFileRequest,
+    bytes: Uint8Array,
+  ) => Promise<ApplicationResult<TransferResult>>;
   exportBackup: () => Promise<ApplicationResult<TransferResult>>;
   inspectBackup: () => Promise<ApplicationResult<ImportPreview | null>>;
   applyImport: (previewToken: string, mode: "merge" | "replace") => Promise<ApplicationResult>;
   pushRepository: () => Promise<ApplicationResult<TransferResult>>;
   inspectRepository: () => Promise<ApplicationResult<RepositoryPreview | null>>;
   pullRepository: (previewToken: string, mode?: "merge" | "replace") => Promise<ApplicationResult>;
+  checkForUpdate: () => Promise<ApplicationResult<UpdateState>>;
+  installUpdate: (expectedVersion: string) => Promise<ApplicationResult>;
 }
 
 export type QaState = WorkspaceData & QaSessionState & QaActions;

@@ -33,15 +33,6 @@ import {
   priorityLabel,
 } from "./Shared";
 
-function downloadJson(value: unknown, fileName: string): void {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: "application/json" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
 interface CasesScreenProps {
   newCaseRequested?: boolean;
   onNewCaseRequestHandled?: () => void;
@@ -53,6 +44,7 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
   const plans = useQaStore((state) => state.plans);
   const saveCase = useQaStore((state) => state.saveCase);
   const archiveCase = useQaStore((state) => state.archiveCase);
+  const saveGeneratedFile = useQaStore((state) => state.saveGeneratedFile);
   const toast = useToast();
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
@@ -63,6 +55,13 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
   const [importPreview, setImportPreview] = useState<CaseDefinition[] | null>(null);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const downloadJson = async (value: unknown, fileName: string) => {
+    toast.fromResult(await saveGeneratedFile(
+      { suggestedName: fileName, mimeType: "application/json", extension: ".json" },
+      new TextEncoder().encode(JSON.stringify(value, null, 2)),
+    ));
+  };
 
   useEffect(() => {
     if (!newCaseRequested) return;
@@ -277,7 +276,7 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
                           <p className="mt-1 text-xs text-muted">{testCase.path.join(" / ") || "Sem pasta"} · {testCase.steps.length} passo(s){testCase.automationLinks.length ? " · automatizado" : ""}</p>
                         </div>
                         <div className="flex shrink-0 flex-wrap gap-2">
-                          <button type="button" aria-label={`Exportar ${testCase.title}`} className={buttonSecondary} onClick={() => downloadJson(testCase, `${testCase.id}.json`)}><Download size={15} /><span className="hidden xl:inline">JSON</span></button>
+                          <button type="button" aria-label={`Exportar ${testCase.title}`} className={buttonSecondary} onClick={() => void downloadJson(testCase, `${testCase.id}.json`)}><Download size={15} /><span className="hidden xl:inline">JSON</span></button>
                           <button type="button" aria-label={`Editar ${testCase.title}`} className={buttonSecondary} onClick={() => setEditing(testCase)}><Pencil size={15} /> Editar</button>
                           {testCase.status !== "archived" && <button type="button" aria-label={`Arquivar ${testCase.title}`} className={buttonDanger} onClick={() => void handleArchive(testCase)}><Archive size={15} /><span className="hidden xl:inline">Arquivar</span></button>}
                         </div>

@@ -6,8 +6,15 @@
 import { pdf } from "@react-pdf/renderer";
 import { ExecutiveSummaryDocument } from "./ExecutiveSummaryDocument";
 import { TechnicalReportDocument } from "./TechnicalReportDocument";
+import type { ApplicationResult } from "../app/commitCoordinator";
 import type { OperationResult } from "../domain/types";
+import type { GeneratedFileRequest, TransferResult } from "../platform/contracts/dtos";
 import type { TestPlan } from "../types";
+
+export type GeneratedFileSaver = (
+  request: GeneratedFileRequest,
+  bytes: Uint8Array,
+) => Promise<ApplicationResult<TransferResult>>;
 
 // ── Utilitário interno ────────────────────────────────────────────────────────
 
@@ -22,39 +29,34 @@ function safeName(name: string): string {
     .slice(0, 40);
 }
 
-async function downloadPdf(
+async function savePdf(
   element: React.ReactElement,
   filename: string,
-): Promise<void> {
+  saveGeneratedFile: GeneratedFileSaver,
+): Promise<ApplicationResult<TransferResult>> {
   const blob = await pdf(element as Parameters<typeof pdf>[0]).toBlob();
-  const url = URL.createObjectURL(blob);
-
-  // Cria o link fora do DOM principal para evitar navegação no browser
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  // rel="noopener" garante que o browser não abra o blob inline
-  a.rel = "noopener";
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  // Revoga após 60 s — tempo suficiente para o download iniciar,
-  // mas sem manter o objectURL (que causaria "Loading document...")
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return saveGeneratedFile(
+    { suggestedName: filename, mimeType: "application/pdf", extension: ".pdf" },
+    new Uint8Array(await blob.arrayBuffer()),
+  );
 }
 
 // ── PDF 1: Resumo Executivo (leve, sem steps detalhados e sem imagens) ────────
 
-export async function generateExecutiveSummary(plan: TestPlan): Promise<OperationResult> {
+export async function generateExecutiveSummary(
+  plan: TestPlan,
+  saveGeneratedFile: GeneratedFileSaver,
+): Promise<OperationResult> {
   try {
     const safe = safeName(plan.name);
-    await downloadPdf(
+    const result = await savePdf(
       <ExecutiveSummaryDocument plan={plan} />,
       `QAFlow_Resumo_Executivo_${safe}.pdf`,
+      saveGeneratedFile,
     );
-    return { ok: true, message: "Resumo executivo gerado." };
+    return result.ok
+      ? { ok: true, message: "Resumo executivo gerado e salvo." }
+      : { ok: false, message: result.message };
   } catch (err) {
     console.error("[generateExecutiveSummary]", err);
     return { ok: false, message: `Falha ao gerar o resumo executivo: ${describe(err)}` };
@@ -63,14 +65,20 @@ export async function generateExecutiveSummary(plan: TestPlan): Promise<Operatio
 
 // ── PDF 2: Relatório Técnico de Evidências (passos + imagens) ─────────────────
 
-export async function generateEvidenceReport(plan: TestPlan): Promise<OperationResult> {
+export async function generateEvidenceReport(
+  plan: TestPlan,
+  saveGeneratedFile: GeneratedFileSaver,
+): Promise<OperationResult> {
   try {
     const safe = safeName(plan.name);
-    await downloadPdf(
+    const result = await savePdf(
       <TechnicalReportDocument plan={plan} />,
       `QAFlow_Relatorio_Tecnico_${safe}.pdf`,
+      saveGeneratedFile,
     );
-    return { ok: true, message: "Relatório técnico gerado." };
+    return result.ok
+      ? { ok: true, message: "Relatório técnico gerado e salvo." }
+      : { ok: false, message: result.message };
   } catch (err) {
     console.error("[generateEvidenceReport]", err);
     return { ok: false, message: `Falha ao gerar o relatório técnico: ${describe(err)}` };
