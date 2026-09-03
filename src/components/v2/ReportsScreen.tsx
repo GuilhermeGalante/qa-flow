@@ -11,21 +11,13 @@ import { Select, type SelectOption } from "../../ui/Select";
 import { useToast } from "../../ui/ToastProvider";
 import { EmptyState, PageHeader, StatusBadge, buttonDanger, buttonSecondary, inputClass, runStatusLabel, stepStatusLabel } from "./Shared";
 
-function download(content: string, type: string, filename: string): void {
-  const url = URL.createObjectURL(new Blob([content], { type }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
 export function ReportsScreen() {
   const runs = useQaStore((state) => state.runs);
   const reports = useQaStore((state) => state.reports);
   const getEvidenceData = useQaStore((state) => state.getEvidenceData);
   const createReport = useQaStore((state) => state.createReport);
   const removeReport = useQaStore((state) => state.removeReport);
+  const saveGeneratedFile = useQaStore((state) => state.saveGeneratedFile);
   const toast = useToast();
   const confirm = useConfirm();
   const [runId, setRunId] = useState(runs[0]?.id ?? "");
@@ -56,8 +48,8 @@ export function ReportsScreen() {
       const legacyPlan = await runToLegacyPlan(run, getEvidenceData);
       const { generateEvidenceReport, generateExecutiveSummary } = await import("../../utils/generatePdfReport");
       const result = kind === "executive"
-        ? await generateExecutiveSummary(legacyPlan)
-        : await generateEvidenceReport(legacyPlan);
+        ? await generateExecutiveSummary(legacyPlan, saveGeneratedFile)
+        : await generateEvidenceReport(legacyPlan, saveGeneratedFile);
       toast.fromResult(result, { successDescription: "Gerado a partir do snapshot da tentativa selecionada." });
     } catch (error) {
       toast.show({
@@ -68,6 +60,14 @@ export function ReportsScreen() {
     } finally {
       setGenerating(null);
     }
+  };
+
+  const saveTextExport = async (content: string, mimeType: string, filename: string) => {
+    const extension = filename.slice(filename.lastIndexOf("."));
+    toast.fromResult(await saveGeneratedFile(
+      { suggestedName: filename, mimeType, extension },
+      new TextEncoder().encode(content),
+    ));
   };
 
   const register = async () => {
@@ -123,8 +123,8 @@ export function ReportsScreen() {
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Button variant="primary" loading={generating === "executive"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileBarChart size={16} />} onClick={() => void generatePdf("executive")}>Resumo executivo PDF</Button>
                   <Button loading={generating === "evidence"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileText size={16} />} onClick={() => void generatePdf("evidence")}>Relatório técnico PDF</Button>
-                  <button type="button" className={buttonSecondary} onClick={() => download(JSON.stringify(run, null, 2), "application/json", `${run.id}.json`)}><Download size={16} /> JSON</button>
-                  <button type="button" className={buttonSecondary} onClick={() => download(Papa.unparse(runCsvRows(run)), "text/csv;charset=utf-8", `${run.id}.csv`)}><Download size={16} /> CSV</button>
+                  <button type="button" className={buttonSecondary} onClick={() => void saveTextExport(JSON.stringify(run, null, 2), "application/json", `${run.id}.json`)}><Download size={16} /> JSON</button>
+                  <button type="button" className={buttonSecondary} onClick={() => void saveTextExport(Papa.unparse(runCsvRows(run)), "text/csv;charset=utf-8", `${run.id}.csv`)}><Download size={16} /> CSV</button>
                 </div>
               </section>
             )}

@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { fileURLToPath } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -23,11 +22,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     ],
-    resolve: {
-      alias: desktop
-        ? [{ find: '../../utils/generatePdfReport', replacement: fileURLToPath(new URL('./src/platform/desktop/generatePdfReport.desktop.ts', import.meta.url)) }]
-        : [],
-    },
     build: {
       outDir: desktop ? 'dist-desktop' : 'dist',
     },

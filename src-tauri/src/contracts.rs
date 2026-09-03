@@ -12,6 +12,7 @@ pub struct RuntimeInfo {
     pub platform: String,
     pub app_version: String,
     pub native_files: bool,
+    pub workspace_transfers: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -148,6 +149,148 @@ pub struct CommitResponse {
     pub storage_revision: u64,
     pub changed: Vec<ChangedEntity>,
     pub committed_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct EvidenceMeta {
+    pub id: String,
+    pub owner_type: String,
+    pub owner_id: String,
+    pub run_id: String,
+    pub name: String,
+    pub mime_type: String,
+    pub size: u64,
+    pub sha256: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct EvidenceRequest {
+    pub operation_id: String,
+    pub expected_storage_revision: u64,
+    pub meta: EvidenceMeta,
+    pub mutations: Vec<StorageMutation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct EvidenceBytes {
+    pub evidence_id: String,
+    pub mime_type: String,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoveEvidenceRequest {
+    pub operation_id: String,
+    pub expected_storage_revision: u64,
+    pub evidence_id: String,
+    pub mutations: Vec<StorageMutation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct GeneratedFileRequest {
+    pub suggested_name: String,
+    pub mime_type: String,
+    pub extension: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TransferStatus {
+    Completed,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TransferResult {
+    pub status: TransferStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bytes_written: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggested_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportSummary {
+    pub cases: usize,
+    pub plans: usize,
+    pub runs: usize,
+    pub reports: usize,
+    pub demand_columns: usize,
+    pub demands: usize,
+    pub evidence: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportPreview {
+    pub status: String,
+    pub preview_token: String,
+    pub source_name: String,
+    pub summary: ImportSummary,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RepositoryPreview {
+    pub status: String,
+    pub preview_token: String,
+    pub source_name: String,
+    pub summary: ImportSummary,
+    pub repository_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ImportMode {
+    Merge,
+    Replace,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyImportRequest {
+    pub preview_token: String,
+    pub mode: ImportMode,
+    pub expected_storage_revision: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportReceipt {
+    pub storage_revision: u64,
+    pub committed_at: String,
+    pub summary: ImportSummary,
+    pub snapshot: WorkspaceSnapshot,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct RepositoryPushRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggested_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RepositoryPullRequest {
+    pub preview_token: String,
+    pub mode: ImportMode,
+    pub expected_storage_revision: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

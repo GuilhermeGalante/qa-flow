@@ -286,7 +286,7 @@ function StepCard({
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-raised text-run ring-1 ring-hairline"><ClipboardPaste size={18} /></span>
                 <div>
                   <p className="text-sm font-bold text-body">Cole uma captura como evidência</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-subtle">Use Ctrl+V nesta área ou leia diretamente a imagem copiada.</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-subtle">Use Ctrl+V ou escolha PNG, JPEG, WebP ou GIF de até 10 MiB.</p>
                 </div>
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">

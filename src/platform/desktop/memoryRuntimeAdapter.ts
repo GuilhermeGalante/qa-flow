@@ -27,4 +27,8 @@ export class MemoryDesktopRuntimeAdapter implements RuntimePort {
   async checkForUpdate(): Promise<UpdateState> {
     return { status: "unsupported" };
   }
+
+  async installUpdate(): Promise<void> {
+    throw new Error("O updater não está disponível no adapter desktop em memória.");
+  }
 }

@@ -30,11 +30,13 @@ import {
 } from "../domain/validation.ts";
 import type {
   CommitResponse,
+  GeneratedFileRequest,
   ImportPreview,
   LocalPreferences,
   RepositoryPreview,
   StorageMutation,
   TransferResult,
+  UpdateState,
   WorkspaceData,
   WorkspaceSnapshot,
 } from "../platform/contracts/dtos";
@@ -59,6 +61,8 @@ interface ApplicationServicesOptions {
   getState(): QaState;
   setState: QaStateSetter;
 }
+
+export const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 
 interface WorkspaceChange<T> {
   mutations: StorageMutation[];
@@ -468,10 +472,17 @@ export class QaApplicationServices {
       if (!file.type.startsWith("image/")) {
         return skipped({ ok: false, message: "Nesta versão, a evidência deve ser uma imagem." });
       }
+      if (file.size > MAX_EVIDENCE_BYTES) {
+        return skipped({ ok: false, message: "A evidência deve ter no máximo 10 MiB." });
+      }
 
       try {
         const compact = state.settings.compactEvidence;
         const dataUrl = compact ? await compressImageToBase64(file) : await blobToDataUrl(file);
+        const bytes = dataUrlToBytes(dataUrl);
+        if (bytes.length > MAX_EVIDENCE_BYTES) {
+          return skipped({ ok: false, message: "A imagem processada excedeu o limite de 10 MiB." });
+        }
         const evidenceId = createId("EVD");
         const meta: EvidenceMeta = {
           id: evidenceId,
@@ -480,7 +491,7 @@ export class QaApplicationServices {
           runId,
           name: name || (file instanceof File ? file.name : `evidencia-${evidenceId}.png`),
           mimeType: compact ? "image/png" : file.type,
-          size: file.size,
+          size: bytes.length,
           sha256: await sha256(dataUrl),
           createdAt: new Date().toISOString(),
         };
@@ -498,7 +509,7 @@ export class QaApplicationServices {
             expectedStorageRevision,
             meta,
             mutations,
-          }, dataUrlToBytes(dataUrl)),
+          }, bytes),
           apply: (response) => this.applyConfirmedWorkspace(nextWorkspace, response),
           result: () => ({ ok: true, value: meta, message: "Evidência anexada." }),
         } satisfies PreparedOperation<EvidenceMeta, CommitResponse>;
@@ -822,6 +833,22 @@ export class QaApplicationServices {
     }
   }
 
+  saveGeneratedFile(
+    request: GeneratedFileRequest,
+    bytes: Uint8Array,
+  ): Promise<ApplicationResult<TransferResult>> {
+    return this.readOperation(async () => {
+      const result = await this.options.transferPort.saveGeneratedFile(request, bytes);
+      return {
+        ok: result.status === "completed",
+        value: result,
+        message: result.status === "completed"
+          ? `Arquivo salvo${result.displayName ? `: ${result.displayName}` : "."}`
+          : "Gravação cancelada.",
+      };
+    });
+  }
+
   exportBackup(): Promise<ApplicationResult<TransferResult>> {
     return this.readOperation(async () => {
       const result = await this.options.transferPort.exportBackup({
@@ -907,6 +934,30 @@ export class QaApplicationServices {
       },
       result: () => ({ ok: true, message: "Conteúdo do repositório mesclado." }),
     }));
+  }
+
+  checkForUpdate(): Promise<ApplicationResult<UpdateState>> {
+    return this.readOperation(async () => {
+      const state = await this.options.runtimePort.checkForUpdate();
+      const message = state.status === "available"
+        ? `Atualização ${state.version} disponível.`
+        : state.status === "upToDate"
+          ? "O QA Flow está atualizado."
+          : state.status === "disabled"
+            ? state.reason
+            : "Atualizações nativas não estão disponíveis neste runtime.";
+      return { ok: true, value: state, message };
+    });
+  }
+
+  installUpdate(expectedVersion: string): Promise<ApplicationResult> {
+    return this.readOperation(async () => {
+      await this.options.runtimePort.installUpdate(expectedVersion);
+      return {
+        ok: true,
+        message: "Atualização verificada e encaminhada ao instalador.",
+      };
+    });
   }
 
   private commitWorkspace<T>(

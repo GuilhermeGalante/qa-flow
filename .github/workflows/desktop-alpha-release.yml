@@ -15,6 +15,11 @@ on:
         required: true
         default: false
         type: boolean
+      publish_stable:
+        description: "Publicar como release estável e atualizar o canal latest"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -26,7 +31,15 @@ concurrency:
 jobs:
   windows-alpha:
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
+    env:
+      WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+      QA_FLOW_WINDOWS_TIMESTAMP_URL: ${{ secrets.WINDOWS_TIMESTAMP_URL }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      QA_FLOW_UPDATER_PUBLIC_KEY: ${{ secrets.QA_FLOW_UPDATER_PUBLIC_KEY }}
+      QA_FLOW_UPDATER_ENDPOINT: https://github.com/GuilhermeGalante/qa-flow/releases/latest/download/latest.json
 
     steps:
       - name: Checkout da tag
@@ -57,11 +70,29 @@ jobs:
           if (-not (git tag --list $releaseTag)) {
             throw "A tag $releaseTag não existe no checkout."
           }
+          if ("${{ inputs.publish_alpha }}" -eq "true" -and "${{ inputs.publish_stable }}" -eq "true") {
+            throw "Escolha somente um modo de publicação: prerelease ou estável."
+          }
           npm run verify:release-version -- --tag $releaseTag
           "tag=$releaseTag" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Instalar dependências
         run: npm ci
+
+      - name: Validar credenciais obrigatórias de distribuição
+        shell: pwsh
+        run: |
+          $required = @(
+            "WINDOWS_CERTIFICATE_BASE64",
+            "WINDOWS_CERTIFICATE_PASSWORD",
+            "QA_FLOW_WINDOWS_TIMESTAMP_URL",
+            "TAURI_SIGNING_PRIVATE_KEY",
+            "QA_FLOW_UPDATER_PUBLIC_KEY"
+          )
+          $missing = @($required | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) })
+          if ($missing.Count -gt 0) {
+            throw "Secrets obrigatórios ausentes: $($missing -join ', ')."
+          }
 
       - name: Gate compartilhado
         run: npm run check
@@ -69,29 +100,148 @@ jobs:
       - name: Gate desktop
         run: npm run check:desktop
 
-      - name: Gerar instalador NSIS
-        run: npm run build:desktop
-
-      - name: Preparar instalador e checksum
-        id: artifact
+      - name: Importar certificado de assinatura Windows
         shell: pwsh
         run: |
+          $certificatePath = Join-Path $env:RUNNER_TEMP "qaflow-code-signing.pfx"
+          [IO.File]::WriteAllBytes(
+            $certificatePath,
+            [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_BASE64)
+          )
+          $securePassword = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $certificate = Import-PfxCertificate -FilePath $certificatePath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
+          Remove-Item -LiteralPath $certificatePath -Force
+          if (-not $certificate -or -not $certificate.HasPrivateKey -or [string]::IsNullOrWhiteSpace($certificate.Thumbprint)) {
+            throw "O certificado importado não possui chave privada ou thumbprint."
+          }
+          "QA_FLOW_WINDOWS_CERT_THUMBPRINT=$($certificate.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Gerar instalador online assinado e artefato do updater
+        id: online
+        shell: pwsh
+        run: |
+          $configPath = Join-Path $env:RUNNER_TEMP "qaflow-release-online.json"
+          node scripts/prepare-desktop-release-config.mjs --flavor online --output $configPath
+          npm run tauri -- build --bundles nsis --config $configPath --ci
           $installers = @(Get-ChildItem "src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" -File)
           if ($installers.Count -ne 1) {
-            throw "Esperado exatamente um instalador NSIS; encontrados $($installers.Count)."
+            throw "Esperado exatamente um instalador NSIS online; encontrados $($installers.Count)."
+          }
+          $signature = "$($installers[0].FullName).sig"
+          if (-not (Test-Path -LiteralPath $signature -PathType Leaf)) {
+            throw "A assinatura do artefato do updater online não foi gerada."
           }
           $artifactDirectory = Join-Path $env:RUNNER_TEMP "qaflow-alpha"
           New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
-          Copy-Item -LiteralPath $installers[0].FullName -Destination $artifactDirectory
-          $hash = Get-FileHash -LiteralPath $installers[0].FullName -Algorithm SHA256
-          "$($hash.Hash)  $($installers[0].Name)" | Set-Content -LiteralPath (Join-Path $artifactDirectory "SHA256SUMS.txt") -Encoding ascii
+          $safeBase = $installers[0].BaseName -replace "[^A-Za-z0-9._-]", "-"
+          $onlineName = "$safeBase-online.exe"
+          Copy-Item -LiteralPath $installers[0].FullName -Destination (Join-Path $artifactDirectory $onlineName)
+          Copy-Item -LiteralPath $signature -Destination (Join-Path $artifactDirectory "$onlineName.sig")
           "directory=$artifactDirectory" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "installer_name=$onlineName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Gerar instalador offline assinado (offlineInstaller)
+        id: offline
+        shell: pwsh
+        run: |
+          $configPath = Join-Path $env:RUNNER_TEMP "qaflow-release-offline.json"
+          node scripts/prepare-desktop-release-config.mjs --flavor offline --output $configPath
+          npm run tauri -- build --bundles nsis --config $configPath --ci
+          $installers = @(Get-ChildItem "src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" -File)
+          if ($installers.Count -ne 1) {
+            throw "Esperado exatamente um instalador NSIS offline; encontrados $($installers.Count)."
+          }
+          $artifactDirectory = "${{ steps.online.outputs.directory }}"
+          $safeBase = $installers[0].BaseName -replace "[^A-Za-z0-9._-]", "-"
+          $offlineName = "$safeBase-offline.exe"
+          Copy-Item -LiteralPath $installers[0].FullName -Destination (Join-Path $artifactDirectory $offlineName)
+          "installer_name=$offlineName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Verificar assinaturas e preparar manifesto do updater
+        shell: pwsh
+        run: |
+          $artifactDirectory = "${{ steps.online.outputs.directory }}"
+          $onlineName = "${{ steps.online.outputs.installer_name }}"
+          $offlineName = "${{ steps.offline.outputs.installer_name }}"
+          foreach ($name in @($onlineName, $offlineName)) {
+            $signature = Get-AuthenticodeSignature -FilePath (Join-Path $artifactDirectory $name)
+            if ($signature.Status -ne "Valid") {
+              throw "Assinatura Authenticode inválida em $name: $($signature.Status)."
+            }
+          }
+          $releaseTag = "${{ steps.release.outputs.tag }}"
+          $updaterSignature = (Get-Content -LiteralPath (Join-Path $artifactDirectory "$onlineName.sig") -Raw).Trim()
+          if ([string]::IsNullOrWhiteSpace($updaterSignature)) {
+            throw "Assinatura minisign do updater vazia."
+          }
+          $manifest = [ordered]@{
+            version = $releaseTag.TrimStart("v")
+            notes = "QA Flow $releaseTag"
+            pub_date = [DateTimeOffset]::UtcNow.ToString("o")
+            platforms = [ordered]@{
+              "windows-x86_64" = [ordered]@{
+                signature = $updaterSignature
+                url = "https://github.com/GuilhermeGalante/qa-flow/releases/download/$releaseTag/$onlineName"
+              }
+            }
+          }
+          $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $artifactDirectory "latest.json") -Encoding utf8
+          $checksumLines = Get-ChildItem -LiteralPath $artifactDirectory -File |
+            Where-Object Name -ne "SHA256SUMS.txt" |
+            Sort-Object Name |
+            ForEach-Object {
+              $hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256
+              "$($hash.Hash)  $($_.Name)"
+            }
+          $checksumLines | Set-Content -LiteralPath (Join-Path $artifactDirectory "SHA256SUMS.txt") -Encoding ascii
+
+      - name: Smoke test de instalação, reinício, reinstalação e desinstalação
+        shell: pwsh
+        run: |
+          $installer = Join-Path "${{ steps.online.outputs.directory }}" "${{ steps.online.outputs.installer_name }}"
+          Start-Process -FilePath $installer -ArgumentList "/S" -Wait -WindowStyle Hidden
+          $uninstallEntry = Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" |
+            Where-Object DisplayName -eq "QA Flow" |
+            Select-Object -First 1
+          if (-not $uninstallEntry -or [string]::IsNullOrWhiteSpace($uninstallEntry.InstallLocation)) {
+            throw "A instalação não registrou o diretório do QA Flow no perfil do usuário."
+          }
+          $installDirectory = $uninstallEntry.InstallLocation
+          $executable = Join-Path $installDirectory "qa-flow.exe"
+          $uninstaller = Join-Path $installDirectory "uninstall.exe"
+          if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
+            throw "O executável não foi instalado em $installDirectory."
+          }
+          $dataDirectory = Join-Path $env:APPDATA "dev.qaflow.app"
+          New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
+          $marker = Join-Path $dataDirectory "distribution-preservation.marker"
+          "preserve" | Set-Content -LiteralPath $marker -Encoding ascii
+          $process = Start-Process -FilePath $executable -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 5
+          if ($process.HasExited) {
+            throw "O aplicativo instalado encerrou durante o smoke test com código $($process.ExitCode)."
+          }
+          Stop-Process -Id $process.Id -Force
+          Start-Process -FilePath $installer -ArgumentList "/S" -Wait -WindowStyle Hidden
+          if (-not (Test-Path -LiteralPath $marker -PathType Leaf)) {
+            throw "A reinstalação removeu dados locais do usuário."
+          }
+          if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
+            throw "O desinstalador NSIS não foi encontrado."
+          }
+          Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait -WindowStyle Hidden
+          if (Test-Path -LiteralPath $executable -PathType Leaf) {
+            throw "O executável permaneceu após a desinstalação."
+          }
+          if (-not (Test-Path -LiteralPath $marker -PathType Leaf)) {
+            throw "A desinstalação removeu dados locais sem consentimento."
+          }
 
       - name: Preservar artefatos do workflow
         uses: actions/upload-artifact@v6
         with:
           name: qa-flow-${{ steps.release.outputs.tag }}-windows-x64
-          path: ${{ steps.artifact.outputs.directory }}/*
+          path: ${{ steps.online.outputs.directory }}/*
           if-no-files-found: error
 
       - name: Criar ou atualizar GitHub Release draft
@@ -100,15 +250,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $releaseTag = "${{ steps.release.outputs.tag }}"
-          $assets = @(Get-ChildItem -LiteralPath "${{ steps.artifact.outputs.directory }}" -File | ForEach-Object FullName)
+          $assets = @(Get-ChildItem -LiteralPath "${{ steps.online.outputs.directory }}" -File | ForEach-Object FullName)
           $notes = @"
-          ## QA Flow Desktop — alpha não assinado
+          ## QA Flow Desktop — alpha assinado
 
-          Esta versão é destinada somente a testes controlados. O Windows pode exibir aviso de editor desconhecido.
+          Esta versão é destinada a testes controlados e inclui instaladores Windows online e offline assinados, além de atualização automática assinada.
 
-          Persistência desktop disponível neste marco: casos de teste e configurações do workspace. Planos, execuções, relatórios, demandas, preferências, evidências, backup e recovery ainda não possuem paridade desktop completa.
+          Persistência desktop disponível: casos, planos, execuções, relatórios, demandas, preferências, evidências, backup, recovery e repositório `.qaflow`.
 
-          Verifique o arquivo `SHA256SUMS.txt` antes da instalação. Não use esta alpha como armazenamento único de dados importantes.
+          Use o instalador `-online.exe` em ambientes conectados e `-offline.exe` quando o WebView2 também precisar ser instalado sem rede. Verifique `SHA256SUMS.txt` antes da instalação.
           "@
           gh release view $releaseTag *> $null
           if ($LASTEXITCODE -eq 0) {
@@ -123,3 +273,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release edit "${{ steps.release.outputs.tag }}" --draft=false --prerelease
+
+      - name: Publicar como release estável quando solicitado
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_stable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ steps.release.outputs.tag }}" --draft=false --prerelease=false --latest

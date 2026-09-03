@@ -50,15 +50,6 @@ function newPlan(): PlanDefinition {
   };
 }
 
-function downloadPlan(plan: PlanDefinition): void {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${plan.id}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
 function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: () => void }) {
   const cases = useQaStore((state) => state.cases);
   const savePlan = useQaStore((state) => state.savePlan);
@@ -236,6 +227,14 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
   const cases = useQaStore((state) => state.cases);
   const archivePlan = useQaStore((state) => state.archivePlan);
   const toast = useToast();
+  const saveGeneratedFile = useQaStore((state) => state.saveGeneratedFile);
+
+  const downloadPlan = async (plan: PlanDefinition) => {
+    toast.fromResult(await saveGeneratedFile(
+      { suggestedName: `${plan.id}.json`, mimeType: "application/json", extension: ".json" },
+      new TextEncoder().encode(JSON.stringify(plan, null, 2)),
+    ));
+  };
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<LifecycleStatus | "all">("active");
@@ -295,7 +294,7 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-hairline pt-4">
                   {plan.status === "active" && <button type="button" className={buttonPrimary} disabled={stale > 0 || inactive > 0} title={stale ? "Atualize as referências antes de executar" : inactive ? "Ative ou substitua os casos indisponíveis" : undefined} onClick={() => onRun(plan.id)}><Play size={15} /> Executar</button>}
                   <button type="button" className={buttonSecondary} onClick={() => setEditing(plan)}><Pencil size={15} /> Editar</button>
-                  <button type="button" className={buttonSecondary} onClick={() => downloadPlan(plan)}><Download size={15} /><span className="hidden sm:inline">JSON</span></button>
+                  <button type="button" className={buttonSecondary} onClick={() => void downloadPlan(plan)}><Download size={15} /><span className="hidden sm:inline">JSON</span></button>
                   {plan.status !== "archived" && <button type="button" className={buttonDanger} onClick={() => void handleArchive(plan)}><Archive size={15} /><span className="hidden sm:inline">Arquivar</span></button>}
                 </div>
               </article>

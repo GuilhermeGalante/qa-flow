@@ -17,7 +17,8 @@ export type DesktopCommand =
   | "runtime_info"
   | "preferences_get"
   | "preferences_set"
-  | "update_check";
+  | "update_check"
+  | "update_install";
 
 export type TauriInvoke = <T>(command: DesktopCommand, args?: Record<string, unknown>) => Promise<T>;
 

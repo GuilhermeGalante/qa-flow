@@ -49,4 +49,8 @@ export class WebRuntimeAdapter implements RuntimePort {
   async checkForUpdate(): Promise<UpdateState> {
     return { status: "unsupported" };
   }
+
+  async installUpdate(): Promise<void> {
+    throw new Error("Atualizações nativas não são suportadas no navegador.");
+  }
 }

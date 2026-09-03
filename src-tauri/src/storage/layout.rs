@@ -8,6 +8,7 @@ use serde::Serialize;
 use crate::{
     contracts::{DesktopError, DesktopErrorCode},
     error::DesktopResult,
+    storage::migrations::{BUNDLE_IDENTIFIER, JSON_SCHEMA_VERSION, STORAGE_FORMAT_VERSION},
 };
 
 #[derive(Debug, Clone)]
@@ -87,10 +88,10 @@ impl WorkspaceLayout {
 
     fn write_runtime_manifest(&self) -> DesktopResult<()> {
         let manifest = RuntimeManifest {
-            storage_format_version: 1,
-            json_schema_version: 2,
+            storage_format_version: STORAGE_FORMAT_VERSION,
+            json_schema_version: JSON_SCHEMA_VERSION,
             ipc_contract_version: crate::contracts::IPC_CONTRACT_VERSION,
-            bundle_identifier: "dev.qaflow.app",
+            bundle_identifier: BUNDLE_IDENTIFIER,
         };
         let bytes = serde_json::to_vec_pretty(&manifest).map_err(|_| {
             DesktopError::new(

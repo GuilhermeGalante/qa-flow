@@ -45,5 +45,6 @@ export interface RuntimePort {
   getPreferences(): Promise<LocalPreferences>;
   setPreferences(changes: LocalPreferences): Promise<void>;
   checkForUpdate(): Promise<UpdateState>;
+  installUpdate(expectedVersion: string): Promise<void>;
 }
 
