@@ -28,6 +28,7 @@ export function createQaStore(dependencies: QaStoreDependencies): QaStore {
     preferences: {},
 
     initialize: () => services.initialize(),
+    refreshWorkspace: () => services.refreshWorkspace(),
     saveCase: (candidate, expectedRevision) => services.saveCase(candidate, expectedRevision),
     archiveCase: (caseId) => services.archiveCase(caseId),
     savePlan: (candidate, expectedRevision) => services.savePlan(candidate, expectedRevision),

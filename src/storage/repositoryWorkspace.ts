@@ -43,6 +43,8 @@ function extensionForMime(mimeType: string): string {
   if (mimeType === "image/jpeg") return "jpg";
   if (mimeType === "image/webp") return "webp";
   if (mimeType === "image/gif") return "gif";
+  if (mimeType.startsWith("video/webm")) return "webm";
+  if (mimeType === "video/mp4") return "mp4";
   return "png";
 }
 

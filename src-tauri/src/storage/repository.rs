@@ -1537,12 +1537,12 @@ fn validate_evidence_request(request: &EvidenceRequest, bytes: &[u8]) -> Desktop
     }
     if !matches!(
         meta.mime_type.as_str(),
-        "image/png" | "image/jpeg" | "image/webp" | "image/gif"
+        "image/png" | "image/jpeg" | "image/webp" | "image/gif" | "video/webm" | "video/mp4"
     ) {
         return Err(DesktopError::validation(
             "O tipo da evidência não é permitido.",
             "meta.mimeType",
-            "Use PNG, JPEG, WebP ou GIF.",
+            "Use PNG, JPEG, WebP, GIF, WebM ou MP4.",
         ));
     }
     if meta.name.trim().is_empty()
@@ -1579,7 +1579,7 @@ fn validate_evidence_request(request: &EvidenceRequest, bytes: &[u8]) -> Desktop
         return Err(DesktopError::validation(
             "O tamanho da evidência não é permitido.",
             "bytes",
-            format!("Envie uma imagem entre 1 byte e {MAX_EVIDENCE_BYTES} bytes."),
+            format!("Envie uma evidência entre 1 byte e {MAX_EVIDENCE_BYTES} bytes."),
         ));
     }
     if meta.size != bytes.len() as u64 {
@@ -1594,13 +1594,15 @@ fn validate_evidence_request(request: &EvidenceRequest, bytes: &[u8]) -> Desktop
         "image/jpeg" => bytes.starts_with(&[0xff, 0xd8, 0xff]),
         "image/gif" => bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a"),
         "image/webp" => bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP",
+        "video/webm" => bytes.starts_with(&[0x1a, 0x45, 0xdf, 0xa3]),
+        "video/mp4" => bytes.len() >= 12 && &bytes[4..8] == b"ftyp",
         _ => false,
     };
     if !signature_matches {
         return Err(DesktopError::validation(
-            "O conteúdo não corresponde ao tipo de imagem informado.",
+            "O conteúdo não corresponde ao tipo de evidência informado.",
             "bytes",
-            "Assinatura de imagem inválida.",
+            "Assinatura de arquivo inválida.",
         ));
     }
     Ok(())
@@ -3000,6 +3002,16 @@ mod tests {
                 .code,
             DesktopErrorCode::CorruptStorage
         );
+    }
+
+    #[test]
+    fn mp4_evidence_is_accepted_with_its_native_signature() {
+        let bytes = b"\0\0\0\x18ftypisom";
+        let mut request = evidence_request(3, "OP-EVIDENCE-MP4", vec!["EVD-1"]);
+        request.meta.name = "gravacao.mp4".to_owned();
+        request.meta.mime_type = "video/mp4".to_owned();
+        request.meta.size = bytes.len() as u64;
+        validate_evidence_request(&request, bytes).expect("valid MP4 evidence");
     }
 
     #[test]

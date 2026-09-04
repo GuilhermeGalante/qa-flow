@@ -200,3 +200,44 @@ test("preferências locais não entram no snapshot portátil nem avançam storag
   assert.equal("preferences" in adapter.snapshot().workspace, false);
 });
 
+test("gravação MP4 é persistida como evidência do passo sem passar pela compactação de imagens", async () => {
+  const adapter = new MemoryWorkspaceAdapter();
+  const store = storeFor(adapter);
+  await store.getState().initialize();
+  await store.getState().saveCase(caseDraft(), null);
+  await store.getState().savePlan(planDraft(), null);
+  const started = await store.getState().startRun("PLAN-1", runContext);
+  assert.equal(started.ok, true);
+
+  const payload = new Uint8Array([26, 69, 223, 163]);
+  const result = await store.getState().addEvidence(
+    started.value!.id,
+    "step",
+    "CASE-1::STEP-1",
+    new Blob([payload], { type: "video/mp4" }),
+    "gravacao-STEP-1.mp4",
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.value?.mimeType, "video/mp4");
+  assert.equal(result.value?.name, "gravacao-STEP-1.mp4");
+  assert.equal(result.value?.size, payload.length);
+  assert.deepEqual(adapter.snapshot().workspace.runs[0].results["CASE-1::STEP-1"].evidenceIds, [result.value?.id]);
+});
+
+test("janela secundária atualiza o snapshot depois de um commit feito em outra janela", async () => {
+  const adapter = new MemoryWorkspaceAdapter();
+  const writer = storeFor(adapter);
+  const reader = storeFor(adapter);
+  await writer.getState().initialize();
+  await reader.getState().initialize();
+
+  assert.equal((await writer.getState().saveCase(caseDraft(), null)).ok, true);
+  assert.equal(reader.getState().cases.length, 0);
+  await reader.getState().refreshWorkspace();
+
+  assert.equal(reader.getState().cases.length, 1);
+  assert.equal(reader.getState().cases[0].id, "CASE-1");
+  assert.equal(reader.getState().storageRevision, writer.getState().storageRevision);
+});
+

@@ -25,7 +25,8 @@
     "verify:desktop-distribution": "node scripts/verify-desktop-distribution.mjs",
     "check:desktop:frontend": "npm run build:desktop:frontend && node scripts/verify-desktop-isolation.mjs",
     "check:desktop": "npm run check:desktop:frontend && npm run doctor:desktop -- --strict && npm run verify:desktop-distribution && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml && npm run build:desktop:no-bundle",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "demo:data": "node scripts/generate-demo-workspace.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",

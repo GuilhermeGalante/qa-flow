@@ -22,11 +22,20 @@
         "minHeight": 560,
         "center": true,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "dragDropEnabled": false
       }
     ],
     "security": {
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXkKUldTS0ZaZXBhMkV5TUtTcmVwV0ZZYjZndlB0Y2xGOU1pZ1lHQTVXb2F4T1hWcXJtUjZSVkExTkcK",
+      "endpoints": [
+        "https://github.com/GuilhermeGalante/qa-flow/releases/latest/download/latest.json"
+      ]
     }
   },
   "bundle": {

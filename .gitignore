@@ -24,6 +24,7 @@ dist-ssr
 *.pem
 *.p12
 *.pfx
+/mcp.json
 
 # Local desktop data
 *.db

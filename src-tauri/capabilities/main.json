@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "QA Flow desktop with narrow application IPC commands and no broad plugin permissions.",
-  "windows": ["main"],
+  "windows": ["main", "run-companion"],
   "platforms": ["windows"],
-  "permissions": []
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten", "core:window:allow-start-dragging"]
 }

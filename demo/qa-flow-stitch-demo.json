@@ -1,0 +1,3107 @@
+{
+  "schemaVersion": 2,
+  "exportedAt": "2026-09-03T18:00:00.000Z",
+  "cases": [
+    {
+      "schemaVersion": 2,
+      "id": "TC-AUTH-001",
+      "revision": 2,
+      "title": "Login com credenciais válidas",
+      "description": "Cenário sintético para validar login com credenciais válidas.",
+      "path": [
+        "Autenticação & Cadastro"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "smoke",
+        "auth"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-AUTH-001-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-AUTH-001-S2",
+          "type": "when",
+          "action": "Executar o fluxo: login com credenciais válidas",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-AUTH-001-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Cypress",
+          "path": "tests/e2e/auth-001.spec.ts",
+          "testName": "Login com credenciais válidas"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-301"
+        }
+      ],
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-AUTH-002",
+      "revision": 1,
+      "title": "Recuperação de senha com e-mail cadastrado",
+      "description": "Cenário sintético para validar recuperação de senha com e-mail cadastrado.",
+      "path": [
+        "Autenticação & Cadastro"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "regressão",
+        "auth"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-AUTH-002-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-AUTH-002-S2",
+          "type": "when",
+          "action": "Executar o fluxo: recuperação de senha com e-mail cadastrado",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-AUTH-002-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Playwright",
+          "path": "tests/e2e/auth-002.spec.ts",
+          "testName": "Recuperação de senha com e-mail cadastrado"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-302"
+        }
+      ],
+      "createdAt": "2026-08-25T13:00:00.000Z",
+      "updatedAt": "2026-09-03T17:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-AUTH-003",
+      "revision": 1,
+      "title": "Autenticação multifator por TOTP",
+      "description": "Cenário sintético para validar autenticação multifator por totp.",
+      "path": [
+        "Autenticação & Cadastro"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "segurança",
+        "mfa"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-AUTH-003-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-AUTH-003-S2",
+          "type": "when",
+          "action": "Executar o fluxo: autenticação multifator por totp",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-AUTH-003-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Cypress",
+          "path": "tests/e2e/auth-003.spec.ts",
+          "testName": "Autenticação multifator por TOTP"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-303"
+        }
+      ],
+      "createdAt": "2026-08-25T14:00:00.000Z",
+      "updatedAt": "2026-09-03T17:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-AUTH-004",
+      "revision": 1,
+      "title": "Bloqueio temporário após cinco tentativas inválidas",
+      "description": "Cenário sintético para validar bloqueio temporário após cinco tentativas inválidas.",
+      "path": [
+        "Autenticação & Cadastro"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "segurança",
+        "rate-limit"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-AUTH-004-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-AUTH-004-S2",
+          "type": "when",
+          "action": "Executar o fluxo: bloqueio temporário após cinco tentativas inválidas",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-AUTH-004-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-304"
+        }
+      ],
+      "createdAt": "2026-08-25T15:00:00.000Z",
+      "updatedAt": "2026-09-03T16:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-AUTH-005",
+      "revision": 1,
+      "title": "Cadastro com consentimento LGPD",
+      "description": "Cenário sintético para validar cadastro com consentimento lgpd.",
+      "path": [
+        "Autenticação & Cadastro"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "cadastro",
+        "lgpd"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-AUTH-005-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-AUTH-005-S2",
+          "type": "when",
+          "action": "Executar o fluxo: cadastro com consentimento lgpd",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-AUTH-005-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-305"
+        }
+      ],
+      "createdAt": "2026-08-25T16:00:00.000Z",
+      "updatedAt": "2026-09-03T16:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-PAY-001",
+      "revision": 2,
+      "title": "Checkout transparente aprovado via Pix",
+      "description": "Cenário sintético para validar checkout transparente aprovado via pix.",
+      "path": [
+        "Checkout & Pagamentos"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "pix",
+        "smoke"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-PAY-001-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-PAY-001-S2",
+          "type": "when",
+          "action": "Executar o fluxo: checkout transparente aprovado via pix",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-PAY-001-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Playwright",
+          "path": "tests/e2e/pay-001.spec.ts",
+          "testName": "Checkout transparente aprovado via Pix"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-306"
+        }
+      ],
+      "createdAt": "2026-08-25T17:00:00.000Z",
+      "updatedAt": "2026-09-03T15:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-PAY-002",
+      "revision": 1,
+      "title": "Recusa de cartão por saldo insuficiente",
+      "description": "Cenário sintético para validar recusa de cartão por saldo insuficiente.",
+      "path": [
+        "Checkout & Pagamentos"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "cartão",
+        "negativo"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-PAY-002-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-PAY-002-S2",
+          "type": "when",
+          "action": "Executar o fluxo: recusa de cartão por saldo insuficiente",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-PAY-002-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Cypress",
+          "path": "tests/e2e/pay-002.spec.ts",
+          "testName": "Recusa de cartão por saldo insuficiente"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-307"
+        }
+      ],
+      "createdAt": "2026-08-25T18:00:00.000Z",
+      "updatedAt": "2026-09-03T15:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-PAY-003",
+      "revision": 1,
+      "title": "Expiração do QR Code Pix",
+      "description": "Cenário sintético para validar expiração do qr code pix.",
+      "path": [
+        "Checkout & Pagamentos"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "pix",
+        "timeout"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-PAY-003-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-PAY-003-S2",
+          "type": "when",
+          "action": "Executar o fluxo: expiração do qr code pix",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-PAY-003-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Playwright",
+          "path": "tests/e2e/pay-003.spec.ts",
+          "testName": "Expiração do QR Code Pix"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-308"
+        }
+      ],
+      "createdAt": "2026-08-25T19:00:00.000Z",
+      "updatedAt": "2026-09-03T14:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-PAY-004",
+      "revision": 1,
+      "title": "Aplicação de cupom com frete grátis",
+      "description": "Cenário sintético para validar aplicação de cupom com frete grátis.",
+      "path": [
+        "Checkout & Pagamentos"
+      ],
+      "priority": "medium",
+      "status": "active",
+      "tags": [
+        "cupom",
+        "frete"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-PAY-004-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-PAY-004-S2",
+          "type": "when",
+          "action": "Executar o fluxo: aplicação de cupom com frete grátis",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-PAY-004-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-309"
+        }
+      ],
+      "createdAt": "2026-08-25T20:00:00.000Z",
+      "updatedAt": "2026-09-03T14:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-PAY-005",
+      "revision": 1,
+      "title": "Estorno parcial de pedido faturado",
+      "description": "Cenário sintético para validar estorno parcial de pedido faturado.",
+      "path": [
+        "Checkout & Pagamentos"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "estorno",
+        "financeiro"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-PAY-005-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-PAY-005-S2",
+          "type": "when",
+          "action": "Executar o fluxo: estorno parcial de pedido faturado",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-PAY-005-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-310"
+        }
+      ],
+      "createdAt": "2026-08-25T21:00:00.000Z",
+      "updatedAt": "2026-09-03T13:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-CAT-001",
+      "revision": 2,
+      "title": "Busca por produto com correção ortográfica",
+      "description": "Cenário sintético para validar busca por produto com correção ortográfica.",
+      "path": [
+        "Catálogo & Busca"
+      ],
+      "priority": "medium",
+      "status": "active",
+      "tags": [
+        "busca",
+        "web"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-CAT-001-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-CAT-001-S2",
+          "type": "when",
+          "action": "Executar o fluxo: busca por produto com correção ortográfica",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-CAT-001-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Cypress",
+          "path": "tests/e2e/cat-001.spec.ts",
+          "testName": "Busca por produto com correção ortográfica"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-311"
+        }
+      ],
+      "createdAt": "2026-08-25T22:00:00.000Z",
+      "updatedAt": "2026-09-03T13:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-CAT-002",
+      "revision": 1,
+      "title": "Filtro combinado por categoria e faixa de preço",
+      "description": "Cenário sintético para validar filtro combinado por categoria e faixa de preço.",
+      "path": [
+        "Catálogo & Busca"
+      ],
+      "priority": "medium",
+      "status": "active",
+      "tags": [
+        "filtro",
+        "regressão"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-CAT-002-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-CAT-002-S2",
+          "type": "when",
+          "action": "Executar o fluxo: filtro combinado por categoria e faixa de preço",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-CAT-002-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Playwright",
+          "path": "tests/e2e/cat-002.spec.ts",
+          "testName": "Filtro combinado por categoria e faixa de preço"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-312"
+        }
+      ],
+      "createdAt": "2026-08-25T23:00:00.000Z",
+      "updatedAt": "2026-09-03T12:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-CAT-003",
+      "revision": 1,
+      "title": "Produto indisponível não permite adicionar ao carrinho",
+      "description": "Cenário sintético para validar produto indisponível não permite adicionar ao carrinho.",
+      "path": [
+        "Catálogo & Busca"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "estoque",
+        "carrinho"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-CAT-003-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-CAT-003-S2",
+          "type": "when",
+          "action": "Executar o fluxo: produto indisponível não permite adicionar ao carrinho",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-CAT-003-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-313"
+        }
+      ],
+      "createdAt": "2026-08-26T00:00:00.000Z",
+      "updatedAt": "2026-09-03T12:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-MOB-001",
+      "revision": 1,
+      "title": "Compra in-app com restauração de recibo Apple",
+      "description": "Cenário sintético para validar compra in-app com restauração de recibo apple.",
+      "path": [
+        "Mobile & Assinaturas"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "ios",
+        "iap"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-MOB-001-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-MOB-001-S2",
+          "type": "when",
+          "action": "Executar o fluxo: compra in-app com restauração de recibo apple",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-MOB-001-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Playwright",
+          "path": "tests/e2e/mob-001.spec.ts",
+          "testName": "Compra in-app com restauração de recibo Apple"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-314"
+        }
+      ],
+      "createdAt": "2026-08-26T01:00:00.000Z",
+      "updatedAt": "2026-09-03T11:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-MOB-002",
+      "revision": 1,
+      "title": "Renovação de assinatura pela Play Store",
+      "description": "Cenário sintético para validar renovação de assinatura pela play store.",
+      "path": [
+        "Mobile & Assinaturas"
+      ],
+      "priority": "critical",
+      "status": "active",
+      "tags": [
+        "android",
+        "assinatura"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-MOB-002-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-MOB-002-S2",
+          "type": "when",
+          "action": "Executar o fluxo: renovação de assinatura pela play store",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-MOB-002-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [
+        {
+          "framework": "Cypress",
+          "path": "tests/e2e/mob-002.spec.ts",
+          "testName": "Renovação de assinatura pela Play Store"
+        }
+      ],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-315"
+        }
+      ],
+      "createdAt": "2026-08-26T02:00:00.000Z",
+      "updatedAt": "2026-09-03T11:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-MOB-003",
+      "revision": 2,
+      "title": "Deep link abre detalhe do pedido autenticado",
+      "description": "Cenário sintético para validar deep link abre detalhe do pedido autenticado.",
+      "path": [
+        "Mobile & Assinaturas"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "deeplink",
+        "mobile"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-MOB-003-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-MOB-003-S2",
+          "type": "when",
+          "action": "Executar o fluxo: deep link abre detalhe do pedido autenticado",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-MOB-003-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-316"
+        }
+      ],
+      "createdAt": "2026-08-26T03:00:00.000Z",
+      "updatedAt": "2026-09-03T10:30:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-ACC-001",
+      "revision": 1,
+      "title": "Navegação completa por teclado no checkout",
+      "description": "Cenário sintético para validar navegação completa por teclado no checkout.",
+      "path": [
+        "Acessibilidade"
+      ],
+      "priority": "high",
+      "status": "active",
+      "tags": [
+        "a11y",
+        "web"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-ACC-001-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-ACC-001-S2",
+          "type": "when",
+          "action": "Executar o fluxo: navegação completa por teclado no checkout",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-ACC-001-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-317"
+        }
+      ],
+      "createdAt": "2026-08-26T04:00:00.000Z",
+      "updatedAt": "2026-09-03T10:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "TC-ACC-002",
+      "revision": 1,
+      "title": "Leitor de tela anuncia erros do formulário",
+      "description": "Cenário sintético para validar leitor de tela anuncia erros do formulário.",
+      "path": [
+        "Acessibilidade"
+      ],
+      "priority": "high",
+      "status": "draft",
+      "tags": [
+        "a11y",
+        "formulário"
+      ],
+      "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+      "steps": [
+        {
+          "id": "TC-ACC-002-S1",
+          "type": "given",
+          "action": "Preparar os dados e abrir a funcionalidade",
+          "expectedResult": "A tela inicial é exibida sem erros"
+        },
+        {
+          "id": "TC-ACC-002-S2",
+          "type": "when",
+          "action": "Executar o fluxo: leitor de tela anuncia erros do formulário",
+          "expectedResult": "A ação é processada com feedback claro"
+        },
+        {
+          "id": "TC-ACC-002-S3",
+          "type": "then",
+          "action": "Validar o estado final e os registros gerados",
+          "expectedResult": "O resultado atende aos critérios de aceite"
+        }
+      ],
+      "automationLinks": [],
+      "externalReferences": [
+        {
+          "system": "Jira",
+          "value": "QAF-318"
+        }
+      ],
+      "createdAt": "2026-08-26T05:00:00.000Z",
+      "updatedAt": "2026-09-03T09:30:00.000Z"
+    }
+  ],
+  "plans": [
+    {
+      "schemaVersion": 2,
+      "id": "PLAN-REGRESSION-CORE",
+      "revision": 3,
+      "name": "Regressão Core & Autenticação",
+      "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+      "objective": "Validar os fluxos críticos antes da publicação em produção.",
+      "project": "Web Store",
+      "status": "active",
+      "tags": [
+        "regressão",
+        "release-2.1"
+      ],
+      "caseRefs": [
+        {
+          "caseId": "TC-AUTH-001",
+          "caseRevision": 2
+        },
+        {
+          "caseId": "TC-AUTH-002",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-AUTH-003",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-AUTH-004",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-ACC-001",
+          "caseRevision": 1
+        }
+      ],
+      "createdBy": "Marina Costa",
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "PLAN-CHECKOUT-PIX",
+      "revision": 2,
+      "name": "Checkout Transparente & Pagamentos Pix",
+      "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+      "objective": "Garantir a estabilidade de gateway financeiro.",
+      "project": "Gateway Financeiro",
+      "status": "active",
+      "tags": [
+        "regressão",
+        "release-2.1"
+      ],
+      "caseRefs": [
+        {
+          "caseId": "TC-PAY-001",
+          "caseRevision": 2
+        },
+        {
+          "caseId": "TC-PAY-002",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-PAY-003",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-PAY-004",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-PAY-005",
+          "caseRevision": 1
+        }
+      ],
+      "createdBy": "Bruno Lopes",
+      "createdAt": "2026-08-26T12:00:00.000Z",
+      "updatedAt": "2026-09-03T16:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "PLAN-MOBILE-IAP",
+      "revision": 1,
+      "name": "IAP 293 · Compra in-app e restauração",
+      "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+      "objective": "Garantir a estabilidade de apps ios / android.",
+      "project": "Apps iOS / Android",
+      "status": "active",
+      "tags": [
+        "homologação"
+      ],
+      "caseRefs": [
+        {
+          "caseId": "TC-MOB-001",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-MOB-002",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-MOB-003",
+          "caseRevision": 2
+        }
+      ],
+      "createdBy": "Marina Costa",
+      "createdAt": "2026-08-27T12:00:00.000Z",
+      "updatedAt": "2026-09-03T14:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "PLAN-CATALOG",
+      "revision": 1,
+      "name": "Catálogo, busca e disponibilidade",
+      "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+      "objective": "Garantir a estabilidade de web store.",
+      "project": "Web Store",
+      "status": "active",
+      "tags": [
+        "homologação"
+      ],
+      "caseRefs": [
+        {
+          "caseId": "TC-CAT-001",
+          "caseRevision": 2
+        },
+        {
+          "caseId": "TC-CAT-002",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-CAT-003",
+          "caseRevision": 1
+        }
+      ],
+      "createdBy": "Bruno Lopes",
+      "createdAt": "2026-08-28T12:00:00.000Z",
+      "updatedAt": "2026-09-03T12:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "PLAN-A11Y",
+      "revision": 1,
+      "name": "Auditoria de acessibilidade do checkout",
+      "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+      "objective": "Garantir a estabilidade de experiência web.",
+      "project": "Experiência Web",
+      "status": "draft",
+      "tags": [
+        "homologação"
+      ],
+      "caseRefs": [
+        {
+          "caseId": "TC-ACC-001",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-ACC-002",
+          "caseRevision": 1
+        },
+        {
+          "caseId": "TC-PAY-001",
+          "caseRevision": 2
+        }
+      ],
+      "createdBy": "Marina Costa",
+      "createdAt": "2026-08-29T12:00:00.000Z",
+      "updatedAt": "2026-09-03T10:00:00.000Z"
+    }
+  ],
+  "runs": [
+    {
+      "schemaVersion": 2,
+      "id": "RUN-REGRESSION-CORE-003",
+      "attempt": 3,
+      "planId": "PLAN-REGRESSION-CORE",
+      "planRevision": 3,
+      "status": "in_progress",
+      "context": {
+        "environment": "Staging 01",
+        "build": "2.1.0-rc.4",
+        "platform": "Web",
+        "device": "Desktop 1440p",
+        "browser": "Chrome 140",
+        "tester": "Marina Costa",
+        "notes": "Execução sintética para validação visual."
+      },
+      "snapshot": {
+        "plan": {
+          "schemaVersion": 2,
+          "id": "PLAN-REGRESSION-CORE",
+          "revision": 3,
+          "name": "Regressão Core & Autenticação",
+          "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+          "objective": "Validar os fluxos críticos antes da publicação em produção.",
+          "project": "Web Store",
+          "status": "active",
+          "tags": [
+            "regressão",
+            "release-2.1"
+          ],
+          "caseRefs": [
+            {
+              "caseId": "TC-AUTH-001",
+              "caseRevision": 2
+            },
+            {
+              "caseId": "TC-AUTH-002",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-AUTH-003",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-AUTH-004",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-ACC-001",
+              "caseRevision": 1
+            }
+          ],
+          "createdBy": "Marina Costa",
+          "createdAt": "2026-08-25T12:00:00.000Z",
+          "updatedAt": "2026-09-03T18:00:00.000Z"
+        },
+        "cases": [
+          {
+            "schemaVersion": 2,
+            "id": "TC-AUTH-001",
+            "revision": 2,
+            "title": "Login com credenciais válidas",
+            "description": "Cenário sintético para validar login com credenciais válidas.",
+            "path": [
+              "Autenticação & Cadastro"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "smoke",
+              "auth"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-AUTH-001-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-AUTH-001-S2",
+                "type": "when",
+                "action": "Executar o fluxo: login com credenciais válidas",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-AUTH-001-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Cypress",
+                "path": "tests/e2e/auth-001.spec.ts",
+                "testName": "Login com credenciais válidas"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-301"
+              }
+            ],
+            "createdAt": "2026-08-25T12:00:00.000Z",
+            "updatedAt": "2026-09-03T18:00:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-AUTH-002",
+            "revision": 1,
+            "title": "Recuperação de senha com e-mail cadastrado",
+            "description": "Cenário sintético para validar recuperação de senha com e-mail cadastrado.",
+            "path": [
+              "Autenticação & Cadastro"
+            ],
+            "priority": "high",
+            "status": "active",
+            "tags": [
+              "regressão",
+              "auth"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-AUTH-002-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-AUTH-002-S2",
+                "type": "when",
+                "action": "Executar o fluxo: recuperação de senha com e-mail cadastrado",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-AUTH-002-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Playwright",
+                "path": "tests/e2e/auth-002.spec.ts",
+                "testName": "Recuperação de senha com e-mail cadastrado"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-302"
+              }
+            ],
+            "createdAt": "2026-08-25T13:00:00.000Z",
+            "updatedAt": "2026-09-03T17:30:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-AUTH-003",
+            "revision": 1,
+            "title": "Autenticação multifator por TOTP",
+            "description": "Cenário sintético para validar autenticação multifator por totp.",
+            "path": [
+              "Autenticação & Cadastro"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "segurança",
+              "mfa"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-AUTH-003-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-AUTH-003-S2",
+                "type": "when",
+                "action": "Executar o fluxo: autenticação multifator por totp",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-AUTH-003-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Cypress",
+                "path": "tests/e2e/auth-003.spec.ts",
+                "testName": "Autenticação multifator por TOTP"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-303"
+              }
+            ],
+            "createdAt": "2026-08-25T14:00:00.000Z",
+            "updatedAt": "2026-09-03T17:00:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-AUTH-004",
+            "revision": 1,
+            "title": "Bloqueio temporário após cinco tentativas inválidas",
+            "description": "Cenário sintético para validar bloqueio temporário após cinco tentativas inválidas.",
+            "path": [
+              "Autenticação & Cadastro"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "segurança",
+              "rate-limit"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-AUTH-004-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-AUTH-004-S2",
+                "type": "when",
+                "action": "Executar o fluxo: bloqueio temporário após cinco tentativas inválidas",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-AUTH-004-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-304"
+              }
+            ],
+            "createdAt": "2026-08-25T15:00:00.000Z",
+            "updatedAt": "2026-09-03T16:30:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-ACC-001",
+            "revision": 1,
+            "title": "Navegação completa por teclado no checkout",
+            "description": "Cenário sintético para validar navegação completa por teclado no checkout.",
+            "path": [
+              "Acessibilidade"
+            ],
+            "priority": "high",
+            "status": "active",
+            "tags": [
+              "a11y",
+              "web"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-ACC-001-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-ACC-001-S2",
+                "type": "when",
+                "action": "Executar o fluxo: navegação completa por teclado no checkout",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-ACC-001-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-317"
+              }
+            ],
+            "createdAt": "2026-08-26T04:00:00.000Z",
+            "updatedAt": "2026-09-03T10:00:00.000Z"
+          }
+        ]
+      },
+      "results": {
+        "TC-AUTH-001::TC-AUTH-001-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:00:00.000Z"
+        },
+        "TC-AUTH-001::TC-AUTH-001-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:01:00.000Z"
+        },
+        "TC-AUTH-001::TC-AUTH-001-S3": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:02:00.000Z"
+        },
+        "TC-AUTH-002::TC-AUTH-002-S1": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:03:00.000Z"
+        },
+        "TC-AUTH-002::TC-AUTH-002-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:04:00.000Z"
+        },
+        "TC-AUTH-002::TC-AUTH-002-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:05:00.000Z"
+        },
+        "TC-AUTH-003::TC-AUTH-003-S1": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:06:00.000Z"
+        },
+        "TC-AUTH-003::TC-AUTH-003-S2": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:07:00.000Z"
+        },
+        "TC-AUTH-003::TC-AUTH-003-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:08:00.000Z"
+        },
+        "TC-AUTH-004::TC-AUTH-004-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:09:00.000Z"
+        },
+        "TC-AUTH-004::TC-AUTH-004-S2": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:10:00.000Z"
+        },
+        "TC-AUTH-004::TC-AUTH-004-S3": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:11:00.000Z"
+        },
+        "TC-ACC-001::TC-ACC-001-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:12:00.000Z"
+        },
+        "TC-ACC-001::TC-ACC-001-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:13:00.000Z"
+        },
+        "TC-ACC-001::TC-ACC-001-S3": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T18:14:00.000Z"
+        }
+      },
+      "exploratoryRecords": [
+        {
+          "id": "RUN-REGRESSION-CORE-003-EXP-1",
+          "title": "Monitorar latência do gateway",
+          "notes": "Oscilação observada durante a preparação.",
+          "classification": "risk",
+          "severity": "medium",
+          "evidenceIds": [],
+          "createdAt": "2026-09-03T17:00:00.000Z"
+        }
+      ],
+      "startedAt": "2026-09-03T17:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "RUN-CHECKOUT-PIX-002",
+      "attempt": 2,
+      "planId": "PLAN-CHECKOUT-PIX",
+      "planRevision": 2,
+      "status": "completed",
+      "context": {
+        "environment": "Homologação",
+        "build": "2.1.0-rc.4",
+        "platform": "Web",
+        "device": "Desktop 1440p",
+        "browser": "Chrome 140",
+        "tester": "Bruno Lopes",
+        "notes": "Execução sintética para validação visual."
+      },
+      "snapshot": {
+        "plan": {
+          "schemaVersion": 2,
+          "id": "PLAN-CHECKOUT-PIX",
+          "revision": 2,
+          "name": "Checkout Transparente & Pagamentos Pix",
+          "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+          "objective": "Garantir a estabilidade de gateway financeiro.",
+          "project": "Gateway Financeiro",
+          "status": "active",
+          "tags": [
+            "regressão",
+            "release-2.1"
+          ],
+          "caseRefs": [
+            {
+              "caseId": "TC-PAY-001",
+              "caseRevision": 2
+            },
+            {
+              "caseId": "TC-PAY-002",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-PAY-003",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-PAY-004",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-PAY-005",
+              "caseRevision": 1
+            }
+          ],
+          "createdBy": "Bruno Lopes",
+          "createdAt": "2026-08-26T12:00:00.000Z",
+          "updatedAt": "2026-09-03T16:00:00.000Z"
+        },
+        "cases": [
+          {
+            "schemaVersion": 2,
+            "id": "TC-PAY-001",
+            "revision": 2,
+            "title": "Checkout transparente aprovado via Pix",
+            "description": "Cenário sintético para validar checkout transparente aprovado via pix.",
+            "path": [
+              "Checkout & Pagamentos"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "pix",
+              "smoke"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-PAY-001-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-PAY-001-S2",
+                "type": "when",
+                "action": "Executar o fluxo: checkout transparente aprovado via pix",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-PAY-001-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Playwright",
+                "path": "tests/e2e/pay-001.spec.ts",
+                "testName": "Checkout transparente aprovado via Pix"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-306"
+              }
+            ],
+            "createdAt": "2026-08-25T17:00:00.000Z",
+            "updatedAt": "2026-09-03T15:30:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-PAY-002",
+            "revision": 1,
+            "title": "Recusa de cartão por saldo insuficiente",
+            "description": "Cenário sintético para validar recusa de cartão por saldo insuficiente.",
+            "path": [
+              "Checkout & Pagamentos"
+            ],
+            "priority": "high",
+            "status": "active",
+            "tags": [
+              "cartão",
+              "negativo"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-PAY-002-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-PAY-002-S2",
+                "type": "when",
+                "action": "Executar o fluxo: recusa de cartão por saldo insuficiente",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-PAY-002-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Cypress",
+                "path": "tests/e2e/pay-002.spec.ts",
+                "testName": "Recusa de cartão por saldo insuficiente"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-307"
+              }
+            ],
+            "createdAt": "2026-08-25T18:00:00.000Z",
+            "updatedAt": "2026-09-03T15:00:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-PAY-003",
+            "revision": 1,
+            "title": "Expiração do QR Code Pix",
+            "description": "Cenário sintético para validar expiração do qr code pix.",
+            "path": [
+              "Checkout & Pagamentos"
+            ],
+            "priority": "high",
+            "status": "active",
+            "tags": [
+              "pix",
+              "timeout"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-PAY-003-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-PAY-003-S2",
+                "type": "when",
+                "action": "Executar o fluxo: expiração do qr code pix",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-PAY-003-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Playwright",
+                "path": "tests/e2e/pay-003.spec.ts",
+                "testName": "Expiração do QR Code Pix"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-308"
+              }
+            ],
+            "createdAt": "2026-08-25T19:00:00.000Z",
+            "updatedAt": "2026-09-03T14:30:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-PAY-004",
+            "revision": 1,
+            "title": "Aplicação de cupom com frete grátis",
+            "description": "Cenário sintético para validar aplicação de cupom com frete grátis.",
+            "path": [
+              "Checkout & Pagamentos"
+            ],
+            "priority": "medium",
+            "status": "active",
+            "tags": [
+              "cupom",
+              "frete"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-PAY-004-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-PAY-004-S2",
+                "type": "when",
+                "action": "Executar o fluxo: aplicação de cupom com frete grátis",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-PAY-004-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-309"
+              }
+            ],
+            "createdAt": "2026-08-25T20:00:00.000Z",
+            "updatedAt": "2026-09-03T14:00:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-PAY-005",
+            "revision": 1,
+            "title": "Estorno parcial de pedido faturado",
+            "description": "Cenário sintético para validar estorno parcial de pedido faturado.",
+            "path": [
+              "Checkout & Pagamentos"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "estorno",
+              "financeiro"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-PAY-005-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-PAY-005-S2",
+                "type": "when",
+                "action": "Executar o fluxo: estorno parcial de pedido faturado",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-PAY-005-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-310"
+              }
+            ],
+            "createdAt": "2026-08-25T21:00:00.000Z",
+            "updatedAt": "2026-09-03T13:30:00.000Z"
+          }
+        ]
+      },
+      "results": {
+        "TC-PAY-001::TC-PAY-001-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:00:00.000Z"
+        },
+        "TC-PAY-001::TC-PAY-001-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:01:00.000Z"
+        },
+        "TC-PAY-001::TC-PAY-001-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:02:00.000Z"
+        },
+        "TC-PAY-002::TC-PAY-002-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:03:00.000Z"
+        },
+        "TC-PAY-002::TC-PAY-002-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:04:00.000Z"
+        },
+        "TC-PAY-002::TC-PAY-002-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:05:00.000Z"
+        },
+        "TC-PAY-003::TC-PAY-003-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:06:00.000Z"
+        },
+        "TC-PAY-003::TC-PAY-003-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:07:00.000Z"
+        },
+        "TC-PAY-003::TC-PAY-003-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:08:00.000Z"
+        },
+        "TC-PAY-004::TC-PAY-004-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:09:00.000Z"
+        },
+        "TC-PAY-004::TC-PAY-004-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:10:00.000Z"
+        },
+        "TC-PAY-004::TC-PAY-004-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:11:00.000Z"
+        },
+        "TC-PAY-005::TC-PAY-005-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:12:00.000Z"
+        },
+        "TC-PAY-005::TC-PAY-005-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:13:00.000Z"
+        },
+        "TC-PAY-005::TC-PAY-005-S3": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T13:14:00.000Z"
+        }
+      },
+      "exploratoryRecords": [],
+      "startedAt": "2026-09-03T12:00:00.000Z",
+      "updatedAt": "2026-09-03T13:00:00.000Z",
+      "finishedAt": "2026-09-03T13:40:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "RUN-MOBILE-IAP-001",
+      "attempt": 1,
+      "planId": "PLAN-MOBILE-IAP",
+      "planRevision": 1,
+      "status": "paused",
+      "context": {
+        "environment": "Device Farm",
+        "build": "2.1.0-rc.4",
+        "platform": "Web",
+        "device": "Desktop 1440p",
+        "browser": "Chrome 140",
+        "tester": "Marina Costa",
+        "notes": "Execução sintética para validação visual."
+      },
+      "snapshot": {
+        "plan": {
+          "schemaVersion": 2,
+          "id": "PLAN-MOBILE-IAP",
+          "revision": 1,
+          "name": "IAP 293 · Compra in-app e restauração",
+          "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+          "objective": "Garantir a estabilidade de apps ios / android.",
+          "project": "Apps iOS / Android",
+          "status": "active",
+          "tags": [
+            "homologação"
+          ],
+          "caseRefs": [
+            {
+              "caseId": "TC-MOB-001",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-MOB-002",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-MOB-003",
+              "caseRevision": 2
+            }
+          ],
+          "createdBy": "Marina Costa",
+          "createdAt": "2026-08-27T12:00:00.000Z",
+          "updatedAt": "2026-09-03T14:00:00.000Z"
+        },
+        "cases": [
+          {
+            "schemaVersion": 2,
+            "id": "TC-MOB-001",
+            "revision": 1,
+            "title": "Compra in-app com restauração de recibo Apple",
+            "description": "Cenário sintético para validar compra in-app com restauração de recibo apple.",
+            "path": [
+              "Mobile & Assinaturas"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "ios",
+              "iap"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-MOB-001-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-MOB-001-S2",
+                "type": "when",
+                "action": "Executar o fluxo: compra in-app com restauração de recibo apple",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-MOB-001-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Playwright",
+                "path": "tests/e2e/mob-001.spec.ts",
+                "testName": "Compra in-app com restauração de recibo Apple"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-314"
+              }
+            ],
+            "createdAt": "2026-08-26T01:00:00.000Z",
+            "updatedAt": "2026-09-03T11:30:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-MOB-002",
+            "revision": 1,
+            "title": "Renovação de assinatura pela Play Store",
+            "description": "Cenário sintético para validar renovação de assinatura pela play store.",
+            "path": [
+              "Mobile & Assinaturas"
+            ],
+            "priority": "critical",
+            "status": "active",
+            "tags": [
+              "android",
+              "assinatura"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-MOB-002-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-MOB-002-S2",
+                "type": "when",
+                "action": "Executar o fluxo: renovação de assinatura pela play store",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-MOB-002-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Cypress",
+                "path": "tests/e2e/mob-002.spec.ts",
+                "testName": "Renovação de assinatura pela Play Store"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-315"
+              }
+            ],
+            "createdAt": "2026-08-26T02:00:00.000Z",
+            "updatedAt": "2026-09-03T11:00:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-MOB-003",
+            "revision": 2,
+            "title": "Deep link abre detalhe do pedido autenticado",
+            "description": "Cenário sintético para validar deep link abre detalhe do pedido autenticado.",
+            "path": [
+              "Mobile & Assinaturas"
+            ],
+            "priority": "high",
+            "status": "active",
+            "tags": [
+              "deeplink",
+              "mobile"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-MOB-003-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-MOB-003-S2",
+                "type": "when",
+                "action": "Executar o fluxo: deep link abre detalhe do pedido autenticado",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-MOB-003-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-316"
+              }
+            ],
+            "createdAt": "2026-08-26T03:00:00.000Z",
+            "updatedAt": "2026-09-03T10:30:00.000Z"
+          }
+        ]
+      },
+      "results": {
+        "TC-MOB-001::TC-MOB-001-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:00:00.000Z"
+        },
+        "TC-MOB-001::TC-MOB-001-S2": {
+          "status": "blocked",
+          "actualResult": "Dependência externa indisponível no ambiente.",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:01:00.000Z"
+        },
+        "TC-MOB-001::TC-MOB-001-S3": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:02:00.000Z"
+        },
+        "TC-MOB-002::TC-MOB-002-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:03:00.000Z"
+        },
+        "TC-MOB-002::TC-MOB-002-S2": {
+          "status": "blocked",
+          "actualResult": "Dependência externa indisponível no ambiente.",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:04:00.000Z"
+        },
+        "TC-MOB-002::TC-MOB-002-S3": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:05:00.000Z"
+        },
+        "TC-MOB-003::TC-MOB-003-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:06:00.000Z"
+        },
+        "TC-MOB-003::TC-MOB-003-S2": {
+          "status": "blocked",
+          "actualResult": "Dependência externa indisponível no ambiente.",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:07:00.000Z"
+        },
+        "TC-MOB-003::TC-MOB-003-S3": {
+          "status": "not_run",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-03T09:08:00.000Z"
+        }
+      },
+      "exploratoryRecords": [
+        {
+          "id": "RUN-MOBILE-IAP-001-EXP-1",
+          "title": "Monitorar latência do gateway",
+          "notes": "Oscilação observada durante a preparação.",
+          "classification": "risk",
+          "severity": "medium",
+          "evidenceIds": [],
+          "createdAt": "2026-09-03T08:00:00.000Z"
+        }
+      ],
+      "startedAt": "2026-09-03T08:00:00.000Z",
+      "updatedAt": "2026-09-03T09:00:00.000Z"
+    },
+    {
+      "schemaVersion": 2,
+      "id": "RUN-CATALOG-004",
+      "attempt": 4,
+      "planId": "PLAN-CATALOG",
+      "planRevision": 1,
+      "status": "completed",
+      "context": {
+        "environment": "Staging 02",
+        "build": "2.1.0-rc.4",
+        "platform": "Web",
+        "device": "Desktop 1440p",
+        "browser": "Chrome 140",
+        "tester": "Bruno Lopes",
+        "notes": "Execução sintética para validação visual."
+      },
+      "snapshot": {
+        "plan": {
+          "schemaVersion": 2,
+          "id": "PLAN-CATALOG",
+          "revision": 1,
+          "name": "Catálogo, busca e disponibilidade",
+          "description": "Plano sintético preparado para inspeção visual e exploração das telas do QA Flow.",
+          "objective": "Garantir a estabilidade de web store.",
+          "project": "Web Store",
+          "status": "active",
+          "tags": [
+            "homologação"
+          ],
+          "caseRefs": [
+            {
+              "caseId": "TC-CAT-001",
+              "caseRevision": 2
+            },
+            {
+              "caseId": "TC-CAT-002",
+              "caseRevision": 1
+            },
+            {
+              "caseId": "TC-CAT-003",
+              "caseRevision": 1
+            }
+          ],
+          "createdBy": "Bruno Lopes",
+          "createdAt": "2026-08-28T12:00:00.000Z",
+          "updatedAt": "2026-09-03T12:00:00.000Z"
+        },
+        "cases": [
+          {
+            "schemaVersion": 2,
+            "id": "TC-CAT-001",
+            "revision": 2,
+            "title": "Busca por produto com correção ortográfica",
+            "description": "Cenário sintético para validar busca por produto com correção ortográfica.",
+            "path": [
+              "Catálogo & Busca"
+            ],
+            "priority": "medium",
+            "status": "active",
+            "tags": [
+              "busca",
+              "web"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-CAT-001-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-CAT-001-S2",
+                "type": "when",
+                "action": "Executar o fluxo: busca por produto com correção ortográfica",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-CAT-001-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Cypress",
+                "path": "tests/e2e/cat-001.spec.ts",
+                "testName": "Busca por produto com correção ortográfica"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-311"
+              }
+            ],
+            "createdAt": "2026-08-25T22:00:00.000Z",
+            "updatedAt": "2026-09-03T13:00:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-CAT-002",
+            "revision": 1,
+            "title": "Filtro combinado por categoria e faixa de preço",
+            "description": "Cenário sintético para validar filtro combinado por categoria e faixa de preço.",
+            "path": [
+              "Catálogo & Busca"
+            ],
+            "priority": "medium",
+            "status": "active",
+            "tags": [
+              "filtro",
+              "regressão"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-CAT-002-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-CAT-002-S2",
+                "type": "when",
+                "action": "Executar o fluxo: filtro combinado por categoria e faixa de preço",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-CAT-002-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [
+              {
+                "framework": "Playwright",
+                "path": "tests/e2e/cat-002.spec.ts",
+                "testName": "Filtro combinado por categoria e faixa de preço"
+              }
+            ],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-312"
+              }
+            ],
+            "createdAt": "2026-08-25T23:00:00.000Z",
+            "updatedAt": "2026-09-03T12:30:00.000Z"
+          },
+          {
+            "schemaVersion": 2,
+            "id": "TC-CAT-003",
+            "revision": 1,
+            "title": "Produto indisponível não permite adicionar ao carrinho",
+            "description": "Cenário sintético para validar produto indisponível não permite adicionar ao carrinho.",
+            "path": [
+              "Catálogo & Busca"
+            ],
+            "priority": "high",
+            "status": "active",
+            "tags": [
+              "estoque",
+              "carrinho"
+            ],
+            "precondition": "Usuário de teste ativo e ambiente de homologação disponível.",
+            "steps": [
+              {
+                "id": "TC-CAT-003-S1",
+                "type": "given",
+                "action": "Preparar os dados e abrir a funcionalidade",
+                "expectedResult": "A tela inicial é exibida sem erros"
+              },
+              {
+                "id": "TC-CAT-003-S2",
+                "type": "when",
+                "action": "Executar o fluxo: produto indisponível não permite adicionar ao carrinho",
+                "expectedResult": "A ação é processada com feedback claro"
+              },
+              {
+                "id": "TC-CAT-003-S3",
+                "type": "then",
+                "action": "Validar o estado final e os registros gerados",
+                "expectedResult": "O resultado atende aos critérios de aceite"
+              }
+            ],
+            "automationLinks": [],
+            "externalReferences": [
+              {
+                "system": "Jira",
+                "value": "QAF-313"
+              }
+            ],
+            "createdAt": "2026-08-26T00:00:00.000Z",
+            "updatedAt": "2026-09-03T12:00:00.000Z"
+          }
+        ]
+      },
+      "results": {
+        "TC-CAT-001::TC-CAT-001-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:00:00.000Z"
+        },
+        "TC-CAT-001::TC-CAT-001-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:01:00.000Z"
+        },
+        "TC-CAT-001::TC-CAT-001-S3": {
+          "status": "failed",
+          "actualResult": "Resposta 500 ao confirmar a operação.",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:02:00.000Z"
+        },
+        "TC-CAT-002::TC-CAT-002-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:03:00.000Z"
+        },
+        "TC-CAT-002::TC-CAT-002-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:04:00.000Z"
+        },
+        "TC-CAT-002::TC-CAT-002-S3": {
+          "status": "failed",
+          "actualResult": "Resposta 500 ao confirmar a operação.",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:05:00.000Z"
+        },
+        "TC-CAT-003::TC-CAT-003-S1": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:06:00.000Z"
+        },
+        "TC-CAT-003::TC-CAT-003-S2": {
+          "status": "passed",
+          "actualResult": "",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:07:00.000Z"
+        },
+        "TC-CAT-003::TC-CAT-003-S3": {
+          "status": "failed",
+          "actualResult": "Resposta 500 ao confirmar a operação.",
+          "evidenceIds": [],
+          "updatedAt": "2026-09-02T16:08:00.000Z"
+        }
+      },
+      "exploratoryRecords": [],
+      "startedAt": "2026-09-02T15:00:00.000Z",
+      "updatedAt": "2026-09-02T16:00:00.000Z",
+      "finishedAt": "2026-09-02T16:40:00.000Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "REPORT-HOMOLOGATION-001",
+      "runId": "RUN-CHECKOUT-PIX-002",
+      "title": "Homologação do checkout Pix",
+      "notes": "Relatório sintético para composição visual.",
+      "createdAt": "2026-09-03T18:00:00.000Z"
+    }
+  ],
+  "demandColumns": [
+    {
+      "id": "COL-BACKLOG",
+      "name": "Backlog",
+      "semantic": "neutral",
+      "order": 0,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "COL-REFINEMENT",
+      "name": "Refinamento",
+      "semantic": "neutral",
+      "order": 1,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "COL-READY",
+      "name": "Pronto",
+      "semantic": "neutral",
+      "order": 2,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "COL-PROGRESS",
+      "name": "Em andamento",
+      "semantic": "active",
+      "order": 3,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "COL-BLOCKED",
+      "name": "Bloqueado",
+      "semantic": "blocked",
+      "order": 4,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "COL-VALIDATION",
+      "name": "Em validação",
+      "semantic": "active",
+      "order": 5,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "COL-DONE",
+      "name": "Concluído",
+      "semantic": "done",
+      "order": 6,
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    }
+  ],
+  "demands": [
+    {
+      "id": "DEM-001",
+      "title": "Mapear critérios de aceite do novo cadastro",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-BACKLOG",
+      "order": 0,
+      "priority": "high",
+      "assignee": "Marina Costa",
+      "dueDate": "2026-09-02",
+      "tags": [
+        "cadastro",
+        "discovery"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-1-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-1-CHK-2",
+          "label": "Evidências anexadas",
+          "done": true
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-AUTH-001",
+          "label": "Login com credenciais válidas"
+        }
+      ],
+      "createdAt": "2026-08-25T12:00:00.000Z",
+      "updatedAt": "2026-09-03T18:00:00.000Z"
+    },
+    {
+      "id": "DEM-002",
+      "title": "Revisar contratos da API de catálogo",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-BACKLOG",
+      "order": 1,
+      "priority": "medium",
+      "assignee": "Lucas Lima",
+      "tags": [
+        "api",
+        "contrato"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-2-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-2-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-AUTH-002",
+          "label": "Recuperação de senha com e-mail cadastrado"
+        }
+      ],
+      "createdAt": "2026-08-25T12:45:00.000Z",
+      "updatedAt": "2026-09-03T17:45:00.000Z"
+    },
+    {
+      "id": "DEM-003",
+      "title": "Elaborar cenários Gherkin para MFA",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-REFINEMENT",
+      "order": 0,
+      "priority": "high",
+      "assignee": "Marina Costa",
+      "tags": [
+        "mfa",
+        "gherkin"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-3-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-3-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-AUTH-003",
+          "label": "Autenticação multifator por TOTP"
+        }
+      ],
+      "createdAt": "2026-08-25T13:30:00.000Z",
+      "updatedAt": "2026-09-03T17:30:00.000Z"
+    },
+    {
+      "id": "DEM-004",
+      "title": "Preparar massa de cartões de teste",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-REFINEMENT",
+      "order": 1,
+      "priority": "medium",
+      "assignee": "Bruno Lopes",
+      "dueDate": "2026-09-08",
+      "tags": [
+        "pagamentos"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-4-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-4-CHK-2",
+          "label": "Evidências anexadas",
+          "done": true
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-AUTH-004",
+          "label": "Bloqueio temporário após cinco tentativas inválidas"
+        }
+      ],
+      "createdAt": "2026-08-25T14:15:00.000Z",
+      "updatedAt": "2026-09-03T17:15:00.000Z"
+    },
+    {
+      "id": "DEM-005",
+      "title": "Validar checklist de publicação web",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-READY",
+      "order": 0,
+      "priority": "critical",
+      "assignee": "Aline Souza",
+      "dueDate": "2026-09-02",
+      "tags": [
+        "release",
+        "smoke"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-5-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-5-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-AUTH-005",
+          "label": "Cadastro com consentimento LGPD"
+        }
+      ],
+      "createdAt": "2026-08-25T15:00:00.000Z",
+      "updatedAt": "2026-09-03T17:00:00.000Z"
+    },
+    {
+      "id": "DEM-006",
+      "title": "Executar regressão do checkout Pix",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-PROGRESS",
+      "order": 0,
+      "priority": "critical",
+      "assignee": "Bruno Lopes",
+      "tags": [
+        "pix",
+        "regressão"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-6-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-6-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-PAY-001",
+          "label": "Checkout transparente aprovado via Pix"
+        }
+      ],
+      "createdAt": "2026-08-25T15:45:00.000Z",
+      "updatedAt": "2026-09-03T16:45:00.000Z"
+    },
+    {
+      "id": "DEM-007",
+      "title": "Auditar navegação por teclado",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-PROGRESS",
+      "order": 1,
+      "priority": "high",
+      "assignee": "Marina Costa",
+      "dueDate": "2026-09-08",
+      "tags": [
+        "a11y"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-7-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-7-CHK-2",
+          "label": "Evidências anexadas",
+          "done": true
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-PAY-002",
+          "label": "Recusa de cartão por saldo insuficiente"
+        }
+      ],
+      "createdAt": "2026-08-25T16:30:00.000Z",
+      "updatedAt": "2026-09-03T16:30:00.000Z"
+    },
+    {
+      "id": "DEM-008",
+      "title": "Falha 500 ao confirmar estorno",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-BLOCKED",
+      "order": 0,
+      "priority": "critical",
+      "assignee": "Lucas Lima",
+      "tags": [
+        "bug",
+        "financeiro"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-8-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-8-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-PAY-003",
+          "label": "Expiração do QR Code Pix"
+        }
+      ],
+      "createdAt": "2026-08-25T17:15:00.000Z",
+      "updatedAt": "2026-09-03T16:15:00.000Z"
+    },
+    {
+      "id": "DEM-009",
+      "title": "Aguardar credenciais do Device Farm",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-BLOCKED",
+      "order": 1,
+      "priority": "high",
+      "assignee": "Aline Souza",
+      "dueDate": "2026-09-02",
+      "tags": [
+        "mobile",
+        "infra"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-9-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-9-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-PAY-004",
+          "label": "Aplicação de cupom com frete grátis"
+        }
+      ],
+      "createdAt": "2026-08-25T18:00:00.000Z",
+      "updatedAt": "2026-09-03T16:00:00.000Z"
+    },
+    {
+      "id": "DEM-010",
+      "title": "Validar evidências da regressão core",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-VALIDATION",
+      "order": 0,
+      "priority": "high",
+      "assignee": "Marina Costa",
+      "dueDate": "2026-09-08",
+      "tags": [
+        "evidência"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-10-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-10-CHK-2",
+          "label": "Evidências anexadas",
+          "done": true
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-PAY-005",
+          "label": "Estorno parcial de pedido faturado"
+        }
+      ],
+      "createdAt": "2026-08-25T18:45:00.000Z",
+      "updatedAt": "2026-09-03T15:45:00.000Z"
+    },
+    {
+      "id": "DEM-011",
+      "title": "Homologar renovação Play Store",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-VALIDATION",
+      "order": 1,
+      "priority": "critical",
+      "assignee": "Bruno Lopes",
+      "tags": [
+        "android",
+        "assinatura"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-11-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-11-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-CAT-001",
+          "label": "Busca por produto com correção ortográfica"
+        }
+      ],
+      "createdAt": "2026-08-25T19:30:00.000Z",
+      "updatedAt": "2026-09-03T15:30:00.000Z"
+    },
+    {
+      "id": "DEM-012",
+      "title": "Smoke de autenticação concluído",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-DONE",
+      "order": 0,
+      "priority": "critical",
+      "assignee": "Marina Costa",
+      "tags": [
+        "auth",
+        "smoke"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-12-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-12-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-CAT-002",
+          "label": "Filtro combinado por categoria e faixa de preço"
+        }
+      ],
+      "createdAt": "2026-08-25T20:15:00.000Z",
+      "updatedAt": "2026-09-03T15:15:00.000Z",
+      "completedAt": "2026-09-03T15:15:00.000Z"
+    },
+    {
+      "id": "DEM-013",
+      "title": "Cobertura da busca por produto",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-DONE",
+      "order": 1,
+      "priority": "medium",
+      "assignee": "Lucas Lima",
+      "dueDate": "2026-09-02",
+      "tags": [
+        "busca"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-13-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-13-CHK-2",
+          "label": "Evidências anexadas",
+          "done": true
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-CAT-003",
+          "label": "Produto indisponível não permite adicionar ao carrinho"
+        }
+      ],
+      "createdAt": "2026-08-25T21:00:00.000Z",
+      "updatedAt": "2026-09-03T15:00:00.000Z",
+      "completedAt": "2026-09-03T15:00:00.000Z"
+    },
+    {
+      "id": "DEM-014",
+      "title": "Revisar mensagens de erro do formulário",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-READY",
+      "order": 1,
+      "priority": "medium",
+      "assignee": "Aline Souza",
+      "tags": [
+        "ux",
+        "a11y"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-14-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-14-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-MOB-001",
+          "label": "Compra in-app com restauração de recibo Apple"
+        }
+      ],
+      "createdAt": "2026-08-25T21:45:00.000Z",
+      "updatedAt": "2026-09-03T14:45:00.000Z"
+    },
+    {
+      "id": "DEM-015",
+      "title": "Planejar regressão da release 2.1",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-BACKLOG",
+      "order": 2,
+      "priority": "high",
+      "assignee": "Bruno Lopes",
+      "tags": [
+        "release-2.1"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-15-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-15-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-MOB-002",
+          "label": "Renovação de assinatura pela Play Store"
+        }
+      ],
+      "createdAt": "2026-08-25T22:30:00.000Z",
+      "updatedAt": "2026-09-03T14:30:00.000Z"
+    },
+    {
+      "id": "DEM-016",
+      "title": "Automatizar expiração do QR Code",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-PROGRESS",
+      "order": 2,
+      "priority": "high",
+      "assignee": "Lucas Lima",
+      "dueDate": "2026-09-08",
+      "tags": [
+        "automação",
+        "pix"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-16-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-16-CHK-2",
+          "label": "Evidências anexadas",
+          "done": true
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-MOB-003",
+          "label": "Deep link abre detalhe do pedido autenticado"
+        }
+      ],
+      "createdAt": "2026-08-25T23:15:00.000Z",
+      "updatedAt": "2026-09-03T14:15:00.000Z"
+    },
+    {
+      "id": "DEM-017",
+      "title": "Confirmar regra de estoque indisponível",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-REFINEMENT",
+      "order": 2,
+      "priority": "medium",
+      "assignee": "Aline Souza",
+      "dueDate": "2026-09-02",
+      "tags": [
+        "estoque"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-17-CHK-1",
+          "label": "Critérios revisados",
+          "done": true
+        },
+        {
+          "id": "DEM-17-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-ACC-001",
+          "label": "Navegação completa por teclado no checkout"
+        }
+      ],
+      "createdAt": "2026-08-26T00:00:00.000Z",
+      "updatedAt": "2026-09-03T14:00:00.000Z"
+    },
+    {
+      "id": "DEM-018",
+      "title": "Relatório executivo de homologação",
+      "description": "Item sintético criado para demonstrar densidade, filtros, estados e responsividade do quadro.",
+      "columnId": "COL-DONE",
+      "order": 2,
+      "priority": "low",
+      "assignee": "Marina Costa",
+      "tags": [
+        "relatório"
+      ],
+      "checklist": [
+        {
+          "id": "DEM-18-CHK-1",
+          "label": "Critérios revisados",
+          "done": false
+        },
+        {
+          "id": "DEM-18-CHK-2",
+          "label": "Evidências anexadas",
+          "done": false
+        }
+      ],
+      "links": [
+        {
+          "type": "case",
+          "id": "TC-ACC-002",
+          "label": "Leitor de tela anuncia erros do formulário"
+        }
+      ],
+      "createdAt": "2026-08-26T00:45:00.000Z",
+      "updatedAt": "2026-09-03T13:45:00.000Z",
+      "completedAt": "2026-09-03T13:45:00.000Z"
+    }
+  ],
+  "evidence": [],
+  "settings": {
+    "mode": "browser",
+    "name": "QA Flow · Demo Elera",
+    "repositoryPath": ".qaflow",
+    "compactEvidence": true
+  }
+}

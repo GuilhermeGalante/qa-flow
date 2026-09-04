@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Play, RotateCcw, Search } from "lucide-react";
+import { Activity, CheckCircle2, Clock3, Play, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import type { RunContext, RunStatus, TestRun } from "../../domain/types";
 import { runProgress } from "../../domain/validation";
 import { useQaStore } from "../../store/useQaStore";
@@ -8,7 +8,7 @@ import { Modal } from "../../ui/Modal";
 import { SegmentedControl, type SegmentedOption } from "../../ui/SegmentedControl";
 import { Select, type SelectOption } from "../../ui/Select";
 import { useToast } from "../../ui/ToastProvider";
-import { EmptyState, Notice, PageHeader, StatusBadge, buttonPrimary, buttonSecondary, inputClass, runStatusLabel } from "./Shared";
+import { EmptyState, MetricCard, Notice, PageHeader, StatusBadge, buttonPrimary, buttonSecondary, inputClass, runStatusLabel } from "./Shared";
 import { RunRunner } from "./RunRunner";
 
 const blankContext: RunContext = { environment: "", build: "", platform: "", device: "", browser: "", tester: "", notes: "" };
@@ -108,6 +108,21 @@ export function RunsScreen({ requestedPlanId, onRequestHandled }: { requestedPla
   const [status, setStatus] = useState<RunStatus | "all">("all");
   const selectedRun = runs.find((item) => item.id === selectedRunId);
 
+  const completedRuns = runs.filter((run) => run.status === "completed");
+  const activeRuns = runs.filter((run) => run.status === "in_progress" || run.status === "paused");
+  const allResults = runs.flatMap((run) => Object.values(run.results));
+  const decisiveResults = allResults.filter((result) => result.status === "passed" || result.status === "failed");
+  const successRate = decisiveResults.length
+    ? Math.round((decisiveResults.filter((result) => result.status === "passed").length / decisiveResults.length) * 100)
+    : 0;
+  const completedDurations = completedRuns
+    .filter((run) => run.finishedAt)
+    .map((run) => Math.max(0, Date.parse(run.finishedAt!) - Date.parse(run.startedAt)));
+  const averageDurationMinutes = completedDurations.length
+    ? Math.round(completedDurations.reduce((sum, duration) => sum + duration, 0) / completedDurations.length / 60_000)
+    : 0;
+  const failedOrBlocked = allResults.filter((result) => result.status === "failed" || result.status === "blocked").length;
+
   const matching = useMemo(() => runs.filter((run) =>
     `${run.id} ${run.snapshot.plan.name} ${run.context.environment} ${run.context.tester}`.toLowerCase().includes(query.toLowerCase())), [query, runs]);
   const filtered = matching.filter((run) => status === "all" || run.status === status);
@@ -125,7 +140,13 @@ export function RunsScreen({ requestedPlanId, onRequestHandled }: { requestedPla
   return (
     <>
       <PageHeader title="Execuções" description="Cada tentativa é independente, preserva o snapshot utilizado e permanece disponível para auditoria e relatórios." actions={<button type="button" className={buttonPrimary} onClick={() => setDialog({})}><Play size={17} /> Nova execução</button>} />
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-4 shadow-sm lg:flex-row lg:items-center">
+      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Indicadores das execuções">
+        <MetricCard label="Total de execuções" value={runs.length} detail={`${activeRuns.length} em andamento`} icon={<Activity size={18} />} />
+        <MetricCard label="Taxa de sucesso global" value={`${successRate}%`} detail={`${decisiveResults.length} resultado(s) decisivo(s)`} icon={<CheckCircle2 size={18} />} tone="pass" />
+        <MetricCard label="Tempo médio" value={averageDurationMinutes ? `${averageDurationMinutes} min` : "—"} detail={`${completedRuns.length} execução(ões) concluída(s)`} icon={<Clock3 size={18} />} tone="run" />
+        <MetricCard label="Falhas e bloqueios" value={failedOrBlocked} detail="resultados que exigem atenção" icon={<ShieldAlert size={18} />} tone={failedOrBlocked ? "fail" : "neutral"} />
+      </section>
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-3 shadow-[0_8px_24px_rgb(15_23_42/0.03)] lg:flex-row lg:items-center">
         <label className="relative lg:w-80"><span className="sr-only">Buscar execuções</span><Search className="absolute left-3 top-3 text-faint" size={18} /><input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar plano, ambiente, responsável ou ID" /></label>
         <SegmentedControl size="sm" ariaLabel="Filtrar status" value={status} onChange={setStatus} options={statusOptions} />
       </div>
@@ -135,15 +156,22 @@ export function RunsScreen({ requestedPlanId, onRequestHandled }: { requestedPla
         <div className="space-y-3">
           {filtered.map((run) => {
             const progress = runProgress(run);
+            const resultValues = Object.values(run.results);
+            const passed = resultValues.filter((result) => result.status === "passed").length;
+            const failed = resultValues.filter((result) => result.status === "failed").length;
+            const blocked = resultValues.filter((result) => result.status === "blocked").length;
             return (
-              <article key={run.id} className="flex flex-col gap-4 rounded-2xl border border-hairline bg-raised p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => { setSelectedRunId(run.id); setActiveRun(run.id); }}>
-                  <div className="flex flex-wrap items-center gap-2"><StatusBadge value={run.status} label={runStatusLabel[run.status]} /><span className="text-xs font-bold text-muted">Tentativa {run.attempt}</span><span className="text-xs text-faint">snapshot do plano rev. {run.planRevision}</span></div>
-                  <h2 className="mt-2 truncate text-lg font-bold text-body">{run.snapshot.plan.name}</h2>
-                  <p className="mt-1 text-xs text-muted">{run.context.environment || "Sem ambiente"} · {run.context.tester || "Sem responsável"} · atualizado em {new Date(run.updatedAt).toLocaleString("pt-BR")}</p>
-                  <div className="mt-3 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-shell"><div className="h-full rounded-full bg-run-mark" style={{ width: `${progress.percent}%` }} /></div><span className="text-xs font-bold tabular-nums text-muted">{progress.percent}%</span></div>
-                </button>
-                <div className="flex shrink-0 flex-wrap gap-2"><button type="button" className={buttonSecondary} onClick={() => { setSelectedRunId(run.id); setActiveRun(run.id); }}>{run.status === "completed" || run.status === "aborted" ? "Consultar" : "Continuar"}</button><button type="button" className={buttonSecondary} onClick={() => setDialog({ sourceRun: run })}><RotateCcw size={15} /> Nova tentativa</button></div>
+              <article key={run.id} className="rounded-2xl border border-hairline bg-raised p-5 shadow-[0_8px_24px_rgb(15_23_42/0.03)]">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <button type="button" className="min-w-0 flex-1 text-left" onClick={() => { setSelectedRunId(run.id); setActiveRun(run.id); }}>
+                    <div className="flex flex-wrap items-center gap-2"><StatusBadge value={run.status} label={runStatusLabel[run.status]} /><span className="text-xs font-bold text-muted">Tentativa {run.attempt}</span><span className="text-xs text-faint">Snapshot rev. {run.planRevision}</span></div>
+                    <h2 className="mt-2 truncate text-lg font-bold text-body">{run.snapshot.plan.name}</h2>
+                    <p className="mt-1 text-xs text-muted">{run.context.environment || "Sem ambiente"} · {run.context.tester || "Sem responsável"} · {new Date(run.updatedAt).toLocaleString("pt-BR")}</p>
+                  </button>
+                  <div className="flex shrink-0 flex-wrap gap-2"><button type="button" className={buttonSecondary} onClick={() => { setSelectedRunId(run.id); setActiveRun(run.id); }}>{run.status === "completed" || run.status === "aborted" ? "Consultar" : "Continuar"}</button><button type="button" className={buttonSecondary} onClick={() => setDialog({ sourceRun: run })}><RotateCcw size={15} /> Nova tentativa</button></div>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs"><span className="text-muted">{passed} aprovado(s) · {failed} reprovado(s) · {blocked} bloqueado(s)</span><strong className="tabular-nums text-body">{progress.executed} de {progress.total} passos · {progress.percent}%</strong></div>
+                <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-shell"><div className="bg-pass-mark" style={{ width: `${progress.total ? (passed / progress.total) * 100 : 0}%` }} /><div className="bg-fail-mark" style={{ width: `${progress.total ? (failed / progress.total) * 100 : 0}%` }} /><div className="bg-warn" style={{ width: `${progress.total ? (blocked / progress.total) * 100 : 0}%` }} /><div className="bg-run-mark" style={{ width: `${Math.max(0, progress.percent - (progress.total ? ((passed + failed + blocked) / progress.total) * 100 : 0))}%` }} /></div>
               </article>
             );
           })}

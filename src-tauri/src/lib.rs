@@ -1,6 +1,10 @@
+#[cfg(target_os = "windows")]
+mod capture;
 pub mod contracts;
 pub mod error;
 pub mod logging;
+#[cfg(target_os = "windows")]
+mod recording;
 pub mod storage;
 
 use std::sync::{
@@ -16,9 +20,10 @@ use contracts::{
     RuntimeInfo, TransferResult, TransferStatus, WorkspaceSnapshot, IPC_CONTRACT_VERSION,
 };
 use error::DesktopResult;
+use serde::Serialize;
 use serde_json::{json, Value};
 use storage::{layout::WorkspaceLayout, service::WorkspaceService, transfer::selected_path};
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, PhysicalPosition, State, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_updater::{Updater, UpdaterExt};
 
@@ -27,6 +32,12 @@ struct DesktopState {
     service: Arc<Mutex<WorkspaceService>>,
     pending_commits: Arc<AtomicUsize>,
     close_requested: Arc<AtomicBool>,
+    recording: Arc<Mutex<Option<RecordingSession>>>,
+}
+
+struct RecordingSession {
+    stop: std::sync::mpsc::Sender<()>,
+    worker: std::thread::JoinHandle<DesktopResult<Vec<u8>>>,
 }
 
 impl DesktopState {
@@ -35,6 +46,7 @@ impl DesktopState {
             service: Arc::new(Mutex::new(WorkspaceService::new(layout))),
             pending_commits: Arc::new(AtomicUsize::new(0)),
             close_requested: Arc::new(AtomicBool::new(false)),
+            recording: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -63,6 +75,263 @@ where
     })?
 }
 
+const COMPANION_LABEL: &str = "run-companion";
+const WORKSPACE_CHANGED_EVENT: &str = "qaflow://workspace-changed";
+const COMPANION_RUN_EVENT: &str = "qaflow://companion-run";
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeCapture {
+    bytes: Vec<u8>,
+    mime_type: &'static str,
+}
+
+fn start_native_recording(state: &DesktopState, rect: capture::CaptureRect) -> DesktopResult<()> {
+    let mut active = state
+        .recording
+        .lock()
+        .map_err(|_| window_error("O controle da gravação precisa ser reiniciado."))?;
+    if active.is_some() {
+        return Err(DesktopError::validation(
+            "Já existe uma gravação em andamento.",
+            "recording",
+            "Encerre a gravação atual antes de iniciar outra.",
+        ));
+    }
+    let (stop, receiver) = std::sync::mpsc::channel();
+    let worker = std::thread::Builder::new()
+        .name("qaflow-screen-recorder".to_owned())
+        .spawn(move || recording::record_region(rect, receiver))
+        .map_err(|_| window_error("Não foi possível iniciar a gravação nativa."))?;
+    *active = Some(RecordingSession { stop, worker });
+    Ok(())
+}
+
+fn cancel_native_recording(state: &DesktopState) {
+    if let Ok(mut active) = state.recording.lock() {
+        if let Some(session) = active.take() {
+            let _ = session.stop.send(());
+        }
+    }
+}
+
+fn window_error(message: &str) -> DesktopError {
+    DesktopError::new(DesktopErrorCode::Internal, message)
+}
+
+fn notify_other_window(app: &tauri::AppHandle, source_label: &str) {
+    let target = if source_label == COMPANION_LABEL {
+        "main"
+    } else {
+        COMPANION_LABEL
+    };
+    let _ = app.emit_to(target, WORKSPACE_CHANGED_EVENT, ());
+}
+
+fn position_companion(app: &tauri::AppHandle, companion: &tauri::WebviewWindow) {
+    let monitor = app
+        .get_webview_window("main")
+        .and_then(|main| main.current_monitor().ok().flatten());
+    let Ok(size) = companion.outer_size() else {
+        return;
+    };
+    let Some(monitor) = monitor else {
+        return;
+    };
+    let origin = monitor.position();
+    let available = monitor.size();
+    let margin = (20.0 * monitor.scale_factor()) as i32;
+    let x = origin.x + available.width as i32 - size.width as i32 - margin;
+    let y = origin.y + margin;
+    let _ = companion.set_position(PhysicalPosition::new(x.max(origin.x), y));
+}
+
+#[tauri::command]
+async fn companion_show(app: tauri::AppHandle, run_id: String) -> DesktopResult<()> {
+    if run_id.is_empty()
+        || run_id.len() > 100
+        || !run_id
+            .chars()
+            .all(|value| value.is_ascii_alphanumeric() || matches!(value, '-' | '_'))
+    {
+        return Err(DesktopError::validation(
+            "A tentativa informada para o assistente é inválida.",
+            "runId",
+            "Use um identificador simples de tentativa.",
+        ));
+    }
+
+    if let Some(companion) = app.get_webview_window(COMPANION_LABEL) {
+        companion
+            .emit(COMPANION_RUN_EVENT, run_id)
+            .map_err(|_| window_error("Não foi possível atualizar o assistente."))?;
+        companion
+            .show()
+            .map_err(|_| window_error("Não foi possível exibir o assistente."))?;
+        companion
+            .set_always_on_top(true)
+            .map_err(|_| window_error("Não foi possível manter o assistente visível."))?;
+        position_companion(&app, &companion);
+        return Ok(());
+    }
+
+    let url = WebviewUrl::App(format!("index.html?companionRunId={run_id}").into());
+    let companion = WebviewWindowBuilder::new(&app, COMPANION_LABEL, url)
+        .title("QA Flow — Assistente de execução")
+        .inner_size(440.0, 680.0)
+        .min_inner_size(300.0, 64.0)
+        .resizable(true)
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .shadow(true)
+        .content_protected(true)
+        .build()
+        .map_err(|_| window_error("Não foi possível criar a janela do assistente."))?;
+    position_companion(&app, &companion);
+    Ok(())
+}
+
+#[tauri::command]
+fn companion_hide(app: tauri::AppHandle) -> DesktopResult<()> {
+    if let Some(companion) = app.get_webview_window(COMPANION_LABEL) {
+        companion
+            .hide()
+            .map_err(|_| window_error("Não foi possível ocultar o assistente."))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn companion_resize(app: tauri::AppHandle, collapsed: bool) -> DesktopResult<()> {
+    if let Some(companion) = app.get_webview_window(COMPANION_LABEL) {
+        let size = if collapsed {
+            tauri::LogicalSize::new(320.0, 64.0)
+        } else {
+            tauri::LogicalSize::new(440.0, 680.0)
+        };
+        companion
+            .set_size(size)
+            .map_err(|_| window_error("Não foi possível redimensionar o assistente."))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn capture_current_display(window: tauri::WebviewWindow) -> DesktopResult<NativeCapture> {
+    let monitor = window
+        .current_monitor()
+        .map_err(|_| window_error("Não foi possível identificar o monitor atual."))?
+        .ok_or_else(|| window_error("O assistente não está posicionado em um monitor válido."))?;
+    let origin = *monitor.position();
+    let size = *monitor.size();
+    window
+        .hide()
+        .map_err(|_| window_error("Não foi possível ocultar o assistente para a captura."))?;
+    let joined = tauri::async_runtime::spawn_blocking(move || {
+        std::thread::sleep(std::time::Duration::from_millis(180));
+        capture::capture_region(origin.x, origin.y, size.width, size.height)
+    })
+    .await;
+    let _ = window.show();
+    let _ = window.set_always_on_top(true);
+    let result = joined.map_err(|_| window_error("A captura foi interrompida."))?;
+    result.map(|bytes| NativeCapture {
+        bytes,
+        mime_type: "image/png",
+    })
+}
+
+#[tauri::command]
+async fn capture_windows_list() -> DesktopResult<Vec<capture::CaptureTarget>> {
+    tauri::async_runtime::spawn_blocking(capture::list_windows)
+        .await
+        .map_err(|_| window_error("A listagem de janelas foi interrompida."))?
+}
+
+#[tauri::command]
+async fn capture_specific_window(
+    window: tauri::WebviewWindow,
+    target_id: String,
+) -> DesktopResult<NativeCapture> {
+    window
+        .hide()
+        .map_err(|_| window_error("Não foi possível ocultar o assistente para a captura."))?;
+    let joined =
+        tauri::async_runtime::spawn_blocking(move || capture::capture_window(&target_id)).await;
+    let _ = window.show();
+    let _ = window.set_always_on_top(true);
+    let result = joined.map_err(|_| window_error("A captura da janela foi interrompida."))?;
+    result.map(|bytes| NativeCapture {
+        bytes,
+        mime_type: "image/png",
+    })
+}
+
+#[tauri::command]
+fn recording_start_current(
+    window: tauri::WebviewWindow,
+    state: State<'_, DesktopState>,
+) -> DesktopResult<()> {
+    let monitor = window
+        .current_monitor()
+        .map_err(|_| window_error("Não foi possível identificar o monitor atual."))?
+        .ok_or_else(|| window_error("O assistente não está posicionado em um monitor válido."))?;
+    let origin = *monitor.position();
+    let size = *monitor.size();
+    start_native_recording(
+        &state,
+        capture::CaptureRect {
+            left: origin.x,
+            top: origin.y,
+            width: size.width,
+            height: size.height,
+        },
+    )
+}
+
+#[tauri::command]
+async fn recording_start_specific_window(
+    state: State<'_, DesktopState>,
+    target_id: String,
+) -> DesktopResult<()> {
+    let rect = tauri::async_runtime::spawn_blocking(move || {
+        capture::window_capture_rect(&target_id, true)
+    })
+    .await
+    .map_err(|_| window_error("A seleção da janela foi interrompida."))??;
+    start_native_recording(&state, rect)
+}
+
+#[tauri::command]
+async fn recording_stop(state: State<'_, DesktopState>) -> DesktopResult<NativeCapture> {
+    let session = state
+        .recording
+        .lock()
+        .map_err(|_| window_error("O controle da gravação precisa ser reiniciado."))?
+        .take()
+        .ok_or_else(|| {
+            DesktopError::validation(
+                "Nenhuma gravação está em andamento.",
+                "recording",
+                "Inicie uma gravação antes de tentar encerrá-la.",
+            )
+        })?;
+    let _ = session.stop.send(());
+    let bytes = tauri::async_runtime::spawn_blocking(move || {
+        session
+            .worker
+            .join()
+            .map_err(|_| window_error("A gravação foi interrompida antes de finalizar."))?
+    })
+    .await
+    .map_err(|_| window_error("A finalização da gravação foi interrompida."))??;
+    Ok(NativeCapture {
+        bytes,
+        mime_type: "video/mp4",
+    })
+}
+
 #[tauri::command]
 async fn workspace_initialize(state: State<'_, DesktopState>) -> DesktopResult<WorkspaceSnapshot> {
     with_service(state, WorkspaceService::initialize).await
@@ -72,6 +341,7 @@ async fn workspace_initialize(state: State<'_, DesktopState>) -> DesktopResult<W
 async fn workspace_commit(
     state: State<'_, DesktopState>,
     app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
     request: CommitRequest,
 ) -> DesktopResult<CommitResponse> {
     let pending_commits = Arc::clone(&state.pending_commits);
@@ -79,6 +349,9 @@ async fn workspace_commit(
     pending_commits.fetch_add(1, Ordering::AcqRel);
     let result = with_service(state, move |service| service.commit(request)).await;
     finish_pending_commit(&pending_commits, &close_requested, &app);
+    if result.is_ok() {
+        notify_other_window(&app, window.label());
+    }
     result
 }
 
@@ -86,6 +359,7 @@ async fn workspace_commit(
 async fn evidence_add(
     state: State<'_, DesktopState>,
     app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
     request: EvidenceRequest,
     bytes: Vec<u8>,
 ) -> DesktopResult<CommitResponse> {
@@ -94,6 +368,9 @@ async fn evidence_add(
     pending_commits.fetch_add(1, Ordering::AcqRel);
     let result = with_service(state, move |service| service.add_evidence(request, bytes)).await;
     finish_pending_commit(&pending_commits, &close_requested, &app);
+    if result.is_ok() {
+        notify_other_window(&app, window.label());
+    }
     result
 }
 
@@ -109,6 +386,7 @@ async fn evidence_read(
 async fn evidence_remove(
     state: State<'_, DesktopState>,
     app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
     request: RemoveEvidenceRequest,
 ) -> DesktopResult<CommitResponse> {
     let pending_commits = Arc::clone(&state.pending_commits);
@@ -116,6 +394,9 @@ async fn evidence_remove(
     pending_commits.fetch_add(1, Ordering::AcqRel);
     let result = with_service(state, move |service| service.remove_evidence(request)).await;
     finish_pending_commit(&pending_commits, &close_requested, &app);
+    if result.is_ok() {
+        notify_other_window(&app, window.label());
+    }
     result
 }
 
@@ -558,11 +839,26 @@ pub fn run() {
                 if state.pending_commits.load(Ordering::Acquire) > 0 {
                     state.close_requested.store(true, Ordering::Release);
                     api.prevent_close();
+                } else if window.label() == "main" {
+                    cancel_native_recording(&state);
+                    if let Some(companion) = window.app_handle().get_webview_window(COMPANION_LABEL)
+                    {
+                        let _ = companion.destroy();
+                    }
                 }
             }
         })
         .invoke_handler(tauri::generate_handler![
             workspace_initialize,
+            companion_show,
+            companion_hide,
+            companion_resize,
+            capture_current_display,
+            capture_windows_list,
+            capture_specific_window,
+            recording_start_current,
+            recording_start_specific_window,
+            recording_stop,
             workspace_commit,
             evidence_add,
             evidence_read,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Archive, Download, GripVertical, Pencil, Play, Plus, Search, X } from "lucide-react";
+import { Archive, Clock3, Download, Gauge, GripVertical, Link2, ListChecks, Pencil, Play, Plus, Search, X } from "lucide-react";
 import {
   QA_FLOW_SCHEMA_VERSION,
   type LifecycleStatus,
@@ -17,6 +17,7 @@ import { Select, type SelectOption } from "../../ui/Select";
 import { useToast } from "../../ui/ToastProvider";
 import {
   EmptyState,
+  MetricCard,
   Notice,
   PageHeader,
   StatusBadge,
@@ -240,6 +241,16 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
   const [status, setStatus] = useState<LifecycleStatus | "all">("active");
   const [editing, setEditing] = useState<PlanDefinition | null>(null);
 
+  const activePlans = plans.filter((plan) => plan.status === "active");
+  const linkedCaseIds = new Set(plans.flatMap((plan) => plan.caseRefs.map((reference) => reference.caseId)));
+  const readyPlans = activePlans.filter((plan) => plan.caseRefs.every((reference) => {
+    const testCase = cases.find((item) => item.id === reference.caseId);
+    return testCase?.status === "active" && testCase.revision === reference.caseRevision;
+  })).length;
+  const latestUpdate = plans.length
+    ? new Date(Math.max(...plans.map((plan) => Date.parse(plan.updatedAt))))
+    : null;
+
   const matching = plans.filter((plan) =>
     `${plan.id} ${plan.name} ${plan.project} ${plan.tags.join(" ")}`.toLowerCase().includes(query.toLowerCase()));
   const filtered = matching.filter((plan) => status === "all" || plan.status === status);
@@ -267,8 +278,14 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
 
   return (
     <>
-      <PageHeader title="Planos de teste" description="Combine referências do catálogo sem duplicar definições. Atualizações de revisão são sempre explícitas." actions={<button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}><Plus size={17} /> Novo plano</button>} />
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-4 shadow-sm lg:flex-row lg:items-center">
+      <PageHeader title="Planos de teste" description="Combine referências do catálogo sem duplicar definições. Atualizações de revisão são explícitas e auditáveis." actions={<button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}><Plus size={17} /> Novo plano</button>} />
+      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Indicadores dos planos">
+        <MetricCard label="Total de planos" value={plans.length} detail={`${activePlans.length} ativo(s)`} icon={<ListChecks size={18} />} />
+        <MetricCard label="Casos vinculados" value={linkedCaseIds.size} detail={`${cases.length} caso(s) no catálogo`} icon={<Link2 size={18} />} tone="pass" />
+        <MetricCard label="Última atualização" value={latestUpdate ? latestUpdate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"} detail={latestUpdate ? latestUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "nenhum plano criado"} icon={<Clock3 size={18} />} />
+        <MetricCard label="Prontos para execução" value={readyPlans} detail={`${activePlans.length ? Math.round((readyPlans / activePlans.length) * 100) : 0}% dos planos ativos`} icon={<Gauge size={18} />} tone={readyPlans ? "run" : "neutral"} />
+      </section>
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-3 shadow-[0_8px_24px_rgb(15_23_42/0.03)] lg:flex-row lg:items-center">
         <label className="relative lg:w-80"><span className="sr-only">Buscar planos</span><Search className="absolute left-3 top-3 text-faint" size={18} /><input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, projeto ou tag" /></label>
         <SegmentedControl size="sm" ariaLabel="Filtrar status do plano" value={status} onChange={setStatus} options={statusOptions} />
       </div>
@@ -276,21 +293,25 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
       {filtered.length === 0 ? (
         <EmptyState title="Nenhum plano encontrado" description={plans.length ? "Ajuste os filtros." : "Crie um plano escolhendo casos reutilizáveis da biblioteca."} action={!plans.length ? <button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}>Criar primeiro plano</button> : undefined} />
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="space-y-3">
           {filtered.map((plan) => {
             const stale = plan.caseRefs.filter((reference) => cases.find((item) => item.id === reference.caseId)?.revision !== reference.caseRevision).length;
             const inactive = plan.caseRefs.filter((reference) => cases.find((item) => item.id === reference.caseId)?.status !== "active").length;
+            const automated = plan.caseRefs.filter((reference) => cases.find((item) => item.id === reference.caseId)?.automationLinks.length).length;
+            const automationPercent = plan.caseRefs.length ? Math.round((automated / plan.caseRefs.length) * 100) : 0;
             return (
-              <article key={plan.id} className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
+              <article key={plan.id} className="rounded-2xl border border-hairline bg-raised p-5 shadow-[0_8px_24px_rgb(15_23_42/0.03)]">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2"><StatusBadge value={plan.status} label={lifecycleLabel[plan.status]} /><span className="text-xs text-faint">rev. {plan.revision}</span>{stale > 0 && <span className="rounded-full bg-warn-tint px-2 py-1 text-xs font-bold text-warn">{stale} desatualizada(s)</span>}{inactive > 0 && <span className="rounded-full bg-explore-tint px-2 py-1 text-xs font-bold text-explore">{inactive} caso(s) não ativo(s)</span>}</div>
                     <h2 className="mt-2 truncate text-lg font-bold text-body">{plan.name}</h2>
                     <p className="mt-1 text-sm text-muted">{plan.project} · {plan.caseRefs.length} caso(s)</p>
                   </div>
-                  <span className="font-mono text-[11px] text-faint">{plan.id}</span>
+                  <span className="font-mono text-xs text-faint">{plan.id}</span>
                 </div>
                 <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-subtle">{plan.objective || plan.description || "Sem objetivo informado."}</p>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>Mapeamento de casos críticos</span><strong className="tabular-nums text-body">{automated} de {plan.caseRefs.length} automatizado(s)</strong></div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-shell"><div className="h-full rounded-full bg-pass-mark" style={{ width: `${automationPercent}%` }} /></div>
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-hairline pt-4">
                   {plan.status === "active" && <button type="button" className={buttonPrimary} disabled={stale > 0 || inactive > 0} title={stale ? "Atualize as referências antes de executar" : inactive ? "Ative ou substitua os casos indisponíveis" : undefined} onClick={() => onRun(plan.id)}><Play size={15} /> Executar</button>}
                   <button type="button" className={buttonSecondary} onClick={() => setEditing(plan)}><Pencil size={15} /> Editar</button>
