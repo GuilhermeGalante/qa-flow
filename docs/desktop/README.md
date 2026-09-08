@@ -24,7 +24,7 @@ A Fase 3 ligou a composição desktop ao backend Rust, a Fase 4 completou a pers
 - Repositório: `.qaflow/workspace.json` é publicado por último e referencia arquivos com hash de conteúdo, preservando um manifesto anterior válido durante escrita parcial.
 - Retenção: por padrão, `recovery/` mantém até 20 cópias por 90 dias. Quantidade e idade são preferências locais configuráveis; a cópia válida mais recente é sempre preservada.
 - Updater: consulta um endpoint HTTPS no backend Rust, compara a versão e valida a assinatura minisign antes da instalação. Builds sem `QA_FLOW_UPDATER_PUBLIC_KEY` exibem o recurso como desabilitado.
-- Distribuição: o workflow exige certificado Windows, chave privada do updater e chave pública via GitHub Secrets; produz instaladores online/offline, `latest.json`, assinaturas e checksums.
+- Distribuição: sem secrets, o workflow produz instaladores online/offline sem assinatura e checksums; com certificado Windows e chaves do updater, também produz assinaturas e `latest.json`.
 - Smoke de instalador: o CI instala, inicia, reinstala e desinstala o pacote, verificando também que dados locais permanecem após reinstalação e desinstalação.
 
 P-003/P-004/P-005/P-006 estão implementadas. A ativação de assinatura e updater em uma release depende somente do provisionamento dos secrets descritos em [`DISTRIBUTION.md`](DISTRIBUTION.md).
@@ -96,6 +96,6 @@ O JSON portátil permanece no schema público v2. A Fase 6 não altera `QA_FLOW_
 
 ## Distribuição alpha pelo GitHub
 
-`npm run build:desktop` continua gerando um instalador local de desenvolvimento. O workflow `desktop-alpha-release.yml` repete todos os gates em Windows, exige as credenciais de assinatura, gera instaladores online/offline, assinatura do updater, `latest.json` e `SHA256SUMS.txt`, executa o smoke de instalação e cria uma GitHub Release em draft quando uma tag `v*` é enviada.
+`npm run build:desktop` continua gerando um instalador local de desenvolvimento. O workflow `desktop-alpha-release.yml` repete todos os gates em Windows, gera instaladores online/offline e `SHA256SUMS.txt`, executa o smoke de instalação e cria uma GitHub Release em draft quando uma tag `v*` é enviada. Quando as credenciais estão disponíveis, os instaladores recebem assinatura e o workflow também gera a assinatura do updater e `latest.json`.
 
-O disparo manual exige uma tag existente. Por padrão, ele apenas cria/atualiza o draft; `publish_alpha=true` publica explicitamente como prerelease e `publish_stable=true` publica no canal estável consumido pelo updater. Os dois modos são mutuamente exclusivos. Sem todos os secrets obrigatórios o job falha antes de gerar artefatos, evitando uma release parcialmente assinada.
+O disparo manual exige uma tag existente. Por padrão, ele apenas cria/atualiza o draft; `publish_alpha=true` publica explicitamente como prerelease e `publish_stable=true` publica no canal estável consumido pelo updater. Os dois modos são mutuamente exclusivos. Sem nenhum secret de distribuição, o job gera uma release sem assinatura e com updater desativado; se apenas parte dos secrets estiver configurada, ele falha antes do build.

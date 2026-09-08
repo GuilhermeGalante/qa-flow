@@ -6,6 +6,16 @@ Passo de versão: **major** para quebra do contrato de dados ou remoção de cap
 
 Mantido pelo comando `/release`.
 
+## 2.2.1 — 2026-09-08
+
+<!-- release-baseline: c109e10 -->
+
+### Corrigido
+- Releases desktop sem credenciais de assinatura voltam a gerar instaladores online e offline para testes manuais, com aviso do Windows e atualização automática desativada.
+
+### Interno
+- O pipeline mantém a distribuição assinada quando todas as credenciais estão disponíveis e bloqueia somente configurações parciais, evitando misturar artefatos assinados e não assinados.
+
 ## 2.2.0 — 2026-09-07
 
 <!-- release-baseline: c694fb5 -->
