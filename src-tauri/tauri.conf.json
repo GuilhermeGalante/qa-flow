@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "QA Flow",
   "mainBinaryName": "qa-flow",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "identifier": "dev.qaflow.app",
   "build": {
     "beforeDevCommand": "npm run dev:desktop:frontend",

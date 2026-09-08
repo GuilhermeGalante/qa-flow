@@ -6,6 +6,29 @@ Passo de versão: **major** para quebra do contrato de dados ou remoção de cap
 
 Mantido pelo comando `/release`.
 
+## 2.2.0 — 2026-09-07
+
+<!-- release-baseline: c694fb5 -->
+
+### Adicionado
+- Execuções no desktop passam a contar com uma janela auxiliar sempre visível para navegar pelos passos, registrar resultados, capturar a tela ou uma janela e anexar gravações MP4 de até 60 segundos como evidência.
+- Backups, importações e repositórios `.qaflow` passam a funcionar nativamente no desktop, com prévia antes de mesclar ou substituir e cópias de recuperação com retenção configurável.
+- Relatórios ganham uma versão HTML autocontida com busca, filtros e ampliação de imagens; PDFs, HTML, JSON e CSV usam o diálogo nativo para escolher onde salvar.
+- O desktop passa a verificar e instalar atualizações assinadas pelo próprio aplicativo.
+
+### Alterado
+- O dashboard passa a reunir indicadores do workspace, andamento da execução ativa, distribuição das demandas, riscos e atividade recente.
+- O quadro de demandas ganha métricas, filtros rápidos e edição em modal, tela cheia ou painel lateral redimensionável.
+- Relatórios executivo e técnico passam a ser gerados diretamente do snapshot imutável da tentativa e preservam todos os estados e evidências disponíveis.
+- A identidade visual do aplicativo, do instalador e dos relatórios passa a usar a nova marca do QA Flow.
+
+### Contrato de dados
+- O armazenamento SQLite interno avança do formato 1 para o 3 por migrations transacionais que adicionam planos, execuções, relatórios, demandas, preferências e evidências sem alterar o JSON schema v2 nem invalidar casos e configurações existentes.
+
+### Interno
+- A distribuição Windows passa a produzir instaladores online e offline assinados, manifesto do updater, checksums e smoke test de instalação, reinstalação e desinstalação antes da publicação.
+- A massa de demonstração e seu gerador deixam de fazer parte do repositório.
+
 ## 2.1.0 — 2026-08-29
 
 <!-- release-baseline: 2c29379 -->
