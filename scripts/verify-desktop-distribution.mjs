@@ -7,6 +7,16 @@ import { load as parseYaml } from "js-yaml";
 
 const root = new URL("../", import.meta.url);
 const temporary = mkdtempSync(join(tmpdir(), "qaflow-distribution-"));
+const powershellParseCommand = [
+  "$source = [Console]::In.ReadToEnd()",
+  "$tokens = $null",
+  "$errors = $null",
+  "[System.Management.Automation.Language.Parser]::ParseInput($source, [ref]$tokens, [ref]$errors) | Out-Null",
+  "if ($errors.Count -gt 0) {",
+  "  [Console]::Error.WriteLine(($errors | ForEach-Object { $_.Message }) -join [Environment]::NewLine)",
+  "  exit 1",
+  "}",
+].join("\n");
 try {
   for (const signing of ["signed", "unsigned"]) {
     for (const flavor of ["online", "offline"]) {
@@ -54,6 +64,19 @@ try {
   const parsedWorkflow = parseYaml(workflow);
   assert.equal(typeof parsedWorkflow, "object");
   assert.ok(parsedWorkflow.jobs?.["windows-alpha"], "job windows-alpha ausente");
+  const powershellSteps = parsedWorkflow.jobs["windows-alpha"].steps.filter(
+    (step) => step.shell === "pwsh" && typeof step.run === "string",
+  );
+  assert.ok(powershellSteps.length > 0, "workflow sem blocos PowerShell para validar");
+  for (const step of powershellSteps) {
+    const powershellSource = step.run.replace(/\$\{\{[\s\S]*?\}\}/g, "github_expression");
+    const result = spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", powershellParseCommand], {
+      cwd: root,
+      encoding: "utf8",
+      input: powershellSource,
+    });
+    assert.equal(result.status, 0, `PowerShell inválido em ${step.name}: ${result.stderr}`);
+  }
   for (const marker of [
     "WINDOWS_CERTIFICATE_BASE64",
     "WINDOWS_CERTIFICATE_PASSWORD",

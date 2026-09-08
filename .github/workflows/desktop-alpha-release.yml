@@ -178,7 +178,7 @@ jobs:
             foreach ($name in @($onlineName, $offlineName)) {
               $signature = Get-AuthenticodeSignature -FilePath (Join-Path $artifactDirectory $name)
               if ($signature.Status -ne "Valid") {
-                throw "Assinatura Authenticode inválida em $name: $($signature.Status)."
+                throw "Assinatura Authenticode inválida em ${name}: $($signature.Status)."
               }
             }
             $releaseTag = "${{ steps.release.outputs.tag }}"
