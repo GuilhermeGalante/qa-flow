@@ -50,6 +50,7 @@ latest.json
 # Local validation artifacts
 /output/
 /tmp/
+/demo/qa-flow-stitch-demo.json
 
 # Editor directories and files
 .vscode/*
