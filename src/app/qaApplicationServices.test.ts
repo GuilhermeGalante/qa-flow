@@ -96,7 +96,13 @@ async function exerciseCoreUseCases(store: QaStore): Promise<void> {
   const started = await store.getState().startRun("PLAN-1", runContext);
   assert.equal(started.ok, true);
   const runId = started.value!.id;
-  assert.equal((await store.getState().updateStepResult(runId, "CASE-1", "STEP-1", "passed", "")).ok, true);
+  assert.equal((await store.getState().updateStepResult(
+    runId,
+    "CASE-1",
+    "STEP-1",
+    "passed",
+    "Validado também no perfil de administrador.",
+  )).ok, true);
   assert.equal((await store.getState().setRunStatus(runId, "completed")).ok, true);
   assert.equal((await store.getState().createReport(runId, "Relatório", "")).ok, true);
   assert.equal((await store.getState().saveDemand(demand(store.getState().demandColumns[0].id))).ok, true);
@@ -106,6 +112,10 @@ async function exerciseCoreUseCases(store: QaStore): Promise<void> {
   assert.equal(state.cases.length, 1);
   assert.equal(state.plans.length, 1);
   assert.equal(state.runs[0].status, "completed");
+  assert.equal(
+    state.runs[0].results["CASE-1::STEP-1"].actualResult,
+    "Validado também no perfil de administrador.",
+  );
   assert.equal(state.reports.length, 1);
   assert.equal(state.demands.length, 1);
   assert.equal(state.settings.name, "Workspace confirmado");

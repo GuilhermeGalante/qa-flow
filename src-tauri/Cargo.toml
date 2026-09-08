@@ -1,6 +1,6 @@
 [package]
 name = "qaflow"
-version = "2.2.1"
+version = "2.3.0"
 description = "QA Flow Desktop"
 authors = ["Guilherme Galante"]
 repository = "https://github.com/GuilhermeGalante/qa-flow"

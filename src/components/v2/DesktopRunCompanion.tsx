@@ -7,6 +7,7 @@ import {
   CirclePlay,
   GalleryVerticalEnd,
   Maximize2,
+  MessageSquareText,
   Minimize2,
   Minus,
   Paperclip,
@@ -165,6 +166,7 @@ export function DesktopRunCompanion({
   // Anexar arquivo
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const resultCommentRef = useRef<HTMLTextAreaElement>(null);
   const recordingOwnerRef = useRef<{ ownerId: string; stepId: string } | null>(null);
   const recordingTimeoutRef = useRef<number | null>(null);
   const recordingIntervalRef = useRef<number | null>(null);
@@ -261,6 +263,15 @@ export function DesktopRunCompanion({
     };
   }, []);
 
+  useEffect(() => {
+    if (!showResultReason) return;
+    const frame = window.requestAnimationFrame(() => {
+      resultCommentRef.current?.scrollIntoView({ block: "nearest" });
+      resultCommentRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [showResultReason]);
+
   // Formatação do identificador do caso (ex: CT-042)
   const caseDisplayCode = useMemo(() => {
     if (!current) return "";
@@ -315,6 +326,15 @@ export function DesktopRunCompanion({
       onSelectStep(next.caseId, next.stepId);
       setShowResultReason(false);
       setShowCaptureMenu(false);
+    }
+  };
+
+  const handleOpenResultComment = () => {
+    setResultReasonText(storedResult?.actualResult || "");
+    setShowResultReason(true);
+    if (collapsed) {
+      setCollapsed(false);
+      onCollapsedChange(false);
     }
   };
 
@@ -621,6 +641,17 @@ export function DesktopRunCompanion({
             onClick={() => void handleSetStatus("passed")}
           >
             Passou
+          </button>
+
+          <button
+            type="button"
+            aria-label={storedResult?.actualResult ? "Editar comentário do passo" : "Adicionar comentário ao passo"}
+            title={storedResult?.actualResult ? "Editar comentário" : "Adicionar comentário"}
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 cursor-pointer"
+            disabled={!editable}
+            onClick={handleOpenResultComment}
+          >
+            <MessageSquareText size={15} />
           </button>
 
           <button
@@ -958,15 +989,20 @@ export function DesktopRunCompanion({
           </div>
         )}
 
-        {/* MOTIVO DE FALHA OU BLOQUEIO (DRAWER INLINE) */}
+        {/* COMENTÁRIO / MOTIVO DO RESULTADO (DRAWER INLINE) */}
         {showResultReason && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
+          <div id="step-comment-editor" className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="font-semibold text-slate-800">
-                {currentStatus === "blocked" ? "Motivo do bloqueio:" : "Resultado observado / falha:"}
-              </span>
+              <label htmlFor="step-comment" className="font-semibold text-slate-800">
+                {currentStatus === "blocked"
+                  ? "Motivo do bloqueio"
+                  : currentStatus === "failed"
+                    ? "Resultado observado / falha"
+                    : "Comentário do passo"}
+              </label>
               <button
                 type="button"
+                aria-label="Fechar comentário"
                 onClick={() => setShowResultReason(false)}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
@@ -974,10 +1010,17 @@ export function DesktopRunCompanion({
               </button>
             </div>
             <textarea
+              ref={resultCommentRef}
+              id="step-comment"
               className="w-full min-h-18 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-800 outline-none focus:border-slate-400"
-              placeholder={currentStatus === "blocked" ? "Descreva o impedimento..." : "Descreva a discrepância observada..."}
+              placeholder={currentStatus === "blocked"
+                ? "Descreva o impedimento..."
+                : currentStatus === "failed"
+                  ? "Descreva a discrepância observada..."
+                  : "Adicione contexto ou observações sobre esta validação..."}
               value={resultReasonText}
               onChange={(e) => setResultReasonText(e.target.value)}
+              disabled={!editable}
             />
             <div className="mt-2 flex justify-end gap-2">
               <button
@@ -990,10 +1033,14 @@ export function DesktopRunCompanion({
               <button
                 type="button"
                 className="rounded-lg bg-slate-900 px-3 py-1 font-medium text-white hover:bg-slate-800 cursor-pointer"
-                disabled={savingResult}
+                disabled={!editable || savingResult}
                 onClick={() => void handleSaveResultReason()}
               >
-                {savingResult ? "Salvando…" : "Salvar observação"}
+                {savingResult
+                  ? "Salvando…"
+                  : currentStatus === "failed" || currentStatus === "blocked"
+                    ? "Salvar observação"
+                    : "Salvar comentário"}
               </button>
             </div>
           </div>
@@ -1061,7 +1108,7 @@ export function DesktopRunCompanion({
           </button>
         </div>
 
-        {/* LINHA INFERIOR: ANTERIOR / CRIAR DEFEITO / PRÓXIMO */}
+        {/* LINHA INFERIOR: ANTERIOR / COMENTÁRIO E DEFEITO / PRÓXIMO */}
         <div className="flex items-center justify-between text-xs sm:text-sm">
           {/* ANTERIOR */}
           <button
@@ -1073,15 +1120,28 @@ export function DesktopRunCompanion({
             Anterior
           </button>
 
-          {/* CRIAR DEFEITO */}
-          <button
-            type="button"
-            disabled={!editable}
-            onClick={handleOpenDefect}
-            className="font-medium text-slate-500 transition hover:text-rose-600 hover:underline cursor-pointer disabled:opacity-40"
-          >
-            Criar defeito
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={!editable}
+              aria-expanded={showResultReason}
+              aria-controls="step-comment-editor"
+              onClick={handleOpenResultComment}
+              className="inline-flex items-center gap-1 font-medium text-slate-500 transition hover:text-slate-900 hover:underline cursor-pointer disabled:opacity-40"
+            >
+              <MessageSquareText size={13} aria-hidden="true" />
+              {storedResult?.actualResult ? "Editar comentário" : "Comentário"}
+            </button>
+
+            <button
+              type="button"
+              disabled={!editable}
+              onClick={handleOpenDefect}
+              className="font-medium text-slate-500 transition hover:text-rose-600 hover:underline cursor-pointer disabled:opacity-40"
+            >
+              Criar defeito
+            </button>
+          </div>
 
           {/* PRÓXIMO */}
           <button

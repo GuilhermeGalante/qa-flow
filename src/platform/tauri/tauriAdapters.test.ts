@@ -1,9 +1,27 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { IPC_CONTRACT_VERSION, type CommitResponse, type WorkspaceSnapshot } from "../contracts/dtos.ts";
 import { createEmptyWorkspaceData } from "../contracts/workspaceData.ts";
 import { createTauriAdapters } from "./tauriAdapters.ts";
 import type { DesktopCommand, TauriInvoke } from "./tauriIpc.ts";
+
+test("CSP desktop permite carregar assets empacotados via fetch", () => {
+  const config = JSON.parse(readFileSync(
+    new URL("../../../src-tauri/tauri.conf.json", import.meta.url),
+    "utf8",
+  )) as { app?: { security?: { csp?: string } } };
+  const connectSources = config.app?.security?.csp
+    ?.split(";")
+    .map((directive) => directive.trim().split(/\s+/))
+    .find(([name]) => name === "connect-src")
+    ?.slice(1);
+
+  assert.ok(
+    connectSources?.includes("'self'"),
+    "connect-src precisa permitir 'self' para os relatórios carregarem a logo empacotada",
+  );
+});
 
 test("adapter Tauri usa commands constantes e preserva DTOs camelCase", async () => {
   const calls: Array<{ command: DesktopCommand; args?: Record<string, unknown> }> = [];

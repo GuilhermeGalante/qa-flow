@@ -6,6 +6,19 @@ Passo de versão: **major** para quebra do contrato de dados ou remoção de cap
 
 Mantido pelo comando `/release`.
 
+## 2.3.0 — 2026-09-08
+
+<!-- release-baseline: b7a2334 -->
+
+### Adicionado
+- O assistente de execução passa a registrar e editar comentários em qualquer resultado de passo, inclusive quando ele foi aprovado, tanto no modo completo quanto a partir do modo compacto.
+
+### Corrigido
+- Resumos executivos, relatórios técnicos em PDF e relatórios interativos em HTML voltam a ser gerados no desktop ao permitir o carregamento da logo empacotada.
+
+### Interno
+- O pipeline de release passa a validar a sintaxe dos blocos PowerShell antes da publicação e normaliza com segurança o caminho de instalação usado no smoke test.
+
 ## 2.2.1 — 2026-09-08
 
 <!-- release-baseline: c109e10 -->
