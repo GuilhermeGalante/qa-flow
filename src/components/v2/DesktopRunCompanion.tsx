@@ -590,6 +590,7 @@ export function DesktopRunCompanion({
       >
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 font-bold text-slate-900 text-xs">
+            <img src="/qa-flow-logo.png" alt="" className="h-5 w-5 rounded-md border border-slate-200 bg-white object-cover" />
             <span>QA Flow</span>
             <span className="text-slate-300 font-light">/</span>
             <span className="font-mono text-slate-600">{caseDisplayCode}</span>
@@ -663,6 +664,7 @@ export function DesktopRunCompanion({
         className="flex cursor-move items-center justify-between px-5 pt-3.5 pb-2"
       >
         <div className="flex items-center gap-1.5 text-sm">
+          <img src="/qa-flow-logo.png" alt="" className="h-6 w-6 rounded-md border border-slate-200 bg-white object-cover" />
           <span className="font-bold tracking-tight text-slate-900">QA Flow</span>
           <span className="font-light text-slate-300">/</span>
           <span className="font-mono text-xs font-semibold text-slate-500">{caseDisplayCode}</span>

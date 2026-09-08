@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/qa-flow-logo.png" alt="Logo do QA Flow" width="180" />
+</p>
+
 # QA Flow v2
 
 QA Flow é um gerenciador local-first para casos, planos e execuções de testes manuais. A versão 2 separa a definição reutilizável do teste de cada tentativa executada, preservando o histórico mesmo quando o catálogo evolui.

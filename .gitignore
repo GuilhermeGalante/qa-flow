@@ -47,6 +47,10 @@ dist-ssr
 *.sig
 latest.json
 
+# Local validation artifacts
+/output/
+/tmp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

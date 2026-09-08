@@ -658,13 +658,14 @@ fn validate_generated_file(
         .to_ascii_lowercase();
     let filter_name = match (extension.as_str(), request.mime_type.as_str()) {
         ("pdf", "application/pdf") => "PDF",
+        ("html", "text/html") | ("html", "text/html;charset=utf-8") => "HTML",
         ("json", "application/json") => "JSON",
         ("csv", "text/csv") | ("csv", "text/csv;charset=utf-8") => "CSV",
         _ => {
             return Err(DesktopError::validation(
                 "O tipo do arquivo gerado não é permitido.",
                 "request",
-                "Use PDF, JSON ou CSV com o MIME correspondente.",
+                "Use PDF, HTML, JSON ou CSV com o MIME correspondente.",
             ))
         }
     };
@@ -923,5 +924,19 @@ mod tests {
         };
         let (name, _, _) = validate_generated_file(&unsafe_name, 3).expect("basename contained");
         assert_eq!(name, "resultado.json");
+    }
+
+    #[test]
+    fn generated_file_accepts_html_reports() {
+        let request = GeneratedFileRequest {
+            suggested_name: "QAFlow_Relatorio_Interativo_resultado.html".to_owned(),
+            mime_type: "text/html;charset=utf-8".to_owned(),
+            extension: ".html".to_owned(),
+        };
+        let (name, extension, filter) =
+            validate_generated_file(&request, 3).expect("valid HTML file");
+        assert_eq!(name, "QAFlow_Relatorio_Interativo_resultado.html");
+        assert_eq!(extension, "html");
+        assert_eq!(filter, "HTML");
     }
 }
