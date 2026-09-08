@@ -219,9 +219,14 @@ jobs:
           if (-not $uninstallEntry -or [string]::IsNullOrWhiteSpace($uninstallEntry.InstallLocation)) {
             throw "A instalação não registrou o diretório do QA Flow no perfil do usuário."
           }
-          $installDirectory = $uninstallEntry.InstallLocation
-          $executable = Join-Path $installDirectory "qa-flow.exe"
-          $uninstaller = Join-Path $installDirectory "uninstall.exe"
+          $rawInstallDirectory = [string]$uninstallEntry.InstallLocation
+          $installDirectory = [Environment]::ExpandEnvironmentVariables($rawInstallDirectory.Trim()).Trim('"')
+          if ([string]::IsNullOrWhiteSpace($installDirectory) -or -not [IO.Path]::IsPathFullyQualified($installDirectory)) {
+            throw "A instalação registrou um diretório inválido: '$rawInstallDirectory'."
+          }
+          $installDirectory = [IO.Path]::GetFullPath($installDirectory)
+          $executable = [IO.Path]::Combine($installDirectory, "qa-flow.exe")
+          $uninstaller = [IO.Path]::Combine($installDirectory, "uninstall.exe")
           if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
             throw "O executável não foi instalado em $installDirectory."
           }

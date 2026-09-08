@@ -17,6 +17,12 @@ const powershellParseCommand = [
   "  exit 1",
   "}",
 ].join("\n");
+const installLocationProbeCommand = [
+  "$rawInstallDirectory = [Console]::In.ReadToEnd()",
+  "$installDirectory = [Environment]::ExpandEnvironmentVariables($rawInstallDirectory.Trim()).Trim('\"')",
+  "if ([string]::IsNullOrWhiteSpace($installDirectory) -or -not [IO.Path]::IsPathFullyQualified($installDirectory)) { exit 1 }",
+  "[Console]::Out.Write([IO.Path]::GetFullPath($installDirectory))",
+].join("\n");
 try {
   for (const signing of ["signed", "unsigned"]) {
     for (const flavor of ["online", "offline"]) {
@@ -77,6 +83,18 @@ try {
     });
     assert.equal(result.status, 0, `PowerShell inválido em ${step.name}: ${result.stderr}`);
   }
+  const quotedInstallLocation = '"C:\\Users\\runneradmin\\AppData\\Local\\QA Flow"';
+  const installLocationProbe = spawnSync(
+    "pwsh",
+    ["-NoProfile", "-NonInteractive", "-Command", installLocationProbeCommand],
+    {
+      cwd: root,
+      encoding: "utf8",
+      input: quotedInstallLocation,
+    },
+  );
+  assert.equal(installLocationProbe.status, 0, installLocationProbe.stderr);
+  assert.equal(installLocationProbe.stdout, quotedInstallLocation.slice(1, -1));
   for (const marker of [
     "WINDOWS_CERTIFICATE_BASE64",
     "WINDOWS_CERTIFICATE_PASSWORD",
@@ -84,6 +102,8 @@ try {
     "QA_FLOW_UPDATER_PUBLIC_KEY",
     "signing=unsigned",
     "Get-AuthenticodeSignature",
+    "ExpandEnvironmentVariables",
+    "IsPathFullyQualified",
     "Smoke test de instalação",
     "distribution-preservation.marker",
     "latest.json",
