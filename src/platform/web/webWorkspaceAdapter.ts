@@ -204,7 +204,9 @@ export class WebWorkspaceAdapter implements WorkspacePort {
     next.evidence = next.evidence.filter((item) => item.id !== request.evidenceId);
     const response = this.nextResponse(request.mutations.map(({ kind, id, payload }) => ({ kind, id, payload })));
     await this.persist(next, response.storageRevision, response.committedAt);
-    await this.storage.delete(webEvidenceKey(request.evidenceId));
+    // O workspace é a fonte de verdade. Uma falha ao limpar um blob que já ficou
+    // sem referência não pode transformar um commit durável em erro para a store.
+    await this.storage.delete(webEvidenceKey(request.evidenceId)).catch(() => undefined);
     this.accept(next, response);
     return response;
   }
@@ -270,14 +272,42 @@ export class WebWorkspaceAdapter implements WorkspacePort {
     };
     const revision = this.storageRevision + 1;
     const committedAt = new Date().toISOString();
-    for (const item of bundle.evidence) {
-      await this.storage.set(webEvidenceKey(item.meta.id), item.dataUrl);
+    const previousEvidence = new Map<string, string | undefined>();
+    const writtenEvidenceKeys: string[] = [];
+    try {
+      for (const item of bundle.evidence) {
+        const key = webEvidenceKey(item.meta.id);
+        previousEvidence.set(key, await this.storage.get<string>(key));
+        await this.storage.set(key, item.dataUrl);
+        writtenEvidenceKeys.push(key);
+      }
+      await this.persist(next, revision, committedAt);
+    } catch (value) {
+      let restorationFailed = false;
+      for (const key of writtenEvidenceKeys.reverse()) {
+        try {
+          const previous = previousEvidence.get(key);
+          if (previous === undefined) await this.storage.delete(key);
+          else await this.storage.set(key, previous);
+        } catch {
+          restorationFailed = true;
+        }
+      }
+      if (restorationFailed) {
+        throw desktopError(
+          "RECOVERY_REQUIRED",
+          "A importação falhou e os binários preparados não puderam ser restaurados integralmente.",
+          { retryable: false },
+        );
+      }
+      throw value;
     }
-    await this.persist(next, revision, committedAt);
     if (mode === "replace") {
       const incoming = new Set(bundle.evidence.map((item) => item.meta.id));
       for (const meta of current.evidence) {
-        if (!incoming.has(meta.id)) await this.storage.delete(webEvidenceKey(meta.id));
+        if (!incoming.has(meta.id)) {
+          await this.storage.delete(webEvidenceKey(meta.id)).catch(() => undefined);
+        }
       }
     }
     this.workspace = cloneWorkspaceData(next);
