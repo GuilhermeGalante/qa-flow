@@ -14,7 +14,7 @@ Mantido pelo comando `/release`.
 - O assistente de execução passa a registrar e editar comentários em qualquer resultado de passo, inclusive quando ele foi aprovado, tanto no modo completo quanto a partir do modo compacto.
 
 ### Corrigido
-- Resumos executivos, relatórios técnicos em PDF e relatórios interativos em HTML voltam a ser gerados no desktop ao permitir o carregamento da logo empacotada.
+- Resumos executivos, relatórios técnicos em PDF e relatórios interativos em HTML voltam a ser gerados no desktop ao permitir o carregamento da logo empacotada; os PDFs também autorizam somente a compilação WebAssembly exigida pelo motor de renderização.
 - Releases desktop sem credenciais de assinatura voltam a gerar instaladores online e offline para testes manuais, com aviso do Windows e atualização automática desativada.
 
 ### Interno

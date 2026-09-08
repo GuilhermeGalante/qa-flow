@@ -6,20 +6,39 @@ import { createEmptyWorkspaceData } from "../contracts/workspaceData.ts";
 import { createTauriAdapters } from "./tauriAdapters.ts";
 import type { DesktopCommand, TauriInvoke } from "./tauriIpc.ts";
 
-test("CSP desktop permite carregar assets empacotados via fetch", () => {
+function desktopCspSources(directiveName: string): string[] | undefined {
   const config = JSON.parse(readFileSync(
     new URL("../../../src-tauri/tauri.conf.json", import.meta.url),
     "utf8",
   )) as { app?: { security?: { csp?: string } } };
-  const connectSources = config.app?.security?.csp
+
+  return config.app?.security?.csp
     ?.split(";")
     .map((directive) => directive.trim().split(/\s+/))
-    .find(([name]) => name === "connect-src")
+    .find(([name]) => name === directiveName)
     ?.slice(1);
+}
+
+test("CSP desktop permite carregar assets empacotados via fetch", () => {
+  const connectSources = desktopCspSources("connect-src");
 
   assert.ok(
     connectSources?.includes("'self'"),
     "connect-src precisa permitir 'self' para os relatórios carregarem a logo empacotada",
+  );
+});
+
+test("CSP desktop permite o WebAssembly dos PDFs sem liberar eval de JavaScript", () => {
+  const scriptSources = desktopCspSources("script-src");
+
+  assert.ok(
+    scriptSources?.includes("'wasm-unsafe-eval'"),
+    "script-src precisa permitir a compilação WebAssembly usada pelo motor de PDF",
+  );
+  assert.equal(
+    scriptSources?.includes("'unsafe-eval'") ?? false,
+    false,
+    "script-src não deve liberar eval de JavaScript",
   );
 });
 
