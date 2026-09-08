@@ -81,6 +81,8 @@ Validação completa:
 npm run check
 ```
 
+Consulte [`TESTING.md`](TESTING.md) para executar cada suíte separadamente, rodar testes focados e entender os gates web, desktop e E2E.
+
 ## Desktop — Fase 7 (maturidade operacional)
 
 A composição Windows isolada liga o frontend ao backend Rust por IPC estreito. Casos, planos, runs, relatórios, demandas, colunas, configurações, preferências e metadados de evidências são persistidos em SQLite dentro de `app_data_dir`, com histórico de revisões, snapshots imutáveis, transações atômicas, lock exclusivo, CAS global e abertura segura diante de corrupção. Imagens de evidência ficam em blobs separados e arquivos gerados usam diálogo nativo allowlisted.
