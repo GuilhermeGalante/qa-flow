@@ -137,13 +137,8 @@ async function sha256(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function blobToDataUrl(file: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Não foi possível ler a evidência."));
-    reader.readAsDataURL(file);
-  });
+async function blobToDataUrl(file: Blob): Promise<string> {
+  return bytesToDataUrl(new Uint8Array(await file.arrayBuffer()), file.type);
 }
 
 function operationId(prefix: string): string {
@@ -213,6 +208,31 @@ export class QaApplicationServices {
         initializing: false,
         storageError: error.message,
         saveState: { kind: "error", operationId: error.operationId ?? "initialize", error },
+      });
+    }
+  }
+
+  async refreshWorkspace(): Promise<void> {
+    const state = this.options.getState();
+    if (!state.ready) {
+      await this.initialize();
+      return;
+    }
+    try {
+      const snapshot = await this.options.workspacePort.initialize();
+      ensureCompatibleSnapshot(snapshot);
+      if (snapshot.storageRevision <= this.options.getState().storageRevision) return;
+      this.options.setState({
+        ...cloneWorkspaceData(snapshot.workspace),
+        storageRevision: snapshot.storageRevision,
+        saveState: { kind: "idle", committedAt: snapshot.committedAt },
+        storageError: null,
+      });
+    } catch (value) {
+      const error = toDesktopError(value);
+      this.options.setState({
+        storageError: error.message,
+        saveState: { kind: "error", operationId: error.operationId ?? "refresh", error },
       });
     }
   }
@@ -469,15 +489,17 @@ export class QaApplicationServices {
       if (!run || !isRunEditable(run) || run.status === "paused") {
         return skipped({ ok: false, message: "Esta execução não aceita novas evidências." });
       }
-      if (!file.type.startsWith("image/")) {
-        return skipped({ ok: false, message: "Nesta versão, a evidência deve ser uma imagem." });
+      const isImage = file.type.startsWith("image/");
+      const isVideo = file.type.startsWith("video/");
+      if (!isImage && !isVideo) {
+        return skipped({ ok: false, message: "A evidência deve ser uma imagem ou um vídeo." });
       }
       if (file.size > MAX_EVIDENCE_BYTES) {
         return skipped({ ok: false, message: "A evidência deve ter no máximo 10 MiB." });
       }
 
       try {
-        const compact = state.settings.compactEvidence;
+        const compact = state.settings.compactEvidence && isImage;
         const dataUrl = compact ? await compressImageToBase64(file) : await blobToDataUrl(file);
         const bytes = dataUrlToBytes(dataUrl);
         if (bytes.length > MAX_EVIDENCE_BYTES) {

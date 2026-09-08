@@ -7,9 +7,9 @@ import { pdf } from "@react-pdf/renderer";
 import { ExecutiveSummaryDocument } from "./ExecutiveSummaryDocument";
 import { TechnicalReportDocument } from "./TechnicalReportDocument";
 import type { ApplicationResult } from "../app/commitCoordinator";
+import type { PdfReportData } from "../domain/reporting";
 import type { OperationResult } from "../domain/types";
 import type { GeneratedFileRequest, TransferResult } from "../platform/contracts/dtos";
-import type { TestPlan } from "../types";
 
 export type GeneratedFileSaver = (
   request: GeneratedFileRequest,
@@ -41,16 +41,32 @@ async function savePdf(
   );
 }
 
+let logoDataUrlPromise: Promise<string> | null = null;
+
+function brandLogoDataUrl(): Promise<string> {
+  logoDataUrlPromise ??= fetch("/qa-flow-logo.png").then(async (response) => {
+    if (!response.ok) throw new Error("Não foi possível carregar a logo do QA Flow.");
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    let binary = "";
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    }
+    return `data:${response.headers.get("content-type") ?? "image/png"};base64,${btoa(binary)}`;
+  });
+  return logoDataUrlPromise;
+}
+
 // ── PDF 1: Resumo Executivo (leve, sem steps detalhados e sem imagens) ────────
 
 export async function generateExecutiveSummary(
-  plan: TestPlan,
+  report: PdfReportData,
   saveGeneratedFile: GeneratedFileSaver,
 ): Promise<OperationResult> {
   try {
-    const safe = safeName(plan.name);
+    const safe = safeName(report.planName);
+    const logoSrc = await brandLogoDataUrl();
     const result = await savePdf(
-      <ExecutiveSummaryDocument plan={plan} />,
+      <ExecutiveSummaryDocument report={report} logoSrc={logoSrc} />,
       `QAFlow_Resumo_Executivo_${safe}.pdf`,
       saveGeneratedFile,
     );
@@ -66,13 +82,14 @@ export async function generateExecutiveSummary(
 // ── PDF 2: Relatório Técnico de Evidências (passos + imagens) ─────────────────
 
 export async function generateEvidenceReport(
-  plan: TestPlan,
+  report: PdfReportData,
   saveGeneratedFile: GeneratedFileSaver,
 ): Promise<OperationResult> {
   try {
-    const safe = safeName(plan.name);
+    const safe = safeName(report.planName);
+    const logoSrc = await brandLogoDataUrl();
     const result = await savePdf(
-      <TechnicalReportDocument plan={plan} />,
+      <TechnicalReportDocument report={report} logoSrc={logoSrc} />,
       `QAFlow_Relatorio_Tecnico_${safe}.pdf`,
       saveGeneratedFile,
     );

@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import Papa from "papaparse";
-import { Download, FileBarChart, FileText, Plus, Trash2 } from "lucide-react";
+import { Download, FileBarChart, FileCode2, FileText, Plus, Trash2 } from "lucide-react";
 import type { StepStatus } from "../../domain/types";
 import { deriveCaseStatus } from "../../domain/validation";
-import { runCsvRows, runToLegacyPlan } from "../../domain/reporting";
+import { runCsvRows, runToPdfReportData } from "../../domain/reporting";
 import { useQaStore } from "../../store/useQaStore";
 import { Button } from "../../ui/Button";
 import { useConfirm } from "../../ui/ConfirmProvider";
@@ -23,7 +23,7 @@ export function ReportsScreen() {
   const [runId, setRunId] = useState(runs[0]?.id ?? "");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [generating, setGenerating] = useState<"executive" | "evidence" | null>(null);
+  const [generating, setGenerating] = useState<"executive" | "evidence" | "html" | null>(null);
   const [registering, setRegistering] = useState(false);
   const run = runs.find((item) => item.id === runId);
   const runReports = reports.filter((item) => item.runId === runId);
@@ -39,22 +39,27 @@ export function ReportsScreen() {
     return accumulator;
   }, { not_run: 0, passed: 0, failed: 0, blocked: 0, skipped: 0 }), [run]);
 
-  const generatePdf = async (kind: "executive" | "evidence") => {
+  const generateReport = async (kind: "executive" | "evidence" | "html") => {
     if (!run) return;
     setGenerating(kind);
     try {
       // O snapshot precisa ser materializado com as evidências antes de virar PDF; uma
       // falha aqui também é falha da operação, e não pode terminar em mensagem de sucesso.
-      const legacyPlan = await runToLegacyPlan(run, getEvidenceData);
-      const { generateEvidenceReport, generateExecutiveSummary } = await import("../../utils/generatePdfReport");
-      const result = kind === "executive"
-        ? await generateExecutiveSummary(legacyPlan, saveGeneratedFile)
-        : await generateEvidenceReport(legacyPlan, saveGeneratedFile);
+      const reportData = await runToPdfReportData(run, getEvidenceData);
+      const result = kind === "html"
+        ? await import("../../utils/generateHtmlReport").then(({ generateHtmlReport }) => (
+          generateHtmlReport(reportData, saveGeneratedFile)
+        ))
+        : await import("../../utils/generatePdfReport").then(({ generateEvidenceReport, generateExecutiveSummary }) => (
+          kind === "executive"
+            ? generateExecutiveSummary(reportData, saveGeneratedFile)
+            : generateEvidenceReport(reportData, saveGeneratedFile)
+        ));
       toast.fromResult(result, { successDescription: "Gerado a partir do snapshot da tentativa selecionada." });
     } catch (error) {
       toast.show({
         tone: "error",
-        message: "Não foi possível preparar o PDF.",
+        message: "Não foi possível preparar o relatório.",
         description: error instanceof Error ? error.message : "Falha ao ler as evidências do snapshot.",
       });
     } finally {
@@ -118,11 +123,12 @@ export function ReportsScreen() {
               <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
                 <h2 className="font-bold text-body">Resultado por caso</h2>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                  {(Object.keys(counts) as StepStatus[]).map((status) => <div key={status} className="rounded-xl bg-surface p-3 text-center"><p className="text-2xl font-bold tabular-nums text-body">{counts[status]}</p><p className="mt-1 text-[11px] font-bold text-muted">{stepStatusLabel[status]}</p></div>)}
+                  {(Object.keys(counts) as StepStatus[]).map((status) => <div key={status} className="rounded-xl bg-surface p-3 text-center"><p className="text-2xl font-bold leading-none tabular-nums text-body">{counts[status]}</p><p className="mt-2 text-[11px] font-bold leading-tight text-muted">{stepStatusLabel[status]}</p></div>)}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
-                  <Button variant="primary" loading={generating === "executive"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileBarChart size={16} />} onClick={() => void generatePdf("executive")}>Resumo executivo PDF</Button>
-                  <Button loading={generating === "evidence"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileText size={16} />} onClick={() => void generatePdf("evidence")}>Relatório técnico PDF</Button>
+                  <Button variant="primary" loading={generating === "executive"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileBarChart size={16} />} onClick={() => void generateReport("executive")}>Resumo executivo PDF</Button>
+                  <Button loading={generating === "evidence"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileText size={16} />} onClick={() => void generateReport("evidence")}>Relatório técnico PDF</Button>
+                  <Button loading={generating === "html"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileCode2 size={16} />} onClick={() => void generateReport("html")}>Relatório interativo HTML</Button>
                   <button type="button" className={buttonSecondary} onClick={() => void saveTextExport(JSON.stringify(run, null, 2), "application/json", `${run.id}.json`)}><Download size={16} /> JSON</button>
                   <button type="button" className={buttonSecondary} onClick={() => void saveTextExport(Papa.unparse(runCsvRows(run)), "text/csv;charset=utf-8", `${run.id}.csv`)}><Download size={16} /> CSV</button>
                 </div>

@@ -40,6 +40,7 @@ export interface QaSessionState {
 
 export interface QaActions {
   initialize: () => Promise<void>;
+  refreshWorkspace: () => Promise<void>;
   saveCase: (testCase: CaseDefinition, expectedRevision: number | null) => Promise<ApplicationResult<CaseDefinition>>;
   archiveCase: (caseId: string) => Promise<ApplicationResult>;
   savePlan: (plan: PlanDefinition, expectedRevision: number | null) => Promise<ApplicationResult<PlanDefinition>>;

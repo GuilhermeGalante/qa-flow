@@ -1,206 +1,341 @@
-/* eslint-disable react-refresh/only-export-components -- helpers de documento são usados por dois templates PDF */
-/**
- * PDF 1 — Resumo Executivo
- * Leve, sem steps detalhados e sem imagens.
- * Contém: cabeçalho, gráfico de pizza, tabela de cenários com status.
- */
+/* eslint-disable react-refresh/only-export-components -- componentes compartilhados entre os dois templates PDF */
 import {
-  Document, Page, View, Text,
-  Svg, Path, Rect,
+  Document,
+  Image,
+  Page,
   StyleSheet,
-} from '@react-pdf/renderer';
-import type { TestPlan, RunStatus } from '../types';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-export function computeStatus(scenario: TestPlan['scenarios'][0]): RunStatus {
-  const { steps } = scenario;
-  if (!steps.length) return 'pending';
-  if (steps.some((s) => s.status === 'failed'))  return 'failed';
-  if (steps.some((s) => s.status === 'blocked')) return 'blocked';
-  if (steps.every((s) => s.status === 'passed')) return 'passed';
-  return 'pending';
-}
-
-export function piePath(cx: number, cy: number, r: number, a0: number, a1: number): string {
-  if (a1 - a0 >= Math.PI * 2 - 0.01) {
-    return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.01} ${cy - r} Z`;
-  }
-  const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
-  const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
-  const lg = a1 - a0 > Math.PI ? 1 : 0;
-  return `M ${cx} ${cy} L ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${lg} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`;
-}
-
-// ── Palette & Maps ────────────────────────────────────────────────────────────
+  Text,
+  View,
+} from "@react-pdf/renderer";
+import type { PdfReportData } from "../domain/reporting";
+import type { CasePriority, RunStatus, StepStatus } from "../domain/types";
 
 export const C = {
-  passed: '#2db39e', failed: '#8b1a1a', blocked: '#a0a0a0', pending: '#c8c8c8',
-  blue: '#1e5aa0', dark: '#1e1e1e', grey: '#646464', lgrey: '#d8d8d8',
-  hbg: '#f2f2f2', rowAlt: '#fafafa', failBg: '#fff5f5',
-  indigo: '#4f46e5', violet: '#7c3aed',
+  ink: "#101828",
+  body: "#344054",
+  muted: "#667085",
+  line: "#d0d5dd",
+  shell: "#f2f4f7",
+  raised: "#ffffff",
+  navy: "#0747a6",
+  cyan: "#0891b2",
+  cyanSoft: "#ecfeff",
+  passed: "#067647",
+  passedSoft: "#ecfdf3",
+  failed: "#b42318",
+  failedSoft: "#fef3f2",
+  blocked: "#b54708",
+  blockedSoft: "#fffaeb",
+  skipped: "#6941c6",
+  skippedSoft: "#f4f3ff",
+  notRun: "#667085",
+  notRunSoft: "#f2f4f7",
 };
-export const SC: Record<RunStatus, string> = { passed: C.passed, failed: C.failed, blocked: C.blocked, pending: C.grey, paused: C.grey, untested: C.pending };
-export const SL: Record<RunStatus, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Blocked', pending: 'Pending', paused: 'Paused', untested: 'Untested' };
 
-// ── Shared styles ─────────────────────────────────────────────────────────────
+export const STATUS_LABEL: Record<StepStatus, string> = {
+  not_run: "Não executado",
+  passed: "Aprovado",
+  failed: "Reprovado",
+  blocked: "Bloqueado",
+  skipped: "Ignorado",
+};
+
+export const STATUS_COLOR: Record<StepStatus, string> = {
+  not_run: C.notRun,
+  passed: C.passed,
+  failed: C.failed,
+  blocked: C.blocked,
+  skipped: C.skipped,
+};
+
+export const STATUS_SOFT: Record<StepStatus, string> = {
+  not_run: C.notRunSoft,
+  passed: C.passedSoft,
+  failed: C.failedSoft,
+  blocked: C.blockedSoft,
+  skipped: C.skippedSoft,
+};
+
+const RUN_STATUS_LABEL: Record<RunStatus, string> = {
+  draft: "Rascunho",
+  in_progress: "Em andamento",
+  paused: "Pausada",
+  completed: "Concluída",
+  aborted: "Abortada",
+};
+
+export const PRIORITY_LABEL: Record<CasePriority, string> = {
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+  critical: "Crítica",
+};
+
+export function formatDate(value?: string): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatDuration(startedAt: string, finishedAt?: string): string {
+  if (!finishedAt) return "Em andamento";
+  const milliseconds = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+  if (!Number.isFinite(milliseconds) || milliseconds < 0) return "-";
+  const minutes = Math.max(1, Math.round(milliseconds / 60_000));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder ? `${hours} h ${remainder} min` : `${hours} h`;
+}
 
 export const shared = StyleSheet.create({
-  page:      { paddingTop: 36, paddingBottom: 52, paddingHorizontal: 38, fontFamily: 'Helvetica', fontSize: 9, color: C.dark, backgroundColor: '#fff', lineHeight: 1.45 },
-  hdrRow:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  titleBlk:  { flex: 1, paddingRight: 14 },
-  planTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: C.blue, lineHeight: 1.4, marginBottom: 6 },
-  metaLine:  { fontSize: 8, color: C.grey, marginBottom: 2 },
-  logoRow:   { flexDirection: 'row', alignItems: 'flex-start', paddingTop: 2 },
-  logoQA:    { fontSize: 19, fontFamily: 'Helvetica-Bold', color: C.dark },
-  logoFl:    { fontSize: 19, fontFamily: 'Helvetica-Bold', color: C.passed },
-  sep:       { borderBottomWidth: 0.5, borderBottomColor: C.lgrey, marginVertical: 10 },
-  secTitle:  { fontSize: 12, fontFamily: 'Helvetica-Bold', color: C.dark, marginBottom: 5 },
-  breadcrumb:{ fontSize: 9, color: C.blue, marginBottom: 5 },
-  tbl:       { width: '100%' },
-  thr:       { flexDirection: 'row', backgroundColor: C.hbg, borderTopWidth: 0.5, borderTopColor: C.lgrey, borderLeftWidth: 0.5, borderLeftColor: C.lgrey, borderRightWidth: 0.5, borderRightColor: C.lgrey },
-  tr:        { flexDirection: 'row', borderLeftWidth: 0.5, borderLeftColor: C.lgrey, borderRightWidth: 0.5, borderRightColor: C.lgrey, borderBottomWidth: 0.5, borderBottomColor: C.lgrey },
-  trAlt:     { backgroundColor: C.rowAlt },
-  th:        { paddingVertical: 4, paddingHorizontal: 4, fontSize: 7, fontFamily: 'Helvetica-Bold', color: C.grey, borderRightWidth: 0.5, borderRightColor: C.lgrey },
-  td:        { paddingVertical: 5, paddingHorizontal: 4, fontSize: 8, color: C.dark, borderRightWidth: 0.5, borderRightColor: C.lgrey },
+  page: {
+    paddingTop: 34,
+    paddingBottom: 32,
+    paddingHorizontal: 38,
+    fontFamily: "Helvetica",
+    fontSize: 8.5,
+    lineHeight: 1.38,
+    color: C.body,
+    backgroundColor: C.raised,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: C.line,
+  },
+  logoBlock: { width: 68, alignItems: "center", marginRight: 14 },
+  logo: { width: 54, height: 54, objectFit: "contain" },
+  brandName: { marginTop: 4, fontSize: 8, fontFamily: "Helvetica-Bold", color: C.ink },
+  brandFlow: { color: C.cyan },
+  headerCopy: { flex: 1 },
+  documentKind: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    color: C.cyan,
+    letterSpacing: 1.1,
+    marginBottom: 4,
+  },
+  planTitle: {
+    fontSize: 16,
+    fontFamily: "Helvetica-Bold",
+    color: C.ink,
+    lineHeight: 1.25,
+  },
+  headerMeta: { color: C.muted, fontSize: 8, marginTop: 4 },
+  sectionTitle: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    color: C.ink,
+    marginBottom: 8,
+  },
+  footer: {
+    position: "absolute",
+    left: 38,
+    right: 38,
+    bottom: 20,
+    paddingTop: 7,
+    borderTopWidth: 0.5,
+    borderTopColor: C.line,
+    color: C.muted,
+    fontSize: 7,
+    textAlign: "center",
+  },
 });
 
-// ── Pie chart ─────────────────────────────────────────────────────────────────
+const S = StyleSheet.create({
+  metaGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 14,
+    marginBottom: 14,
+    borderWidth: 0.7,
+    borderColor: C.line,
+    borderRadius: 7,
+    backgroundColor: C.shell,
+  },
+  metaItem: { width: "33.333%", paddingVertical: 7, paddingHorizontal: 9 },
+  metaLabel: { fontSize: 6.5, fontFamily: "Helvetica-Bold", color: C.muted, marginBottom: 2 },
+  metaValue: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: C.ink },
+  objective: {
+    padding: 10,
+    marginBottom: 14,
+    borderRadius: 7,
+    backgroundColor: C.cyanSoft,
+    borderWidth: 0.7,
+    borderColor: "#a5f3fc",
+  },
+  objectiveLabel: { fontSize: 7, fontFamily: "Helvetica-Bold", color: C.cyan, marginBottom: 3 },
+  objectiveText: { fontSize: 8.5, color: C.body },
+  metrics: { flexDirection: "row", marginBottom: 14 },
+  metric: {
+    width: "20%",
+    paddingVertical: 8,
+    paddingHorizontal: 7,
+    borderWidth: 0.7,
+    borderColor: C.line,
+    borderRightWidth: 0,
+  },
+  metricFirst: { borderTopLeftRadius: 7, borderBottomLeftRadius: 7 },
+  metricLast: { borderRightWidth: 0.7, borderTopRightRadius: 7, borderBottomRightRadius: 7 },
+  metricValue: { fontSize: 16, lineHeight: 1, fontFamily: "Helvetica-Bold", marginBottom: 6 },
+  metricLabel: { fontSize: 6.5, lineHeight: 1.25, fontFamily: "Helvetica-Bold", color: C.muted },
+  distribution: {
+    padding: 10,
+    marginBottom: 16,
+    borderWidth: 0.7,
+    borderColor: C.line,
+    borderRadius: 7,
+  },
+  distributionBar: { flexDirection: "row", height: 10, borderRadius: 5, overflow: "hidden", backgroundColor: C.shell },
+  legend: { flexDirection: "row", flexWrap: "wrap", marginTop: 8 },
+  legendItem: { width: "33.333%", flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  legendDot: { width: 7, height: 7, borderRadius: 3.5, marginRight: 5 },
+  legendText: { fontSize: 7.5, color: C.body },
+  table: { width: "100%", borderWidth: 0.7, borderColor: C.line, borderRadius: 6, overflow: "hidden" },
+  tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: C.line },
+  tableRowLast: { borderBottomWidth: 0 },
+  tableHeader: { backgroundColor: C.shell },
+  th: { paddingVertical: 6, paddingHorizontal: 5, fontSize: 6.5, fontFamily: "Helvetica-Bold", color: C.muted },
+  td: { paddingVertical: 7, paddingHorizontal: 5, fontSize: 7.5, color: C.body },
+  idText: { fontFamily: "Helvetica-Bold", color: C.navy },
+  titleText: { fontFamily: "Helvetica-Bold", color: C.ink },
+  status: { borderRadius: 4, paddingVertical: 2, paddingHorizontal: 4, alignSelf: "flex-start" },
+  statusText: { fontSize: 6.8, fontFamily: "Helvetica-Bold" },
+  empty: { padding: 18, textAlign: "center", color: C.muted },
+  note: { marginTop: 12, padding: 9, borderRadius: 6, backgroundColor: C.shell, color: C.body },
+});
 
-export interface Slice { value: number; color: string; label: string }
+const STATUS_ORDER: StepStatus[] = ["passed", "failed", "blocked", "skipped", "not_run"];
 
-export function PieChart({ slices, total }: { slices: Slice[]; total: number }) {
-  const cx = 95, cy = 90, r = 80;
-  const paths: { d: string; color: string }[] = [];
-  let a = -Math.PI / 2;
-  for (const sl of slices) {
-    if (!sl.value) continue;
-    const da = (sl.value / total) * 2 * Math.PI;
-    paths.push({ d: piePath(cx, cy, r, a, a + da), color: sl.color });
-    a += da;
-  }
+export function ReportHeader({ report, logoSrc, kind }: { report: PdfReportData; logoSrc: string; kind: string }) {
   return (
-    <Svg width={210} height={195} viewBox="0 0 210 195">
-      {paths.map((p, i) => <Path key={i} d={p.d} fill={p.color} stroke="white" strokeWidth={1.5} />)}
-    </Svg>
-  );
-}
-
-// ── Header (reusable) ─────────────────────────────────────────────────────────
-
-export function DocHeader({ plan, dateStr }: { plan: TestPlan; dateStr: string }) {
-  return (
-    <>
-      <View style={shared.hdrRow}>
-        <View style={shared.titleBlk}>
-          <Text style={shared.planTitle}>Plano de testes - {plan.name}</Text>
-          <Text style={shared.metaLine}>Project: {plan.meta.project}</Text>
-          <Text style={shared.metaLine}>Created by {plan.meta.createdBy} on {dateStr}</Text>
-          <Text style={shared.metaLine}>Test plan status: Open</Text>
-        </View>
-        <View style={shared.logoRow}>
-          <Text style={shared.logoQA}>QA</Text>
-          <Text style={shared.logoFl}>Flow</Text>
-        </View>
+    <View style={shared.header}>
+      <View style={shared.logoBlock}>
+        <Image src={logoSrc} style={shared.logo} />
+        <Text style={shared.brandName}>QA <Text style={shared.brandFlow}>Flow</Text></Text>
       </View>
-      <View style={shared.sep} />
-    </>
+      <View style={shared.headerCopy}>
+        <Text style={shared.documentKind}>{kind}</Text>
+        <Text style={shared.planTitle}>{report.planName}</Text>
+        <Text style={shared.headerMeta}>Tentativa {report.attempt} | Plano rev. {report.planRevision} | {RUN_STATUS_LABEL[report.status]}</Text>
+      </View>
+    </View>
   );
 }
 
-// ── Executive Summary Document ────────────────────────────────────────────────
+export function ReportFooter({ report }: { report: PdfReportData }) {
+  return (
+    <Text
+      fixed
+      style={shared.footer}
+      render={({ pageNumber, totalPages }) => (
+        `QA Flow | ${report.id} | Gerado do snapshot imutável | Página ${pageNumber} de ${totalPages}`
+      )}
+    />
+  );
+}
 
-const ES = StyleSheet.create({
-  chartRow:   { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  legendBlk:  { flex: 1, paddingLeft: 14 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 7 },
-  legendRect: { width: 10, height: 10, marginRight: 6 },
-  legendLbl:  { fontSize: 9, color: C.dark },
-});
-
-export function ExecutiveSummaryDocument({ plan }: { plan: TestPlan }) {
-  const enriched = plan.scenarios.map((s) => ({ ...s, computed: computeStatus(s) }));
-  const total   = enriched.length;
-  const passed  = enriched.filter((s) => s.computed === 'passed').length;
-  const failed  = enriched.filter((s) => s.computed === 'failed').length;
-  const blocked = enriched.filter((s) => s.computed === 'blocked').length;
-  const pending = enriched.filter((s) => s.computed === 'pending').length;
-  const pct     = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
-
-  const slices: Slice[] = [
-    { value: passed,  color: C.passed,  label: `Passed (${passed}/${total}) - ${pct(passed)}%`   },
-    { value: failed,  color: C.failed,  label: `Failed (${failed}/${total}) - ${pct(failed)}%`   },
-    { value: blocked, color: C.blocked, label: `Blocked (${blocked}/${total}) - ${pct(blocked)}%` },
-    { value: pending, color: C.pending, label: `Pending (${pending}/${total}) - ${pct(pending)}%` },
-  ].filter((s) => s.value > 0);
-
-  const crumb   = [plan.meta.project, plan.meta.section].filter(Boolean).join(' / ') || plan.name;
-  const dateStr = new Date(plan.meta.createdAt).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-  });
-  const today = new Date().toLocaleDateString('pt-BR');
-  const CW = { id: '8%', title: '28%', status: '12%', date: '14%', by: '14%', el: '11%', iss: '13%' };
+export function ExecutiveSummaryDocument({ report, logoSrc }: { report: PdfReportData; logoSrc: string }) {
+  const counts = STATUS_ORDER.reduce<Record<StepStatus, number>>((accumulator, status) => {
+    accumulator[status] = report.cases.filter((item) => item.status === status).length;
+    return accumulator;
+  }, { not_run: 0, passed: 0, failed: 0, blocked: 0, skipped: 0 });
+  const total = report.cases.length;
+  const evidenceCount = report.cases.reduce((sum, item) => (
+    sum + item.steps.reduce((stepSum, step) => stepSum + step.evidence.length, 0)
+  ), 0);
+  const distribution = STATUS_ORDER.filter((status) => counts[status] > 0);
 
   return (
-    <Document author="QA Flow" title={`Resumo Executivo - ${plan.name}`}>
+    <Document author="QA Flow" title={`Resumo executivo - ${report.planName}`} subject={`Tentativa ${report.attempt}`}>
       <Page size="A4" style={shared.page}>
-        <DocHeader plan={plan} dateStr={dateStr} />
+        <ReportHeader report={report} logoSrc={logoSrc} kind="RESUMO EXECUTIVO" />
 
-        {/* Pie chart + legend */}
-        <View style={ES.chartRow}>
-          <PieChart slices={slices} total={total} />
-          <View style={ES.legendBlk}>
-            {slices.map((sl) => (
-              <View key={sl.color} style={ES.legendItem}>
-                <Svg width={10} height={10} style={ES.legendRect}>
-                  <Rect x={0} y={0} width={10} height={10} fill={sl.color} />
-                </Svg>
-                <Text style={ES.legendLbl}>{sl.label}</Text>
+        <View style={S.metaGrid}>
+          <View style={S.metaItem}><Text style={S.metaLabel}>PROJETO</Text><Text style={S.metaValue}>{report.project || "Não informado"}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>AMBIENTE</Text><Text style={S.metaValue}>{report.environment || "Não informado"}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>BUILD</Text><Text style={S.metaValue}>{report.build || "Não informada"}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>RESPONSÁVEL</Text><Text style={S.metaValue}>{report.tester || report.createdBy}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>INÍCIO</Text><Text style={S.metaValue}>{formatDate(report.startedAt)}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>DURAÇÃO</Text><Text style={S.metaValue}>{formatDuration(report.startedAt, report.finishedAt)}</Text></View>
+        </View>
+
+        {(report.objective || report.description) && (
+          <View style={S.objective}>
+            <Text style={S.objectiveLabel}>OBJETIVO</Text>
+            <Text style={S.objectiveText}>{report.objective || report.description}</Text>
+          </View>
+        )}
+
+        <Text style={shared.sectionTitle}>Visão geral</Text>
+        <View style={S.metrics}>
+          {STATUS_ORDER.map((status, index) => (
+            <View key={status} style={[S.metric, index === 0 ? S.metricFirst : {}, index === STATUS_ORDER.length - 1 ? S.metricLast : {}]}>
+              <Text style={[S.metricValue, { color: STATUS_COLOR[status] }]}>{counts[status]}</Text>
+              <Text style={S.metricLabel}>{STATUS_LABEL[status].toUpperCase()}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={S.distribution}>
+          <Text style={shared.sectionTitle}>Distribuição por caso</Text>
+          <View style={S.distributionBar}>
+            {distribution.map((status) => (
+              <View key={status} style={{ width: `${(counts[status] / Math.max(total, 1)) * 100}%`, backgroundColor: STATUS_COLOR[status] }} />
+            ))}
+          </View>
+          <View style={S.legend}>
+            {STATUS_ORDER.map((status) => (
+              <View key={status} style={S.legendItem}>
+                <View style={[S.legendDot, { backgroundColor: STATUS_COLOR[status] }]} />
+                <Text style={S.legendText}>{STATUS_LABEL[status]}: {counts[status]} ({total ? Math.round((counts[status] / total) * 100) : 0}%)</Text>
               </View>
             ))}
           </View>
         </View>
 
-        <Text style={shared.secTitle}>DETAILS</Text>
-        <Text style={shared.breadcrumb}>{crumb}</Text>
-
-        {/* Summary table — NO step details, NO images */}
-        <View style={shared.tbl}>
-          <View style={shared.thr} fixed>
-            {[['ID', CW.id], ['TITLE', CW.title], ['STATUS', CW.status],
-              ['TEST RESULT\nADDED ON', CW.date], ['TEST RESULT\nADDED BY', CW.by],
-              ['ELAPSED\nTIME', CW.el], ['ISSUES LINKED', CW.iss]].map(([label, w]) => (
-              <View key={label} style={[shared.th, { width: w }]}>
-                <Text>{label}</Text>
-              </View>
-            ))}
+        <Text style={shared.sectionTitle}>Resultado por caso</Text>
+        <View style={S.table}>
+          <View style={[S.tableRow, S.tableHeader]} fixed>
+            <Text style={[S.th, { width: "18%" }]}>ID</Text>
+            <Text style={[S.th, { width: "42%" }]}>CASO DE TESTE</Text>
+            <Text style={[S.th, { width: "13%" }]}>PRIORIDADE</Text>
+            <Text style={[S.th, { width: "17%" }]}>RESULTADO</Text>
+            <Text style={[S.th, { width: "10%", textAlign: "center" }]}>EVID.</Text>
           </View>
-          {enriched.map((s, i) => {
-            const issues = s.steps
-              .filter((st) => st.status === 'failed' && st.comment)
-              .map((st) => st.comment).join('; ');
+          {report.cases.length === 0 ? (
+            <Text style={S.empty}>Nenhum caso registrado no snapshot desta tentativa.</Text>
+          ) : report.cases.map((item, index) => {
+            const itemEvidence = item.steps.reduce((sum, step) => sum + step.evidence.length, 0);
             return (
-              <View key={s.id} style={[shared.tr, i % 2 !== 0 ? shared.trAlt : {}]} wrap={false}>
-                <View style={[shared.td, { width: CW.id }]}><Text>{s.caseId}</Text></View>
-                <View style={[shared.td, { width: CW.title }]}><Text>{s.title}</Text></View>
-                <View style={[shared.td, { width: CW.status }]}>
-                  <Text style={{ color: SC[s.computed], fontFamily: 'Helvetica-Bold' }}>{SL[s.computed]}</Text>
+              <View key={item.id} style={[S.tableRow, index === report.cases.length - 1 ? S.tableRowLast : {}]} wrap={false}>
+                <Text style={[S.td, S.idText, { width: "18%" }]}>{item.id}</Text>
+                <Text style={[S.td, S.titleText, { width: "42%" }]}>{item.title}</Text>
+                <Text style={[S.td, { width: "13%" }]}>{PRIORITY_LABEL[item.priority]}</Text>
+                <View style={[S.td, { width: "17%" }]}>
+                  <View style={[S.status, { backgroundColor: STATUS_SOFT[item.status] }]}>
+                    <Text style={[S.statusText, { color: STATUS_COLOR[item.status] }]}>{STATUS_LABEL[item.status]}</Text>
+                  </View>
                 </View>
-                <View style={[shared.td, { width: CW.date }]}>
-                  <Text>{s.computed !== 'pending' ? today : ''}</Text>
-                </View>
-                <View style={[shared.td, { width: CW.by }]}>
-                  <Text>{s.computed !== 'pending' ? plan.meta.createdBy : ''}</Text>
-                </View>
-                <View style={[shared.td, { width: CW.el }]}><Text /></View>
-                <View style={[shared.td, { width: CW.iss, borderRightWidth: 0 }]}>
-                  <Text>{issues}</Text>
-                </View>
+                <Text style={[S.td, { width: "10%", textAlign: "center" }]}>{itemEvidence}</Text>
               </View>
             );
           })}
         </View>
+
+        {report.notes && <Text style={S.note}>Notas da execução: {report.notes}</Text>}
+        <Text style={{ marginTop: 7, color: C.muted, fontSize: 7 }}>Total de evidências vinculadas: {evidenceCount}</Text>
+        <ReportFooter report={report} />
       </Page>
     </Document>
   );

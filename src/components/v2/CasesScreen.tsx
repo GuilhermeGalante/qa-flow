@@ -2,11 +2,15 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import Papa from "papaparse";
 import {
   Archive,
+  AlertTriangle,
+  BarChart3,
+  Bot,
   ChevronDown,
   ChevronRight,
   Download,
   FileUp,
   Folder,
+  FolderOpen,
   Pencil,
   Plus,
   Search,
@@ -23,6 +27,7 @@ import { CaseEditor } from "./CaseEditor";
 import { createBlankCase } from "./caseFactory";
 import {
   EmptyState,
+  MetricCard,
   PageHeader,
   StatusBadge,
   buttonDanger,
@@ -50,7 +55,7 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
   const [query, setQuery] = useState("");
   const [priority, setPriority] = useState<CasePriority | "all">("all");
   const [status, setStatus] = useState<LifecycleStatus | "all">("active");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(cases.map((testCase) => testCase.path[0] || "Sem pasta")));
   const [editing, setEditing] = useState<CaseDefinition | null>(null);
   const [importPreview, setImportPreview] = useState<CaseDefinition[] | null>(null);
   const [importing, setImporting] = useState(false);
@@ -120,6 +125,12 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
     });
     return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right, "pt-BR"));
   }, [filtered]);
+
+  const activeCases = cases.filter((testCase) => testCase.status === "active");
+  const automatedCases = activeCases.filter((testCase) => testCase.automationLinks.length > 0).length;
+  const automationCoverage = activeCases.length ? Math.round((automatedCases / activeCases.length) * 100) : 0;
+  const criticalCases = cases.filter((testCase) => testCase.status === "active" && testCase.priority === "critical").length;
+  const unfiledCases = cases.filter((testCase) => testCase.path.length === 0).length;
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -198,8 +209,8 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
   return (
     <>
       <PageHeader
-        title="Casos"
-        description="Definições reutilizáveis e versionadas. Planos apontam para revisões; execuções preservam snapshots imutáveis."
+        title="Casos de teste"
+        description="Definições reutilizáveis e versionadas. Pastas organizam o catálogo; planos e execuções preservam a revisão utilizada."
         actions={(
           <>
             <input ref={fileRef} type="file" accept=".json,.csv,application/json,text/csv" className="hidden" onChange={(event) => void handleFile(event)} />
@@ -208,6 +219,13 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
           </>
         )}
       />
+
+      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Indicadores do catálogo">
+        <MetricCard label="Total de casos" value={cases.length} detail={`${activeCases.length} ativo(s)`} icon={<BarChart3 size={18} />} />
+        <MetricCard label="Cobertura de automação" value={`${automationCoverage}%`} detail={`${automatedCases} caso(s) automatizado(s)`} icon={<Bot size={18} />} tone="pass" />
+        <MetricCard label="Casos críticos" value={criticalCases} detail="prioridade crítica no catálogo ativo" icon={<AlertTriangle size={18} />} tone={criticalCases ? "fail" : "neutral"} />
+        <MetricCard label="Sem pasta" value={unfiledCases} detail="caso(s) aguardando organização" icon={<FolderOpen size={18} />} tone={unfiledCases ? "warn" : "neutral"} />
+      </section>
 
       {importPreview && (
         <section className="mb-5 rounded-2xl border border-run-line bg-run-tint p-5" aria-labelledby="import-preview-title">
@@ -227,13 +245,13 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
         </section>
       )}
 
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-4 shadow-sm lg:flex-row lg:items-center">
-        <label className="relative lg:w-72">
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-3 shadow-[0_8px_24px_rgb(15_23_42/0.03)] xl:flex-row xl:items-center">
+        <label className="relative xl:w-80">
           <span className="sr-only">Buscar casos</span>
           <Search className="pointer-events-none absolute left-3 top-3 text-muted" size={18} />
           <input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por ID, título, pasta ou tag" />
         </label>
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 xl:justify-end">
           <SegmentedControl size="sm" ariaLabel="Filtrar prioridade" value={priority} onChange={setPriority} options={priorityOptions} />
           <SegmentedControl size="sm" ariaLabel="Filtrar status" value={status} onChange={setStatus} options={statusOptions} />
         </div>
@@ -250,12 +268,12 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
           {groups.map(([group, items]) => {
             const open = expanded.has(group);
             return (
-              <section key={group} className="overflow-hidden rounded-2xl border border-hairline bg-raised shadow-sm">
+              <section key={group} className="overflow-hidden rounded-2xl border border-hairline bg-raised shadow-[0_8px_24px_rgb(15_23_42/0.03)]">
                 <button type="button" aria-expanded={open} onClick={() => setExpanded((current) => {
                   const next = new Set(current);
                   if (next.has(group)) next.delete(group); else next.add(group);
                   return next;
-                })} className="flex w-full items-center gap-3 bg-surface px-4 py-3 text-left transition hover:bg-shell">
+                })} className="flex w-full items-center gap-3 bg-surface/70 px-4 py-3 text-left transition hover:bg-shell">
                   {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                   <Folder size={18} className="text-run" />
                   <span className="flex-1 font-bold text-body">{group}</span>
@@ -264,7 +282,7 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
                 {open && (
                   <div className="divide-y divide-hairline">
                     {items.map((testCase) => (
-                      <article key={testCase.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <article key={testCase.id} className="flex flex-col gap-4 p-4 transition hover:bg-surface/60 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-xs font-bold text-run">{testCase.id}</span>

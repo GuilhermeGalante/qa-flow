@@ -14,7 +14,7 @@
     "build": "tsc -b && vite build",
     "build:desktop:frontend": "tsc -b && vite build --mode desktop",
     "lint": "eslint .",
-    "test": "node --test src/domain/validation.test.ts src/domain/importers.test.ts src/domain/migration.test.ts src/domain/demands.test.ts src/app/qaApplicationServices.test.ts src/platform/web/webWorkspaceAdapter.test.ts src/platform/tauri/tauriAdapters.test.ts && node scripts/verify-schemas.mjs",
+    "test": "node --test src/domain/validation.test.ts src/domain/importers.test.ts src/domain/migration.test.ts src/domain/demands.test.ts src/domain/reporting.test.ts src/utils/generateHtmlReport.test.ts src/app/qaApplicationServices.test.ts src/platform/web/webWorkspaceAdapter.test.ts src/platform/tauri/tauriAdapters.test.ts && node scripts/verify-schemas.mjs",
     "check": "npm run lint && npm run test && npm run build",
     "tauri": "tauri",
     "dev:desktop": "tauri dev",

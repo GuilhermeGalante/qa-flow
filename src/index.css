@@ -94,6 +94,34 @@ textarea {
   font-family: "Segoe UI Variable Text", "Segoe UI", Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
+.qa-demand-surface :is(button, input, select, textarea, summary):focus-visible {
+  outline-color: rgb(34 197 94);
+}
+
+.qa-board-scroll {
+  scrollbar-color: rgb(163 163 163) rgb(229 229 229);
+  scrollbar-width: thin;
+}
+
+.qa-board-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.qa-board-scroll::-webkit-scrollbar-track {
+  background: rgb(229 229 229);
+  border-radius: 9999px;
+}
+
+.qa-board-scroll::-webkit-scrollbar-thumb {
+  background: rgb(163 163 163);
+  border: 2px solid rgb(229 229 229);
+  border-radius: 9999px;
+}
+
+.qa-board-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(115 115 115);
+}
+
 button,
 input,
 select,

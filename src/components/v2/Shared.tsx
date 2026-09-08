@@ -81,13 +81,46 @@ export function StatusBadge({ value, label }: { value: string; label: string }) 
 
 export function PageHeader({ title, description, actions }: { title: string; description: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-black tracking-tight text-body md:text-3xl">{title}</h1>
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-black tracking-[-0.035em] text-body md:text-3xl">{title}</h1>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-subtle">{description}</p>
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
     </div>
+  );
+}
+
+const metricToneStyles = {
+  neutral: "bg-shell text-control",
+  pass: "bg-pass-tint text-pass",
+  run: "bg-run-tint text-run",
+  warn: "bg-warn-tint text-warn",
+  fail: "bg-fail-tint text-fail",
+} as const;
+
+export function MetricCard({
+  label,
+  value,
+  detail,
+  icon,
+  tone = "neutral",
+}: {
+  label: string;
+  value: ReactNode;
+  detail: ReactNode;
+  icon: ReactNode;
+  tone?: keyof typeof metricToneStyles;
+}) {
+  return (
+    <article className="flex min-h-28 items-start justify-between gap-4 rounded-2xl border border-hairline bg-raised p-4 shadow-[0_8px_24px_rgb(15_23_42/0.035)] sm:p-5">
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-muted">{label}</p>
+        <p className="mt-2 text-2xl font-black tracking-[-0.035em] tabular-nums text-body">{value}</p>
+        <div className="mt-1 text-xs leading-relaxed text-muted">{detail}</div>
+      </div>
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${metricToneStyles[tone]}`} aria-hidden="true">{icon}</span>
+    </article>
   );
 }
 

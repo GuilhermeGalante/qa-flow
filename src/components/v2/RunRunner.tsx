@@ -11,6 +11,7 @@ import {
   ClipboardPaste,
   Image,
   Lock,
+  MonitorUp,
   Plus,
   Square,
   Trash2,
@@ -77,7 +78,11 @@ function EvidencePreview({ meta, editable, onRemove }: { meta: EvidenceMeta; edi
 
   return (
     <figure className="group relative overflow-hidden rounded-xl border border-hairline bg-shell">
-      {source ? <img src={source} alt={meta.name} className="h-28 w-full object-cover" /> : <div className="flex h-28 items-center justify-center text-faint"><Image size={22} /></div>}
+      {source ? (
+        meta.mimeType.startsWith("video/")
+          ? <video src={source} aria-label={meta.name} controls preload="metadata" className="h-28 w-full bg-ink object-contain" />
+          : <img src={source} alt={meta.name} className="h-28 w-full object-cover" />
+      ) : <div className="flex h-28 items-center justify-center text-faint"><Image size={22} /></div>}
       <figcaption className="truncate px-2 py-1.5 text-[11px] text-subtle" title={`${meta.name} · SHA-256 ${meta.sha256}`}>{meta.name}</figcaption>
       {editable && <button type="button" aria-label={`Remover evidência ${meta.name}`} onClick={onRemove} className="absolute right-2 top-2 rounded-lg bg-raised/90 p-1.5 text-fail opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100"><Trash2 size={14} /></button>}
     </figure>
@@ -394,6 +399,7 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
   const setRunStatus = useQaStore((state) => state.setRunStatus);
   const updateStepResult = useQaStore((state) => state.updateStepResult);
   const toast = useToast();
+  const runtimeInfo = useQaStore((state) => state.runtimeInfo);
   const [selectedCaseId, setSelectedCaseId] = useState(run.snapshot.cases[0]?.id ?? "");
   const [activeStepId, setActiveStepId] = useState(run.snapshot.cases[0]?.steps[0]?.id ?? "");
   const [expandedStepId, setExpandedStepId] = useState<string | null>(run.snapshot.cases[0]?.steps[0]?.id ?? null);
@@ -436,6 +442,11 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
     setExpandedStepId(nextStepId || null);
   };
 
+  const showCompanion = async () => {
+    const { showDesktopCompanion } = await import("../../platform/desktop/desktopCompanion");
+    await showDesktopCompanion(run.id);
+  };
+
   const pendingCount = Object.keys(pendingStepResults).length;
 
   const transition = async (status: "in_progress" | "paused" | "completed" | "aborted") => {
@@ -476,6 +487,7 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
             <p className="mt-1 text-sm text-muted">{run.context.environment || "Ambiente não informado"} · {run.context.tester || "Responsável não informado"} · iniciada em {new Date(run.startedAt).toLocaleString("pt-BR")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {runtimeInfo?.runtime === "desktop" && isRunEditable(run) && <button type="button" className={buttonSecondary} onClick={() => void showCompanion()}><MonitorUp size={16} /> Mostrar assistente</button>}
             {run.status === "in_progress" && <button type="button" className={buttonSecondary} onClick={() => void transition("paused")}><CirclePause size={16} /> Pausar</button>}
             {run.status === "paused" && <button type="button" className={buttonPrimary} onClick={() => void transition("in_progress")}><CirclePlay size={16} /> Retomar</button>}
             {(run.status === "in_progress" || run.status === "paused") && <button type="button" className={buttonDanger} onClick={() => setPendingFinalStatus("aborted")}><Square size={15} /> Abortar</button>}
@@ -525,8 +537,9 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
               </div>
               <div className="space-y-3">{selectedCase.steps.map((step) => {
                 const key = resultKey(selectedCase.id, step.id);
+                const storedResult = run.results[key];
                 return <StepCard
-                  key={step.id}
+                  key={`${step.id}-${storedResult?.updatedAt ?? "new"}`}
                   run={run}
                   caseId={selectedCase.id}
                   stepId={step.id}

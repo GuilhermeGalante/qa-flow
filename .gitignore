@@ -24,6 +24,7 @@ dist-ssr
 *.pem
 *.p12
 *.pfx
+/mcp.json
 
 # Local desktop data
 *.db
@@ -45,6 +46,11 @@ dist-ssr
 *.rpm
 *.sig
 latest.json
+
+# Local validation artifacts
+/output/
+/tmp/
+/demo/qa-flow-stitch-demo.json
 
 # Editor directories and files
 .vscode/*

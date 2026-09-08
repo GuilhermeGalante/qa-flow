@@ -20,27 +20,27 @@ function BootSkeleton() {
   return (
     <div className="min-h-screen bg-shell" role="status" aria-live="polite">
       <span className="sr-only">Preparando o workspace: validando o armazenamento e procurando dados da versão anterior.</span>
-      <aside aria-hidden="true" className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-ink p-4 lg:flex">
-        <div className="flex items-center gap-3 border-b border-ink-hover pb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-run-mark text-sm font-black text-ink">QA</div>
+      <aside aria-hidden="true" className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-neutral-200 bg-white p-4 lg:flex">
+        <div className="flex items-center gap-3 border-b border-neutral-100 pb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-950 text-sm font-black text-white">QA</div>
           <div className="min-w-0 flex-1 space-y-1.5">
-            <Skeleton className="h-3.5 w-16 bg-ink-hover" />
-            <Skeleton className="h-2.5 w-24 bg-ink-hover" />
+            <Skeleton className="h-3.5 w-16" />
+            <Skeleton className="h-2.5 w-24" />
           </div>
         </div>
         <div className="mt-4 space-y-2">
-          {Array.from({ length: 7 }, (_, index) => <Skeleton key={index} className="h-11 bg-ink-hover" />)}
+          {Array.from({ length: 7 }, (_, index) => <Skeleton key={index} className="h-11" />)}
         </div>
       </aside>
       <div className="lg:pl-64">
-        <header aria-hidden="true" className="flex h-16 items-center gap-3 border-b border-hairline bg-raised px-4 md:px-7">
+        <header aria-hidden="true" className="flex h-16 items-center gap-3 border-b border-hairline bg-raised px-4 md:px-7 lg:hidden">
           <div className="space-y-1.5">
             <Skeleton className="h-3.5 w-32" />
             <Skeleton className="h-2.5 w-56" />
           </div>
           <Skeleton className="ml-auto h-7 w-32 rounded-full" />
         </header>
-        <main aria-hidden="true" className="mx-auto w-full max-w-[1500px] space-y-5 p-4 md:p-7">
+        <main aria-hidden="true" className="w-full space-y-5 p-4 md:p-7 2xl:p-9">
           <Skeleton className="h-9 w-52" />
           <Skeleton className="h-40 rounded-2xl" />
           <div className="grid gap-5 lg:grid-cols-3">
