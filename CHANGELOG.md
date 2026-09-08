@@ -6,27 +6,19 @@ Passo de versão: **major** para quebra do contrato de dados ou remoção de cap
 
 Mantido pelo comando `/release`.
 
-## 2.3.0 — 2026-09-08
+## 2.2.1 — 2026-09-08
 
-<!-- release-baseline: b7a2334 -->
+<!-- release-baseline: 293222d -->
 
 ### Adicionado
 - O assistente de execução passa a registrar e editar comentários em qualquer resultado de passo, inclusive quando ele foi aprovado, tanto no modo completo quanto a partir do modo compacto.
 
 ### Corrigido
 - Resumos executivos, relatórios técnicos em PDF e relatórios interativos em HTML voltam a ser gerados no desktop ao permitir o carregamento da logo empacotada.
-
-### Interno
-- O pipeline de release passa a validar a sintaxe dos blocos PowerShell antes da publicação e normaliza com segurança o caminho de instalação usado no smoke test.
-
-## 2.2.1 — 2026-09-08
-
-<!-- release-baseline: c109e10 -->
-
-### Corrigido
 - Releases desktop sem credenciais de assinatura voltam a gerar instaladores online e offline para testes manuais, com aviso do Windows e atualização automática desativada.
 
 ### Interno
+- O pipeline de release passa a validar a sintaxe dos blocos PowerShell antes da publicação e normaliza com segurança o caminho de instalação usado no smoke test.
 - O pipeline mantém a distribuição assinada quando todas as credenciais estão disponíveis e bloqueia somente configurações parciais, evitando misturar artefatos assinados e não assinados.
 
 ## 2.2.0 — 2026-09-07
