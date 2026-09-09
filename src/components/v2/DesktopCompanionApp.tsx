@@ -10,6 +10,8 @@ import {
   resizeDesktopCompanion,
   WORKSPACE_CHANGED_EVENT,
 } from "../../platform/desktop/desktopCompanion";
+import { useActiveUiPreferences } from "../../useActiveUiPreferences";
+import { tr } from "../../i18n";
 
 function CompanionRun({ run }: { run: TestRun }) {
   const firstCase = run.snapshot.cases[0];
@@ -66,14 +68,14 @@ function CompanionContent({ initialRunId }: { initialRunId: string }) {
   }, [refreshWorkspace]);
 
   if (!ready) {
-    return <main className="flex min-h-screen items-center justify-center bg-ink px-5 text-sm font-bold text-raised">Preparando assistente…</main>;
+    return <main className="flex min-h-screen items-center justify-center bg-ink px-5 text-sm font-bold text-raised">{tr("Preparando assistente…")}</main>;
   }
 
   if (!run) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-raised p-6 text-center">
-        <p className="text-sm font-bold text-body">Tentativa não encontrada</p>
-        <button type="button" className="mt-4 text-xs font-bold text-run" onClick={() => void hideDesktopCompanion()}>Fechar assistente</button>
+        <p className="text-sm font-bold text-body">{tr("Tentativa não encontrada")}</p>
+        <button type="button" className="mt-4 text-xs font-bold text-run" onClick={() => void hideDesktopCompanion()}>{tr("Fechar assistente")}</button>
       </main>
     );
   }
@@ -82,5 +84,6 @@ function CompanionContent({ initialRunId }: { initialRunId: string }) {
 }
 
 export function DesktopCompanionApp({ runId }: { runId: string }) {
+  useActiveUiPreferences();
   return <div data-runtime="qaflow-companion"><ToastProvider><CompanionContent initialRunId={runId} /></ToastProvider></div>;
 }

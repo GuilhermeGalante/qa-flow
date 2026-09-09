@@ -28,6 +28,7 @@ import {
   lifecycleLabel,
   priorityLabel,
 } from "./Shared";
+import { getActiveLocale, tr } from "../../i18n";
 
 const lifecycleOptions: SelectOption<LifecycleStatus>[] = (Object.keys(lifecycleLabel) as LifecycleStatus[])
   .map((value) => ({ value, label: lifecycleLabel[value] }));
@@ -122,14 +123,14 @@ function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: ()
     <Modal
       open
       onClose={onClose}
-      title={initial.name ? "Editar plano" : "Novo plano"}
-      description="O plano guarda referências; os casos não são duplicados."
+      title={initial.name ? tr("Editar plano") : tr("Novo plano")}
+      description={tr("O plano guarda referências; os casos não são duplicados.")}
       size="xl"
       closeOnBackdrop={false}
       footer={(
         <>
-          <button type="button" className={buttonSecondary} onClick={onClose}>Cancelar</button>
-          <Button variant="primary" loading={saving} loadingLabel="Salvando…" onClick={() => void submit()}>Salvar plano</Button>
+          <button type="button" className={buttonSecondary} onClick={onClose}>{tr("Cancelar")}</button>
+          <Button variant="primary" loading={saving} loadingLabel={tr("Salvando…")} onClick={() => void submit()}>{tr("Salvar plano")}</Button>
         </>
       )}
     >
@@ -138,28 +139,28 @@ function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: ()
           <Notice tone="error" title={error} onDismiss={() => { setError(""); setIssues([]); }}>
             {issues.length > 0
               ? <ul className="list-disc space-y-1 pl-5">{issues.slice(0, 8).map((issue) => <li key={`${issue.path}-${issue.message}`}>{issue.path}: {issue.message}</li>)}</ul>
-              : "Revise os campos obrigatórios e tente novamente."}
+              : tr("Revise os campos obrigatórios e tente novamente.")}
           </Notice>
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-bold text-control">Nome <span className="text-fail">*</span><input className={`${inputClass} mt-1`} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
-          <label className="text-sm font-bold text-control">Projeto <span className="text-fail">*</span><input className={`${inputClass} mt-1`} value={draft.project} onChange={(event) => setDraft({ ...draft, project: event.target.value })} /></label>
-          <label className="text-sm font-bold text-control">Responsável<input className={`${inputClass} mt-1`} value={draft.createdBy} onChange={(event) => setDraft({ ...draft, createdBy: event.target.value })} /></label>
+          <label className="text-sm font-bold text-control">{tr("Nome")} <span className="text-fail">*</span><input className={`${inputClass} mt-1`} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
+          <label className="text-sm font-bold text-control">{tr("Projeto")} <span className="text-fail">*</span><input className={`${inputClass} mt-1`} value={draft.project} onChange={(event) => setDraft({ ...draft, project: event.target.value })} /></label>
+          <label className="text-sm font-bold text-control">{tr("Responsável")}<input className={`${inputClass} mt-1`} value={draft.createdBy} onChange={(event) => setDraft({ ...draft, createdBy: event.target.value })} /></label>
           <div className="text-sm font-bold text-control">
-            <label htmlFor="plan-status">Status</label>
-            <Select id="plan-status" className="mt-1" ariaLabel="Status do plano" value={draft.status} onChange={(status) => setDraft({ ...draft, status })} options={lifecycleOptions} />
+            <label htmlFor="plan-status">{tr("Status")}</label>
+            <Select id="plan-status" className="mt-1" ariaLabel={tr("Status do plano")} value={draft.status} onChange={(status) => setDraft({ ...draft, status })} options={lifecycleOptions} />
           </div>
-          <label className="text-sm font-bold text-control md:col-span-2">Objetivo<textarea className={`${inputClass} mt-1 min-h-20 resize-y`} value={draft.objective} onChange={(event) => setDraft({ ...draft, objective: event.target.value })} /></label>
-          <label className="text-sm font-bold text-control md:col-span-2">Descrição<textarea className={`${inputClass} mt-1 min-h-20 resize-y`} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
-          <label className="text-sm font-bold text-control md:col-span-2">Tags<input className={`${inputClass} mt-1`} value={tagsText} onChange={(event) => setTagsText(event.target.value)} placeholder="release, regressão, smoke" /></label>
+          <label className="text-sm font-bold text-control md:col-span-2">{tr("Objetivo")}<textarea className={`${inputClass} mt-1 min-h-20 resize-y`} value={draft.objective} onChange={(event) => setDraft({ ...draft, objective: event.target.value })} /></label>
+          <label className="text-sm font-bold text-control md:col-span-2">{tr("Descrição")}<textarea className={`${inputClass} mt-1 min-h-20 resize-y`} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
+          <label className="text-sm font-bold text-control md:col-span-2">{tr("Tags")}<input className={`${inputClass} mt-1`} value={tagsText} onChange={(event) => setTagsText(event.target.value)} placeholder="release, regressão, smoke" /></label>
         </div>
 
         {stale.length > 0 && (
           <Notice tone="warning">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <span>{stale.length} referência(s) apontam para revisões antigas. Revise as alterações antes de atualizar.</span>
-              <button type="button" className="font-bold underline" onClick={refreshRevisions}>Usar revisões atuais</button>
+              <span>{tr(`${stale.length} referência(s) apontam para revisões antigas. Revise as alterações antes de atualizar.`)}</span>
+              <button type="button" className="font-bold underline" onClick={refreshRevisions}>{tr("Usar revisões atuais")}</button>
             </div>
           </Notice>
         )}
@@ -167,13 +168,13 @@ function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: ()
         <div className="grid gap-5 lg:grid-cols-2">
           <section>
             <div className="mb-3">
-              <h3 className="font-bold text-body">Casos disponíveis</h3>
-              <p className="text-xs text-muted">Busque e selecione os casos ativos do catálogo.</p>
+              <h3 className="font-bold text-body">{tr("Casos disponíveis")}</h3>
+              <p className="text-xs text-muted">{tr("Busque e selecione os casos ativos do catálogo.")}</p>
             </div>
             <label className="relative block">
-              <span className="sr-only">Buscar casos para o plano</span>
+              <span className="sr-only">{tr("Buscar casos para o plano")}</span>
               <Search className="absolute left-3 top-3 text-faint" size={18} />
-              <input className={`${inputClass} pl-10`} value={caseQuery} onChange={(event) => setCaseQuery(event.target.value)} placeholder="Buscar casos" />
+              <input className={`${inputClass} pl-10`} value={caseQuery} onChange={(event) => setCaseQuery(event.target.value)} placeholder={tr("Buscar casos")} />
             </label>
             <div className="mt-3 max-h-96 space-y-2 overflow-y-auto pr-1">
               {available.map((testCase) => {
@@ -183,7 +184,7 @@ function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: ()
                     <input type="checkbox" checked={selected} onChange={() => toggleCase(testCase.id)} className="mt-1 h-4 w-4 accent-run" />
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-bold text-body">{testCase.title}</span>
-                      <span className="block text-xs text-muted">{testCase.id} · {priorityLabel[testCase.priority]} · rev. {testCase.revision}</span>
+                      <span className="block text-xs text-muted">{testCase.id} · {tr(priorityLabel[testCase.priority])} · rev. {testCase.revision}</span>
                     </span>
                   </label>
                 );
@@ -193,11 +194,11 @@ function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: ()
 
           <section>
             <div className="mb-3">
-              <h3 className="font-bold text-body">Ordem de execução ({draft.caseRefs.length})</h3>
-              <p className="text-xs text-muted">A ordem fica congelada no snapshot de cada tentativa.</p>
+              <h3 className="font-bold text-body">{tr(`Ordem de execução (${draft.caseRefs.length})`)}</h3>
+              <p className="text-xs text-muted">{tr("A ordem fica congelada no snapshot de cada tentativa.")}</p>
             </div>
             <div className="max-h-[450px] space-y-2 overflow-y-auto pr-1">
-              {draft.caseRefs.length === 0 && <div className="rounded-xl border border-dashed border-hairline-strong p-8 text-center text-sm text-muted">Selecione pelo menos um caso.</div>}
+              {draft.caseRefs.length === 0 && <div className="rounded-xl border border-dashed border-hairline-strong p-8 text-center text-sm text-muted">{tr("Selecione pelo menos um caso.")}</div>}
               {draft.caseRefs.map((reference, index) => {
                 const testCase = cases.find((item) => item.id === reference.caseId);
                 const outdated = !testCase || testCase.revision !== reference.caseRevision;
@@ -209,9 +210,9 @@ function PlanEditor({ initial, onClose }: { initial: PlanDefinition; onClose: ()
                       <p className="truncate text-sm font-bold text-body">{testCase?.title ?? reference.caseId}</p>
                       <p className={`text-xs ${outdated ? "font-bold text-warn" : "text-muted"}`}>rev. {reference.caseRevision}{outdated ? ` → atual ${testCase?.revision ?? "ausente"}` : ""}</p>
                     </div>
-                    <button type="button" aria-label={`Mover ${testCase?.title} para cima`} disabled={index === 0} onClick={() => moveReference(index, -1)} className="rounded p-1 text-xs font-bold disabled:opacity-25">↑</button>
-                    <button type="button" aria-label={`Mover ${testCase?.title} para baixo`} disabled={index === draft.caseRefs.length - 1} onClick={() => moveReference(index, 1)} className="rounded p-1 text-xs font-bold disabled:opacity-25">↓</button>
-                    <button type="button" aria-label={`Remover ${testCase?.title}`} onClick={() => toggleCase(reference.caseId)} className="rounded p-1 text-fail"><X size={16} /></button>
+                    <button type="button" aria-label={tr(`Mover ${testCase?.title} para cima`)} disabled={index === 0} onClick={() => moveReference(index, -1)} className="rounded p-1 text-xs font-bold disabled:opacity-25">↑</button>
+                    <button type="button" aria-label={tr(`Mover ${testCase?.title} para baixo`)} disabled={index === draft.caseRefs.length - 1} onClick={() => moveReference(index, 1)} className="rounded p-1 text-xs font-bold disabled:opacity-25">↓</button>
+                    <button type="button" aria-label={tr(`Remover ${testCase?.title}`)} onClick={() => toggleCase(reference.caseId)} className="rounded p-1 text-fail"><X size={16} /></button>
                   </article>
                 );
               })}
@@ -256,7 +257,7 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
   const filtered = matching.filter((plan) => status === "all" || plan.status === status);
 
   const statusOptions: SegmentedOption<LifecycleStatus | "all">[] = [
-    { value: "all", label: "Todos", count: matching.length },
+    { value: "all", label: tr("Todos"), count: matching.length },
     ...(Object.keys(lifecycleLabel) as LifecycleStatus[]).map((value) => ({
       value,
       label: lifecycleLabel[value],
@@ -266,10 +267,10 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
 
   const handleArchive = async (plan: PlanDefinition) => {
     const confirmed = await confirm({
-      title: "Arquivar este plano?",
-      description: "Ele sai da lista executável. O histórico de execuções e os snapshots já criados são preservados.",
+      title: tr("Arquivar este plano?"),
+      description: tr("Ele sai da lista executável. O histórico de execuções e os snapshots já criados são preservados."),
       itemLabel: plan.name,
-      confirmLabel: "Arquivar plano",
+      confirmLabel: tr("Arquivar plano"),
       tone: "danger",
     });
     if (!confirmed) return;
@@ -278,20 +279,20 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
 
   return (
     <>
-      <PageHeader title="Planos de teste" description="Combine referências do catálogo sem duplicar definições. Atualizações de revisão são explícitas e auditáveis." actions={<button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}><Plus size={17} /> Novo plano</button>} />
-      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Indicadores dos planos">
-        <MetricCard label="Total de planos" value={plans.length} detail={`${activePlans.length} ativo(s)`} icon={<ListChecks size={18} />} />
-        <MetricCard label="Casos vinculados" value={linkedCaseIds.size} detail={`${cases.length} caso(s) no catálogo`} icon={<Link2 size={18} />} tone="pass" />
-        <MetricCard label="Última atualização" value={latestUpdate ? latestUpdate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"} detail={latestUpdate ? latestUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "nenhum plano criado"} icon={<Clock3 size={18} />} />
-        <MetricCard label="Prontos para execução" value={readyPlans} detail={`${activePlans.length ? Math.round((readyPlans / activePlans.length) * 100) : 0}% dos planos ativos`} icon={<Gauge size={18} />} tone={readyPlans ? "run" : "neutral"} />
+      <PageHeader title={tr("Planos de teste")} description={tr("Combine referências do catálogo sem duplicar definições. Atualizações de revisão são explícitas e auditáveis.")} actions={<button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}><Plus size={17} /> {tr("Novo plano")}</button>} />
+      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label={tr("Indicadores dos planos")}>
+        <MetricCard label={tr("Total de planos")} value={plans.length} detail={`${activePlans.length} ${tr("ativo(s)")}`} icon={<ListChecks size={18} />} />
+        <MetricCard label={tr("Casos vinculados")} value={linkedCaseIds.size} detail={tr(`${cases.length} caso(s) no catálogo`)} icon={<Link2 size={18} />} tone="pass" />
+        <MetricCard label={tr("Última atualização")} value={latestUpdate ? latestUpdate.toLocaleDateString(getActiveLocale(), { day: "2-digit", month: "short" }) : "—"} detail={latestUpdate ? latestUpdate.toLocaleTimeString(getActiveLocale(), { hour: "2-digit", minute: "2-digit" }) : tr("nenhum plano criado")} icon={<Clock3 size={18} />} />
+        <MetricCard label={tr("Prontos para execução")} value={readyPlans} detail={tr(`${activePlans.length ? Math.round((readyPlans / activePlans.length) * 100) : 0}% dos planos ativos`)} icon={<Gauge size={18} />} tone={readyPlans ? "run" : "neutral"} />
       </section>
       <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-3 shadow-[0_8px_24px_rgb(15_23_42/0.03)] lg:flex-row lg:items-center">
-        <label className="relative lg:w-80"><span className="sr-only">Buscar planos</span><Search className="absolute left-3 top-3 text-faint" size={18} /><input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, projeto ou tag" /></label>
-        <SegmentedControl size="sm" ariaLabel="Filtrar status do plano" value={status} onChange={setStatus} options={statusOptions} />
+        <label className="relative lg:w-80"><span className="sr-only">{tr("Buscar planos")}</span><Search className="absolute left-3 top-3 text-faint" size={18} /><input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tr("Buscar por nome, projeto ou tag")} /></label>
+        <SegmentedControl size="sm" ariaLabel={tr("Filtrar status do plano")} value={status} onChange={setStatus} options={statusOptions} />
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState title="Nenhum plano encontrado" description={plans.length ? "Ajuste os filtros." : "Crie um plano escolhendo casos reutilizáveis da biblioteca."} action={!plans.length ? <button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}>Criar primeiro plano</button> : undefined} />
+        <EmptyState title={tr("Nenhum plano encontrado")} description={plans.length ? tr("Ajuste os filtros.") : tr("Crie um plano escolhendo casos reutilizáveis da biblioteca.")} action={!plans.length ? <button type="button" className={buttonPrimary} onClick={() => setEditing(newPlan())}>{tr("Criar primeiro plano")}</button> : undefined} />
       ) : (
         <div className="space-y-3">
           {filtered.map((plan) => {
@@ -303,20 +304,20 @@ export function PlansScreen({ onRun }: { onRun: (planId: string) => void }) {
               <article key={plan.id} className="rounded-2xl border border-hairline bg-raised p-5 shadow-[0_8px_24px_rgb(15_23_42/0.03)]">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2"><StatusBadge value={plan.status} label={lifecycleLabel[plan.status]} /><span className="text-xs text-faint">rev. {plan.revision}</span>{stale > 0 && <span className="rounded-full bg-warn-tint px-2 py-1 text-xs font-bold text-warn">{stale} desatualizada(s)</span>}{inactive > 0 && <span className="rounded-full bg-explore-tint px-2 py-1 text-xs font-bold text-explore">{inactive} caso(s) não ativo(s)</span>}</div>
+                    <div className="flex flex-wrap items-center gap-2"><StatusBadge value={plan.status} label={lifecycleLabel[plan.status]} /><span className="text-xs text-faint">{tr("rev.")} {plan.revision}</span>{stale > 0 && <span className="rounded-full bg-warn-tint px-2 py-1 text-xs font-bold text-warn">{tr(`${stale} desatualizada(s)`)}</span>}{inactive > 0 && <span className="rounded-full bg-explore-tint px-2 py-1 text-xs font-bold text-explore">{tr(`${inactive} caso(s) não ativo(s)`)}</span>}</div>
                     <h2 className="mt-2 truncate text-lg font-bold text-body">{plan.name}</h2>
-                    <p className="mt-1 text-sm text-muted">{plan.project} · {plan.caseRefs.length} caso(s)</p>
+                    <p className="mt-1 text-sm text-muted">{plan.project} · {plan.caseRefs.length} {tr("caso(s)")}</p>
                   </div>
                   <span className="font-mono text-xs text-faint">{plan.id}</span>
                 </div>
-                <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-subtle">{plan.objective || plan.description || "Sem objetivo informado."}</p>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>Mapeamento de casos críticos</span><strong className="tabular-nums text-body">{automated} de {plan.caseRefs.length} automatizado(s)</strong></div>
+                <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-subtle">{plan.objective || plan.description || tr("Sem objetivo informado.")}</p>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>{tr("Mapeamento de casos críticos")}</span><strong className="tabular-nums text-body">{automated} {tr("de")} {plan.caseRefs.length} {tr("automatizado(s)")}</strong></div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-shell"><div className="h-full rounded-full bg-pass-mark" style={{ width: `${automationPercent}%` }} /></div>
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-hairline pt-4">
-                  {plan.status === "active" && <button type="button" className={buttonPrimary} disabled={stale > 0 || inactive > 0} title={stale ? "Atualize as referências antes de executar" : inactive ? "Ative ou substitua os casos indisponíveis" : undefined} onClick={() => onRun(plan.id)}><Play size={15} /> Executar</button>}
-                  <button type="button" className={buttonSecondary} onClick={() => setEditing(plan)}><Pencil size={15} /> Editar</button>
+                  {plan.status === "active" && <button type="button" className={buttonPrimary} disabled={stale > 0 || inactive > 0} title={stale ? tr("Atualize as referências antes de executar") : inactive ? tr("Ative ou substitua os casos indisponíveis") : undefined} onClick={() => onRun(plan.id)}><Play size={15} /> {tr("Executar")}</button>}
+                  <button type="button" className={buttonSecondary} onClick={() => setEditing(plan)}><Pencil size={15} /> {tr("Editar")}</button>
                   <button type="button" className={buttonSecondary} onClick={() => void downloadPlan(plan)}><Download size={15} /><span className="hidden sm:inline">JSON</span></button>
-                  {plan.status !== "archived" && <button type="button" className={buttonDanger} onClick={() => void handleArchive(plan)}><Archive size={15} /><span className="hidden sm:inline">Arquivar</span></button>}
+                  {plan.status !== "archived" && <button type="button" className={buttonDanger} onClick={() => void handleArchive(plan)}><Archive size={15} /><span className="hidden sm:inline">{tr("Arquivar")}</span></button>}
                 </div>
               </article>
             );

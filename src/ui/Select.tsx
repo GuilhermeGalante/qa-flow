@@ -1,15 +1,22 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { inputClass } from "./styles";
+import { getActiveLocale, tr } from "../i18n";
 
 export interface SelectOption<T extends string = string> {
   value: T;
+  /** Identificador visual opcional. O rótulo continua sendo a fonte acessível da opção. */
+  icon?: ReactNode;
   /** Identidade da opção. Fica em peso forte, sozinha na primeira linha. */
   label: string;
   /** Metadado da opção — revisão, contagem, status. É o que o `<select>` nativo achatava. */
   hint?: string;
   badge?: string;
   disabled?: boolean;
+  /** Desative para conteúdo criado pelo usuário (nomes de planos, casos, colunas etc.). */
+  localizeLabel?: boolean;
+  /** Desative para metadados livres fornecidos pelo usuário. */
+  localizeHint?: boolean;
 }
 
 interface SelectProps<T extends string> {
@@ -31,6 +38,14 @@ interface SelectProps<T extends string> {
 const TYPEAHEAD_RESET_MS = 600;
 const POPOVER_SPACE = 264;
 
+function localizedOptionLabel<T extends string>(option: SelectOption<T>): string {
+  return option.localizeLabel === false ? option.label : tr(option.label);
+}
+
+function localizedOptionHint<T extends string>(option: SelectOption<T>): string {
+  return option.localizeHint === false ? option.hint ?? "" : tr(option.hint ?? "");
+}
+
 /**
  * Listbox própria, em substituição ao `<select>` nativo.
  *
@@ -43,14 +58,14 @@ export function Select<T extends string>({
   value,
   onChange,
   options,
-  placeholder = "Selecione",
+  placeholder = tr("Selecione"),
   ariaLabel,
   ariaLabelledBy,
   id,
   disabled = false,
   searchable = false,
-  searchPlaceholder = "Buscar…",
-  emptyLabel = "Nenhuma opção encontrada.",
+  searchPlaceholder = tr("Buscar…"),
+  emptyLabel = tr("Nenhuma opção encontrada."),
   className = "",
 }: SelectProps<T>) {
   const generatedId = useId();
@@ -67,12 +82,11 @@ export function Select<T extends string>({
   const listRef = useRef<HTMLUListElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const typeahead = useRef({ query: "", at: 0 });
-
   const visible = useMemo(() => {
     if (!searchable || !search.trim()) return options;
-    const needle = search.trim().toLocaleLowerCase("pt-BR");
+    const needle = search.trim().toLocaleLowerCase(getActiveLocale());
     return options.filter((option) =>
-      `${option.label} ${option.hint ?? ""} ${option.badge ?? ""}`.toLocaleLowerCase("pt-BR").includes(needle));
+      `${localizedOptionLabel(option)} ${option.label} ${localizedOptionHint(option)} ${tr(option.badge ?? "")}`.toLocaleLowerCase(getActiveLocale()).includes(needle));
   }, [options, search, searchable]);
 
   const selected = options.find((option) => option.value === value);
@@ -184,11 +198,11 @@ export function Select<T extends string>({
     if (searchable || event.key.length !== 1) return;
     const now = Date.now();
     typeahead.current.query = now - typeahead.current.at > TYPEAHEAD_RESET_MS
-      ? event.key.toLocaleLowerCase("pt-BR")
-      : typeahead.current.query + event.key.toLocaleLowerCase("pt-BR");
+      ? event.key.toLocaleLowerCase(getActiveLocale())
+      : typeahead.current.query + event.key.toLocaleLowerCase(getActiveLocale());
     typeahead.current.at = now;
     const found = visible.findIndex((option) =>
-      !option.disabled && option.label.toLocaleLowerCase("pt-BR").startsWith(typeahead.current.query));
+      !option.disabled && localizedOptionLabel(option).toLocaleLowerCase(getActiveLocale()).startsWith(typeahead.current.query));
     if (found >= 0) setActiveIndex(found);
   };
 
@@ -203,17 +217,18 @@ export function Select<T extends string>({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-activedescendant={open && activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ? tr(ariaLabel) : undefined}
         aria-labelledby={ariaLabelledBy}
         disabled={disabled}
         onClick={() => (open ? close() : openList())}
         className={`${inputClass} flex items-center gap-2 pr-9 text-left disabled:cursor-not-allowed disabled:bg-shell disabled:text-muted ${open ? "border-run-mark ring-4 ring-run-halo" : ""}`}
       >
+        {selected?.icon && <span className="shrink-0" aria-hidden="true">{selected.icon}</span>}
         {selected?.badge && (
-          <span className="shrink-0 rounded-full bg-shell px-2 py-0.5 text-[11px] font-bold text-subtle">{selected.badge}</span>
+          <span className="shrink-0 rounded-full bg-shell px-2 py-0.5 text-[11px] font-bold text-subtle">{tr(selected.badge)}</span>
         )}
-        <span className={`truncate ${selected ? "" : "text-muted"}`}>{selected?.label ?? placeholder}</span>
-        {selected?.hint && <span className="min-w-0 truncate text-xs text-muted">{selected.hint}</span>}
+        <span className={`truncate ${selected ? "" : "text-muted"}`}>{selected ? localizedOptionLabel(selected) : tr(placeholder)}</span>
+        {selected?.hint && <span className="min-w-0 truncate text-xs text-muted">{localizedOptionHint(selected)}</span>}
         <ChevronDown
           size={16}
           aria-hidden="true"
@@ -229,16 +244,16 @@ export function Select<T extends string>({
               <input
                 ref={searchRef}
                 type="text"
-                aria-label={searchPlaceholder}
+                aria-label={tr(searchPlaceholder)}
                 value={search}
                 onChange={(event) => { setSearch(event.target.value); setActiveIndex(0); }}
-                placeholder={searchPlaceholder}
+                placeholder={tr(searchPlaceholder)}
                 className={`${inputClass} py-2 pl-8 text-sm`}
               />
             </div>
           )}
-          <ul ref={listRef} id={listId} role="listbox" aria-label={ariaLabel} className="max-h-60 overflow-y-auto p-1">
-            {visible.length === 0 && <li className="px-3 py-6 text-center text-xs text-muted">{emptyLabel}</li>}
+          <ul ref={listRef} id={listId} role="listbox" aria-label={ariaLabel ? tr(ariaLabel) : undefined} className="max-h-60 overflow-y-auto p-1">
+            {visible.length === 0 && <li className="px-3 py-6 text-center text-xs text-muted">{tr(emptyLabel)}</li>}
             {visible.map((option, index) => {
               const active = index === activeIndex;
               const isSelected = option.value === value;
@@ -254,12 +269,13 @@ export function Select<T extends string>({
                   onClick={() => commit(option)}
                   className={`flex items-start gap-2 rounded-lg px-3 py-2 ${option.disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"} ${active ? "bg-run-tint" : ""}`}
                 >
+                  {option.icon && <span className="mt-0.5 shrink-0" aria-hidden="true">{option.icon}</span>}
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      {option.badge && <span className="shrink-0 rounded-full bg-shell px-2 py-0.5 text-[11px] font-bold text-subtle">{option.badge}</span>}
-                      <span className={`truncate text-sm ${isSelected ? "font-bold text-body" : "text-control"}`}>{option.label}</span>
+                      {option.badge && <span className="shrink-0 rounded-full bg-shell px-2 py-0.5 text-[11px] font-bold text-subtle">{tr(option.badge)}</span>}
+                      <span className={`truncate text-sm ${isSelected ? "font-bold text-body" : "text-control"}`}>{localizedOptionLabel(option)}</span>
                     </span>
-                    {option.hint && <span className="mt-0.5 block truncate text-xs text-muted">{option.hint}</span>}
+                    {option.hint && <span className="mt-0.5 block truncate text-xs text-muted">{localizedOptionHint(option)}</span>}
                   </span>
                   {isSelected && <Check size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-run" />}
                 </li>

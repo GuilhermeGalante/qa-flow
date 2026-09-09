@@ -10,6 +10,7 @@ import type { ApplicationResult } from "../app/commitCoordinator";
 import type { PdfReportData } from "../domain/reporting";
 import type { OperationResult } from "../domain/types";
 import type { GeneratedFileRequest, TransferResult } from "../platform/contracts/dtos";
+import { tr } from "../i18n";
 
 export type GeneratedFileSaver = (
   request: GeneratedFileRequest,
@@ -19,7 +20,7 @@ export type GeneratedFileSaver = (
 // ── Utilitário interno ────────────────────────────────────────────────────────
 
 function describe(error: unknown): string {
-  return error instanceof Error ? error.message : "erro desconhecido.";
+  return error instanceof Error ? error.message : tr("erro desconhecido.");
 }
 
 function safeName(name: string): string {
@@ -45,7 +46,7 @@ let logoDataUrlPromise: Promise<string> | null = null;
 
 function brandLogoDataUrl(): Promise<string> {
   logoDataUrlPromise ??= fetch("/qa-flow-logo.png").then(async (response) => {
-    if (!response.ok) throw new Error("Não foi possível carregar a logo do QA Flow.");
+    if (!response.ok) throw new Error(tr("Não foi possível carregar a logo do QA Flow."));
     const bytes = new Uint8Array(await response.arrayBuffer());
     let binary = "";
     for (let offset = 0; offset < bytes.length; offset += 0x8000) {
@@ -67,15 +68,15 @@ export async function generateExecutiveSummary(
     const logoSrc = await brandLogoDataUrl();
     const result = await savePdf(
       <ExecutiveSummaryDocument report={report} logoSrc={logoSrc} />,
-      `QAFlow_Resumo_Executivo_${safe}.pdf`,
+      `QAFlow_${safeName(tr("Resumo executivo"))}_${safe}.pdf`,
       saveGeneratedFile,
     );
     return result.ok
-      ? { ok: true, message: "Resumo executivo gerado e salvo." }
+      ? { ok: true, message: tr("Resumo executivo gerado e salvo.") }
       : { ok: false, message: result.message };
   } catch (err) {
     console.error("[generateExecutiveSummary]", err);
-    return { ok: false, message: `Falha ao gerar o resumo executivo: ${describe(err)}` };
+    return { ok: false, message: tr(`Falha ao gerar o resumo executivo: ${describe(err)}`) };
   }
 }
 
@@ -90,14 +91,14 @@ export async function generateEvidenceReport(
     const logoSrc = await brandLogoDataUrl();
     const result = await savePdf(
       <TechnicalReportDocument report={report} logoSrc={logoSrc} />,
-      `QAFlow_Relatorio_Tecnico_${safe}.pdf`,
+      `QAFlow_${safeName(tr("Relatório técnico"))}_${safe}.pdf`,
       saveGeneratedFile,
     );
     return result.ok
-      ? { ok: true, message: "Relatório técnico gerado e salvo." }
+      ? { ok: true, message: tr("Relatório técnico gerado e salvo.") }
       : { ok: false, message: result.message };
   } catch (err) {
     console.error("[generateEvidenceReport]", err);
-    return { ok: false, message: `Falha ao gerar o relatório técnico: ${describe(err)}` };
+    return { ok: false, message: tr(`Falha ao gerar o relatório técnico: ${describe(err)}`) };
   }
 }

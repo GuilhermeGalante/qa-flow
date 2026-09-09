@@ -3,6 +3,7 @@ import {
   QA_FLOW_SCHEMA_VERSION,
   type CaseDefinition,
   type DemandColumn,
+  type DemandColumnColor,
   type DemandColumnSemantic,
   type EvidenceMeta,
   type ExploratoryRecord,
@@ -734,7 +735,11 @@ export class QaApplicationServices {
     });
   }
 
-  addDemandColumn(name: string, semantic: DemandColumnSemantic): Promise<ApplicationResult<DemandColumn>> {
+  addDemandColumn(
+    name: string,
+    semantic: DemandColumnSemantic,
+    color?: DemandColumnColor,
+  ): Promise<ApplicationResult<DemandColumn>> {
     return this.commitWorkspace("COLUMN", () => {
       const normalizedName = normalizeText(name);
       if (!normalizedName) return { ok: false, message: "Informe o nome da coluna." };
@@ -743,6 +748,7 @@ export class QaApplicationServices {
         id: createId("COL"),
         name: normalizedName,
         semantic,
+        ...(color ? { color } : {}),
         order: this.options.getState().demandColumns.length,
         createdAt: now,
         updatedAt: now,
@@ -757,6 +763,7 @@ export class QaApplicationServices {
     columnId: string,
     name: string,
     semantic: DemandColumnSemantic,
+    color?: DemandColumnColor,
   ): Promise<ApplicationResult<DemandColumn>> {
     return this.commitWorkspace("COLUMN", () => {
       const state = this.options.getState();
@@ -764,7 +771,14 @@ export class QaApplicationServices {
       const normalizedName = normalizeText(name);
       if (!existing) return { ok: false, message: "Coluna não encontrada." };
       if (!normalizedName) return { ok: false, message: "Informe o nome da coluna." };
-      const updated = { ...existing, name: normalizedName, semantic, updatedAt: new Date().toISOString() };
+      const updated: DemandColumn = {
+        ...existing,
+        name: normalizedName,
+        semantic,
+        updatedAt: new Date().toISOString(),
+      };
+      if (color) updated.color = color;
+      else delete updated.color;
       const enteringDone = semantic === "done" && existing.semantic !== "done";
       const leavingDone = semantic !== "done" && existing.semantic === "done";
       const mutations: StorageMutation[] = [{

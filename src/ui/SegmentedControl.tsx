@@ -1,5 +1,6 @@
 import { useRef, type KeyboardEvent } from "react";
 import { focusRing } from "./styles";
+import { tr } from "../i18n";
 
 export interface SegmentedOption<T extends string = string> {
   value: T;
@@ -70,7 +71,7 @@ export function SegmentedControl<T extends string>({
     <div
       ref={containerRef}
       role="radiogroup"
-      aria-label={ariaLabel}
+      aria-label={tr(ariaLabel)}
       onKeyDown={handleKeyDown}
       className={`flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-hairline-strong bg-shell p-1 ${className}`}
     >
@@ -86,7 +87,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={`flex shrink-0 items-center gap-1.5 rounded-lg font-bold transition ${size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"} ${focusRing} ${active ? "bg-raised text-body shadow-sm" : "text-subtle hover:text-body"}`}
           >
-            {option.label}
+            {tr(option.label)}
             {option.count !== undefined && (
               <span className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${active ? "bg-shell text-subtle" : "bg-raised/70 text-muted"}`}>
                 {option.count}

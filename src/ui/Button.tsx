@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Spinner } from "./Spinner";
 import { buttonDanger, buttonPrimary, buttonSecondary } from "./styles";
+import { localizeReactNode, tr } from "../i18n";
 
 const variants = { primary: buttonPrimary, secondary: buttonSecondary, danger: buttonDanger } as const;
 
@@ -40,7 +41,7 @@ export function Button({
       className={`${variants[variant]} ${className}`}
     >
       {loading ? <Spinner size="sm" /> : icon}
-      {loading && loadingLabel ? loadingLabel : children}
+      {loading && loadingLabel ? tr(loadingLabel) : localizeReactNode(children)}
     </button>
   );
 }

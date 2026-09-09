@@ -2181,6 +2181,14 @@ fn validate_demand_column_payload(payload: &Value, expected_id: &str) -> Desktop
     ) {
         return Err(field_issue("semantic", "Semântica de coluna inválida."));
     }
+    if object.get("color").is_some()
+        && !matches!(
+            object.get("color").and_then(Value::as_str),
+            Some("cyan" | "green" | "amber" | "rose" | "violet")
+        )
+    {
+        return Err(field_issue("color", "Cor de coluna inválida."));
+    }
     Ok(())
 }
 
@@ -2918,6 +2926,8 @@ mod tests {
         let mut preferences = Map::new();
         preferences.insert("sidebarCollapsed".to_owned(), json!(true));
         preferences.insert("demandViewMode".to_owned(), json!("sidebar"));
+        preferences.insert("theme".to_owned(), json!("dark"));
+        preferences.insert("locale".to_owned(), json!("es-ES"));
         repository
             .set_preferences(&preferences)
             .expect("persist preferences");
@@ -2939,6 +2949,70 @@ mod tests {
             reopened.preferences().expect("read preferences")["demandViewMode"],
             "sidebar"
         );
+        assert_eq!(
+            reopened.preferences().expect("read preferences")["theme"],
+            "dark"
+        );
+        assert_eq!(
+            reopened.preferences().expect("read preferences")["locale"],
+            "es-ES"
+        );
+        assert_eq!(snapshot.storage_revision, 1);
+    }
+
+    #[test]
+    fn optional_column_color_survives_restart_and_rejects_unknown_values() {
+        let (directory, mut repository) = open_temp_repository();
+        let column_payload = |color: &str| {
+            json!({
+                "id": "COL-PROGRESS",
+                "name": "Em andamento",
+                "semantic": "active",
+                "color": color,
+                "order": 3,
+                "createdAt": "2026-08-29T12:00:00.000Z",
+                "updatedAt": "2026-08-29T12:05:00.000Z"
+            })
+        };
+
+        repository
+            .commit(entity_commit(
+                "OP-COLUMN-COLOR",
+                0,
+                StorageMutation {
+                    kind: EntityKind::DemandColumn,
+                    action: MutationAction::Upsert,
+                    id: "COL-PROGRESS".to_owned(),
+                    expected_entity_revision: ExpectedEntityRevision::Omitted,
+                    payload: Some(column_payload("cyan")),
+                },
+            ))
+            .expect("persist column color");
+
+        let invalid = repository
+            .commit(entity_commit(
+                "OP-COLUMN-COLOR-INVALID",
+                1,
+                StorageMutation {
+                    kind: EntityKind::DemandColumn,
+                    action: MutationAction::Upsert,
+                    id: "COL-PROGRESS".to_owned(),
+                    expected_entity_revision: ExpectedEntityRevision::Omitted,
+                    payload: Some(column_payload("blue")),
+                },
+            ))
+            .expect_err("reject unknown column color");
+        assert_eq!(invalid.code, DesktopErrorCode::Validation);
+        drop(repository);
+
+        let reopened = WorkspaceRepository::open(&directory.path().join("qaflow.sqlite3"))
+            .expect("reopen repository");
+        let snapshot = reopened.snapshot().expect("snapshot after restart");
+        let column = snapshot.workspace["demandColumns"]
+            .as_array()
+            .and_then(|columns| columns.iter().find(|column| column["id"] == "COL-PROGRESS"))
+            .expect("colored column");
+        assert_eq!(column["color"], "cyan");
         assert_eq!(snapshot.storage_revision, 1);
     }
 

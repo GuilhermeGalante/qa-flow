@@ -16,7 +16,14 @@ export default defineConfig(({ mode }) => {
           order: 'pre',
           handler(html: string) {
             return desktop
-              ? html.replace('/src/main.tsx', '/src/main.desktop.tsx')
+              ? html
+                  .replace('/src/main.tsx', '/src/main.desktop.tsx')
+                  .replace(
+                    /<script data-web-preferences>[\s\S]*?<\/script>/,
+                    `<script>
+      document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    </script>`,
+                  )
               : html
           },
         },

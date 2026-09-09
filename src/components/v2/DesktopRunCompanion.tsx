@@ -29,6 +29,7 @@ import {
   stopNativeRecording,
   type NativeCaptureTarget,
 } from "../../platform/desktop/desktopCompanion";
+import { tr } from "../../i18n";
 
 const MAX_RECORDING_DURATION_MS = 60_000;
 
@@ -73,7 +74,7 @@ function FormattedStepText({ text }: { text: string }) {
   const lines = text.split("\n");
 
   return (
-    <div className="space-y-1.5 text-[13px] leading-relaxed text-slate-700">
+    <div className="space-y-1.5 text-[13px] leading-relaxed text-control">
       {lines.map((line, lineIdx) => {
         const trimmed = line.trim();
         if (!trimmed) return <div key={lineIdx} className="h-2" />;
@@ -86,14 +87,14 @@ function FormattedStepText({ text }: { text: string }) {
 
         return (
           <p key={lineIdx} className="break-words">
-            {prefix && <strong className="font-bold text-slate-900">{prefix} </strong>}
+            {prefix && <strong className="font-bold text-body">{prefix} </strong>}
             {tokens.map((token, tokenIdx) => {
               if (token.startsWith("`") && token.endsWith("`")) {
                 const inner = token.slice(1, -1);
                 return (
                   <span
                     key={tokenIdx}
-                    className="mx-0.5 inline-block rounded border border-slate-200/90 bg-white px-1.5 py-0.5 font-mono text-[11px] font-medium text-slate-800 shadow-2xs"
+                    className="mx-0.5 inline-block rounded border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[11px] font-medium text-control shadow-2xs"
                   >
                     {inner}
                   </span>
@@ -103,7 +104,7 @@ function FormattedStepText({ text }: { text: string }) {
                 return (
                   <span
                     key={tokenIdx}
-                    className="mx-0.5 inline-block rounded border border-slate-200/90 bg-white px-1.5 py-0.5 font-mono text-[11px] font-medium text-slate-800 shadow-2xs"
+                    className="mx-0.5 inline-block rounded border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[11px] font-medium text-control shadow-2xs"
                   >
                     {token}
                   </span>
@@ -214,7 +215,7 @@ export function DesktopRunCompanion({
 
   // Opções de janelas para captura
   const captureTargetOptions = useMemo<SelectOption[]>(
-    () => captureTargets.map((target) => ({ value: target.id, label: target.title })),
+    () => captureTargets.map((target) => ({ value: target.id, label: target.title, localizeLabel: false })),
     [captureTargets]
   );
 
@@ -373,7 +374,7 @@ export function DesktopRunCompanion({
       resultReasonText.trim()
     );
     setSavingResult(false);
-    toast.fromResult(result, { successDescription: "Observação registrada no passo." });
+    toast.fromResult(result, { successDescription: tr("Observação registrada no passo.") });
     if (result.ok) setShowResultReason(false);
   };
 
@@ -391,12 +392,12 @@ export function DesktopRunCompanion({
         blob,
         evidenceName("captura", current.stepId, "png")
       );
-      toast.fromResult(result, { successDescription: "Captura vinculada ao passo atual." });
+      toast.fromResult(result, { successDescription: tr("Captura vinculada ao passo atual.") });
     } catch (value) {
       toast.show({
         tone: "error",
-        message: value instanceof Error ? value.message : "Não foi possível capturar a tela.",
-        description: "Mova o assistente para o monitor desejado e tente novamente.",
+        message: value instanceof Error ? value.message : tr("Não foi possível capturar a tela."),
+        description: tr("Mova o assistente para o monitor desejado e tente novamente."),
       });
     } finally {
       setCapturing(false);
@@ -413,12 +414,12 @@ export function DesktopRunCompanion({
       setCaptureTargets(targets);
       setSelectedCaptureTarget((currentTarget) => currentTarget || targets[0]?.id || "");
       if (!targets.length) {
-        toast.show({ tone: "warning", message: "Nenhuma janela disponível para captura." });
+        toast.show({ tone: "warning", message: tr("Nenhuma janela disponível para captura.") });
       }
     } catch (value) {
       toast.show({
         tone: "error",
-        message: value instanceof Error ? value.message : "Não foi possível listar as janelas abertas.",
+        message: value instanceof Error ? value.message : tr("Não foi possível listar as janelas abertas."),
       });
     } finally {
       setLoadingCaptureTargets(false);
@@ -438,12 +439,12 @@ export function DesktopRunCompanion({
         blob,
         evidenceName("captura", current.stepId, "png")
       );
-      toast.fromResult(result, { successDescription: "Janela capturada e vinculada ao passo atual." });
+      toast.fromResult(result, { successDescription: tr("Janela capturada e vinculada ao passo atual.") });
       if (result.ok) setWindowTargetMode(null);
     } catch (value) {
       toast.show({
         tone: "error",
-        message: value instanceof Error ? value.message : "Não foi possível capturar a janela.",
+        message: value instanceof Error ? value.message : tr("Não foi possível capturar a janela."),
       });
     } finally {
       setCapturing(false);
@@ -461,8 +462,8 @@ export function DesktopRunCompanion({
         stepId: current.stepId,
       };
       const targetTitle = targetId
-        ? captureTargets.find((target) => target.id === targetId)?.title ?? "Janela selecionada"
-        : "Monitor atual";
+        ? captureTargets.find((target) => target.id === targetId)?.title ?? tr("Janela selecionada")
+        : tr("Monitor atual");
 
       setRecordingSource(targetTitle);
       setRecording(true);
@@ -479,7 +480,7 @@ export function DesktopRunCompanion({
     } catch (value) {
       toast.show({
         tone: "error",
-        message: value instanceof Error ? value.message : "Não foi possível iniciar a gravação.",
+        message: value instanceof Error ? value.message : tr("Não foi possível iniciar a gravação."),
       });
     }
   };
@@ -511,13 +512,13 @@ export function DesktopRunCompanion({
       );
       toast.fromResult(result, {
         successDescription: reachedLimit
-          ? "Vídeo de 60s vinculado ao passo onde a gravação iniciou."
-          : "Vídeo salvo e vinculado ao passo.",
+          ? tr("Vídeo de 60s vinculado ao passo onde a gravação iniciou.")
+          : tr("Vídeo salvo e vinculado ao passo."),
       });
     } catch (value) {
       toast.show({
         tone: "error",
-        message: value instanceof Error ? value.message : "Não foi possível finalizar a gravação.",
+        message: value instanceof Error ? value.message : tr("Não foi possível finalizar a gravação."),
       });
     } finally {
       recordingOwnerRef.current = null;
@@ -536,7 +537,7 @@ export function DesktopRunCompanion({
     const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1] || "png";
     const name = file.name || evidenceName("captura", current.stepId, extension);
     const result = await addEvidence(run.id, "step", currentResultKey, file, name);
-    toast.fromResult(result, { successDescription: "Arquivo vinculado como evidência." });
+    toast.fromResult(result, { successDescription: tr("Arquivo vinculado como evidência.") });
     event.target.value = "";
   };
 
@@ -556,7 +557,7 @@ export function DesktopRunCompanion({
             file,
             evidenceName("captura", current.stepId, "png")
           );
-          toast.fromResult(result, { successDescription: "Imagem colada e vinculada ao passo." });
+          toast.fromResult(result, { successDescription: tr("Imagem colada e vinculada ao passo.") });
           return;
         }
       }
@@ -565,15 +566,15 @@ export function DesktopRunCompanion({
 
   // Criar defeito rápido
   const handleOpenDefect = () => {
-    setDefectTitle(`[${caseDisplayCode}] Falha no passo ${current.stepNumber}`);
-    setDefectNotes(`Cenário: ${current.caseTitle}\nAção: ${current.action}\nResultado esperado: ${current.expectedResult}\n\nObservação:\n`);
+    setDefectTitle(`[${caseDisplayCode}] ${tr(`Falha no passo ${current.stepNumber}`)}`);
+    setDefectNotes(`${tr("Cenário")}: ${current.caseTitle}\n${tr("Ação")}: ${current.action}\n${tr("Resultado esperado")}: ${current.expectedResult}\n\n${tr("Observação")}:\n`);
     setDefectSeverity("high");
     setShowDefectModal(true);
   };
 
   const handleSaveDefect = async () => {
     if (!defectTitle.trim()) {
-      toast.show({ tone: "warning", message: "Informe um título para o defeito." });
+      toast.show({ tone: "warning", message: tr("Informe um título para o defeito.") });
       return;
     }
     setSavingDefect(true);
@@ -584,7 +585,7 @@ export function DesktopRunCompanion({
       severity: defectSeverity,
     });
     setSavingDefect(false);
-    toast.fromResult(result, { successDescription: "Defeito registrado na execução." });
+    toast.fromResult(result, { successDescription: tr("Defeito registrado na execução.") });
     if (result.ok) {
       setShowDefectModal(false);
       setDefectTitle("");
@@ -595,7 +596,7 @@ export function DesktopRunCompanion({
   // Remover evidência
   const handleRemoveEvidence = async (evidenceId: string) => {
     const result = await removeEvidence(evidenceId);
-    toast.fromResult(result, { successDescription: "Evidência removida." });
+    toast.fromResult(result, { successDescription: tr("Evidência removida.") });
   };
 
   // --------------------------------------------------------------------------
@@ -605,49 +606,49 @@ export function DesktopRunCompanion({
     return (
       <aside
         data-tauri-drag-region="deep"
-        aria-label="Assistente compacto de execução"
-        className="flex h-16 w-full cursor-move select-none items-center justify-between border-b border-slate-200/80 bg-white px-3 shadow-md antialiased"
+        aria-label={tr("Assistente compacto de execução")}
+        className="flex h-16 w-full cursor-move select-none items-center justify-between border-b border-hairline bg-raised px-3 shadow-md antialiased"
       >
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 font-bold text-slate-900 text-xs">
-            <img src="/qa-flow-logo.png" alt="" className="h-5 w-5 rounded-md border border-slate-200 bg-white object-cover" />
+          <div className="flex items-center gap-1 font-bold text-body text-xs">
+            <img src="/qa-flow-logo.png" alt="" className="h-5 w-5 rounded-md border border-hairline bg-raised object-cover" />
             <span>QA Flow</span>
-            <span className="text-slate-300 font-light">/</span>
-            <span className="font-mono text-slate-600">{caseDisplayCode}</span>
-            <span className="ml-1 inline-block h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
+            <span className="text-muted font-light">/</span>
+            <span className="font-mono text-subtle">{caseDisplayCode}</span>
+            <span className="ml-1 inline-block h-2 w-2 rounded-full bg-pass-mark shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-0.5 text-xs font-mono font-bold text-slate-800 cursor-pointer"
+            className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-2 py-0.5 text-xs font-mono font-bold text-control cursor-pointer"
             onClick={toggleTimer}
             role="button"
-            title="Clique para pausar/retomar"
+            title={tr("Clique para pausar/retomar")}
           >
-            <span className="text-[10px] font-sans font-medium text-slate-400">Tempo</span>
+            <span className="text-[10px] font-sans font-medium text-muted">{tr("Tempo")}</span>
             <span>{formatDuration(elapsedMs)}</span>
-            {timer.startedAt === null ? <CirclePlay size={12} className="text-slate-400" /> : <CirclePause size={12} className="text-emerald-600" />}
+            {timer.startedAt === null ? <CirclePlay size={12} className="text-muted" /> : <CirclePause size={12} className="text-pass" />}
           </div>
 
-          <span className="text-[11px] font-medium text-slate-500">
+          <span className="text-[11px] font-medium text-muted">
             {current.stepNumber}/{current.stepCount}
           </span>
 
           <button
             type="button"
-            className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-emerald-700 transition cursor-pointer"
+            className="rounded-lg bg-solid-pass px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-pass transition cursor-pointer"
             disabled={!editable}
             onClick={() => void handleSetStatus("passed")}
           >
-            Passou
+            {tr("Passou")}
           </button>
 
           <button
             type="button"
-            aria-label={storedResult?.actualResult ? "Editar comentário do passo" : "Adicionar comentário ao passo"}
-            title={storedResult?.actualResult ? "Editar comentário" : "Adicionar comentário"}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 cursor-pointer"
+            aria-label={storedResult?.actualResult ? tr("Editar comentário do passo") : tr("Adicionar comentário ao passo")}
+            title={storedResult?.actualResult ? tr("Editar comentário") : tr("Adicionar comentário")}
+            className="rounded-lg p-1.5 text-muted transition hover:bg-shell hover:text-control disabled:opacity-40 cursor-pointer"
             disabled={!editable}
             onClick={handleOpenResultComment}
           >
@@ -656,8 +657,8 @@ export function DesktopRunCompanion({
 
           <button
             type="button"
-            aria-label="Expandir assistente"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
+            aria-label={tr("Expandir assistente")}
+            className="rounded-lg p-1.5 text-muted hover:bg-shell hover:text-control transition cursor-pointer"
             onClick={toggleCollapsed}
           >
             <Maximize2 size={15} />
@@ -677,8 +678,8 @@ export function DesktopRunCompanion({
       ref={containerRef}
       onPaste={handlePaste}
       tabIndex={0}
-      aria-label="Assistente flutuante de execução"
-      className="flex min-h-screen w-full flex-col justify-between overflow-hidden bg-white text-slate-800 antialiased select-none outline-none font-sans"
+      aria-label={tr("Assistente flutuante de execução")}
+      className="flex min-h-screen w-full flex-col justify-between overflow-hidden bg-raised text-control antialiased select-none outline-none font-sans"
     >
       {/* INPUT OCULTO DE ARQUIVOS */}
       <input
@@ -695,13 +696,13 @@ export function DesktopRunCompanion({
         className="flex cursor-move items-center justify-between px-5 pt-3.5 pb-2"
       >
         <div className="flex items-center gap-1.5 text-sm">
-          <img src="/qa-flow-logo.png" alt="" className="h-6 w-6 rounded-md border border-slate-200 bg-white object-cover" />
-          <span className="font-bold tracking-tight text-slate-900">QA Flow</span>
-          <span className="font-light text-slate-300">/</span>
-          <span className="font-mono text-xs font-semibold text-slate-500">{caseDisplayCode}</span>
+          <img src="/qa-flow-logo.png" alt="" className="h-6 w-6 rounded-md border border-hairline bg-raised object-cover" />
+          <span className="font-bold tracking-tight text-body">QA Flow</span>
+          <span className="font-light text-muted">/</span>
+          <span className="font-mono text-xs font-semibold text-muted">{caseDisplayCode}</span>
           <span
-            className="ml-1 inline-block h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]"
-            title="Assistente ativo"
+            className="ml-1 inline-block h-2 w-2 rounded-full bg-pass-mark shadow-[0_0_8px_rgba(16,185,129,0.7)]"
+            title={tr("Assistente ativo")}
           />
         </div>
 
@@ -709,29 +710,29 @@ export function DesktopRunCompanion({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            aria-label="Modo compacto"
-            title="Modo compacto"
+            aria-label={tr("Modo compacto")}
+            title={tr("Modo compacto")}
             onClick={toggleCollapsed}
-            className="cursor-pointer rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-shell hover:text-control"
           >
             <Minimize2 size={14} />
           </button>
           <button
             type="button"
-            aria-label="Minimizar"
-            title="Minimizar"
+            aria-label={tr("Minimizar")}
+            title={tr("Minimizar")}
             onClick={toggleCollapsed}
-            className="cursor-pointer rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-shell hover:text-control"
           >
             <Minus size={14} />
           </button>
           <button
             type="button"
-            aria-label="Fechar assistente"
-            title={recording || finalizingRecording ? "Encerre a gravação antes de fechar" : "Fechar"}
+            aria-label={tr("Fechar assistente")}
+            title={recording || finalizingRecording ? tr("Encerre a gravação antes de fechar") : tr("Fechar")}
             disabled={recording || finalizingRecording}
             onClick={onClose}
-            className="cursor-pointer rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-rose-600 disabled:opacity-30"
+            className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-shell hover:text-fail disabled:opacity-30"
           >
             <X size={14} />
           </button>
@@ -743,7 +744,7 @@ export function DesktopRunCompanion({
         {/* TÍTULO & TEMPO */}
         <div>
           <div className="flex items-start justify-between gap-3">
-            <h1 className="flex-1 text-base sm:text-[17px] font-bold leading-snug tracking-tight text-slate-900">
+            <h1 className="flex-1 text-base sm:text-[17px] font-bold leading-snug tracking-tight text-body">
               {current.caseTitle}
             </h1>
 
@@ -752,38 +753,38 @@ export function DesktopRunCompanion({
               type="button"
               onClick={toggleTimer}
               disabled={!editable}
-              title={timer.startedAt === null ? "Clique para iniciar cronômetro" : "Clique para pausar cronômetro"}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200/70 bg-slate-50/90 px-2.5 py-1 shadow-2xs transition hover:bg-slate-100/90 disabled:opacity-60 cursor-pointer"
+              title={timer.startedAt === null ? tr("Clique para iniciar cronômetro") : tr("Clique para pausar cronômetro")}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface/90 px-2.5 py-1 shadow-2xs transition hover:bg-shell/90 disabled:opacity-60 cursor-pointer"
             >
-              <span className="text-[11px] font-medium text-slate-400">Tempo</span>
-              <span className="font-mono text-xs font-bold tabular-nums text-slate-800">
+              <span className="text-[11px] font-medium text-muted">{tr("Tempo")}</span>
+              <span className="font-mono text-xs font-bold tabular-nums text-control">
                 {formatDuration(elapsedMs)}
               </span>
               {timer.startedAt === null ? (
-                <CirclePlay size={12} className="text-slate-400" />
+                <CirclePlay size={12} className="text-muted" />
               ) : (
-                <CirclePause size={12} className="text-emerald-600" />
+                <CirclePause size={12} className="text-pass" />
               )}
             </button>
           </div>
 
           {/* METADADOS / TELA ALVO */}
-          <p className="mt-1 text-xs text-slate-400">
-            Tela alvo: {targetScreenText}
+          <p className="mt-1 text-xs text-muted">
+            {tr("Tela alvo:")} {targetScreenText}
           </p>
         </div>
 
         {/* PROGRESSO DO TESTE */}
         <div>
           <div className="flex items-center justify-between text-xs font-medium">
-            <span className="text-slate-400">Progresso do teste</span>
-            <span className="text-slate-700">
-              Passo {current.stepNumber} de {current.stepCount}
+            <span className="text-muted">{tr("Progresso do teste")}</span>
+            <span className="text-control">
+              {tr("Passo")} {current.stepNumber} {tr("de")} {current.stepCount}
             </span>
           </div>
-          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-shell">
             <div
-              className="h-full rounded-full bg-slate-900 transition-all duration-300"
+              className="h-full rounded-full bg-ink transition-all duration-300"
               style={{ width: `${(current.stepNumber / current.stepCount) * 100}%` }}
             />
           </div>
@@ -791,12 +792,12 @@ export function DesktopRunCompanion({
 
         {/* CARTÃO 1: AÇÃO */}
         <section
-          aria-label="Ação do passo"
-          className="rounded-2xl border border-slate-200/70 bg-[#F8FAFC] p-4 shadow-2xs transition hover:border-slate-300/80"
+          aria-label={tr("Ação do passo")}
+          className="rounded-2xl border border-hairline bg-surface p-4 shadow-2xs transition hover:border-hairline-strong"
         >
           <div className="mb-2.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              {String(current.stepNumber).padStart(2, "0")} · AÇÃO
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              {String(current.stepNumber).padStart(2, "0")} {tr("· AÇÃO")}
             </span>
           </div>
           <FormattedStepText text={current.action} />
@@ -804,15 +805,15 @@ export function DesktopRunCompanion({
 
         {/* CARTÃO 2: RESULTADO ESPERADO */}
         <section
-          aria-label="Resultado esperado do passo"
-          className="rounded-2xl border border-slate-200/70 bg-[#F8FAFC] p-4 shadow-2xs transition hover:border-slate-300/80"
+          aria-label={tr("Resultado esperado do passo")}
+          className="rounded-2xl border border-hairline bg-surface p-4 shadow-2xs transition hover:border-hairline-strong"
         >
           <div className="mb-2.5 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              {String(current.stepNumber + 1).padStart(2, "0")} · RESULTADO ESPERADO
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              {String(current.stepNumber + 1).padStart(2, "0")} {tr("· RESULTADO ESPERADO")}
             </span>
             {requirementTag && (
-              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-muted">
                 {requirementTag}
               </span>
             )}
@@ -825,32 +826,32 @@ export function DesktopRunCompanion({
           {/* LADO ESQUERDO: LISTAGEM DE EVIDÊNCIA */}
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {currentEvidences.length > 0 ? (
-              <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+              <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-faint" />
                 <span
-                  className="truncate font-mono text-[11px] font-medium text-slate-600 hover:text-slate-900"
+                  className="truncate font-mono text-[11px] font-medium text-subtle hover:text-body"
                   title={currentEvidences[currentEvidences.length - 1].name}
                 >
                   {currentEvidences[currentEvidences.length - 1].name}
                 </span>
                 {currentEvidences.length > 1 && (
-                  <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.2 text-[10px] font-bold text-slate-600">
+                  <span className="shrink-0 rounded-full bg-shell px-1.5 py-0.2 text-[10px] font-bold text-subtle">
                     +{currentEvidences.length - 1}
                   </span>
                 )}
                 <button
                   type="button"
-                  title="Remover evidência"
+                  title={tr("Remover evidência")}
                   onClick={() => void handleRemoveEvidence(currentEvidences[currentEvidences.length - 1].id)}
-                  className="text-slate-300 hover:text-rose-500 transition p-0.5 cursor-pointer"
+                  className="text-muted hover:text-fail transition p-0.5 cursor-pointer"
                 >
                   <Trash2 size={12} />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300" />
-                <span className="text-[11px] font-normal text-slate-400">Nenhuma evidência</span>
+              <div className="flex items-center gap-1.5 text-xs text-muted">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-hairline-strong" />
+                <span className="text-[11px] font-normal text-muted">{tr("Nenhuma evidência")}</span>
               </div>
             )}
           </div>
@@ -863,54 +864,54 @@ export function DesktopRunCompanion({
                 type="button"
                 disabled={!editable || capturing || recording || finalizingRecording}
                 onClick={() => void takeScreenshot()}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-subtle transition hover:bg-shell hover:text-body disabled:opacity-40 cursor-pointer"
               >
-                <Camera size={14} className="text-slate-500" />
-                <span>{capturing ? "Capturando…" : "Capturar"}</span>
+                <Camera size={14} className="text-muted" />
+                <span>{capturing ? tr("Capturando…") : tr("Capturar")}</span>
               </button>
 
               {/* MENU DE OPÇÕES AVANÇADAS DE CAPTURA */}
               <button
                 type="button"
-                aria-label="Opções de captura e gravação"
+                aria-label={tr("Opções de captura e gravação")}
                 onClick={() => setShowCaptureMenu(!showCaptureMenu)}
-                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
+                className="rounded-md p-1 text-muted hover:bg-shell hover:text-control transition cursor-pointer"
               >
                 <ChevronDown size={12} />
               </button>
 
               {showCaptureMenu && (
-                <div className="absolute right-0 bottom-full mb-1 z-30 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-lg text-xs">
+                <div className="absolute right-0 bottom-full mb-1 z-30 w-48 rounded-xl border border-hairline bg-raised p-1 shadow-lg text-xs">
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-control hover:bg-shell cursor-pointer"
                     onClick={() => void takeScreenshot()}
                   >
-                    <Camera size={14} /> Capturar tela inteira
+                    <Camera size={14} /> {tr("Capturar tela inteira")}
                   </button>
                   <button
                     type="button"
                     disabled={loadingCaptureTargets}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 cursor-pointer disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-control hover:bg-shell cursor-pointer disabled:opacity-50"
                     onClick={() => void openWindowTarget("screenshot")}
                   >
-                    <GalleryVerticalEnd size={14} /> {loadingCaptureTargets ? "Listando janelas…" : "Capturar janela…"}
+                    <GalleryVerticalEnd size={14} /> {loadingCaptureTargets ? tr("Listando janelas…") : tr("Capturar janela…")}
                   </button>
-                  <hr className="my-1 border-slate-100" />
+                  <hr className="my-1 border-hairline" />
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-control hover:bg-shell cursor-pointer"
                     onClick={() => void startRecording()}
                   >
-                    <Video size={14} /> Gravar vídeo da tela (60s)
+                    <Video size={14} /> {tr("Gravar vídeo da tela (60s)")}
                   </button>
                   <button
                     type="button"
                     disabled={loadingCaptureTargets}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 cursor-pointer disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-control hover:bg-shell cursor-pointer disabled:opacity-50"
                     onClick={() => void openWindowTarget("recording")}
                   >
-                    <Video size={14} /> {loadingCaptureTargets ? "Listando janelas…" : "Gravar janela…"}
+                    <Video size={14} /> {loadingCaptureTargets ? tr("Listando janelas…") : tr("Gravar janela…")}
                   </button>
                 </div>
               )}
@@ -921,69 +922,69 @@ export function DesktopRunCompanion({
               type="button"
               disabled={!editable}
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-subtle transition hover:bg-shell hover:text-body disabled:opacity-40 cursor-pointer"
             >
-              <Paperclip size={14} className="text-slate-500" />
-              <span>Anexar</span>
+              <Paperclip size={14} className="text-muted" />
+              <span>{tr("Anexar")}</span>
             </button>
           </div>
         </div>
 
         {/* GRAVAÇÃO EM ANDAMENTO (QUANDO ATIVA) */}
         {recording && (
-          <div className="flex items-center justify-between rounded-xl bg-rose-50 border border-rose-200/80 px-3 py-2 text-xs text-rose-700">
+          <div className="flex items-center justify-between rounded-xl bg-fail-tint border border-fail-line px-3 py-2 text-xs text-fail-deep">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 animate-ping rounded-full bg-rose-600" />
-              <span className="font-semibold">Gravando: {recordingSource}</span>
-              <span className="font-mono text-rose-900">({recordingElapsed}s)</span>
+              <span className="h-2 w-2 animate-ping rounded-full bg-solid-fail" />
+              <span className="font-semibold">{tr("Gravando:")} {recordingSource}</span>
+              <span className="font-mono text-fail-deep">({recordingElapsed}s)</span>
             </div>
             <button
               type="button"
               onClick={() => void stopRecording()}
               disabled={finalizingRecording}
-              className="rounded-lg bg-rose-600 px-2.5 py-1 font-semibold text-white hover:bg-rose-700 transition cursor-pointer"
+              className="rounded-lg bg-solid-fail px-2.5 py-1 font-semibold text-on-solid hover:bg-fail-mark transition cursor-pointer"
             >
-              {finalizingRecording ? "Salvando…" : "Parar"}
+              {finalizingRecording ? tr("Salvando…") : tr("Parar")}
             </button>
           </div>
         )}
 
         {/* SELETOR DE JANELA (QUANDO ABERTO) */}
         {windowTargetMode && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
-            <label className="font-semibold text-slate-700" htmlFor="capture-window-select">
-              {windowTargetMode === "recording" ? "Selecione a janela para gravação:" : "Selecione a janela para captura:"}
+          <div className="rounded-xl border border-hairline bg-surface p-3 text-xs">
+            <label className="font-semibold text-control" htmlFor="capture-window-select">
+              {windowTargetMode === "recording" ? tr("Selecione a janela para gravação:") : tr("Selecione a janela para captura:")}
             </label>
             <Select
               id="capture-window-select"
               className="mt-1"
-              ariaLabel="Janela alvo"
+              ariaLabel={tr("Janela alvo")}
               value={selectedCaptureTarget}
               onChange={setSelectedCaptureTarget}
               options={captureTargetOptions}
               searchable={captureTargetOptions.length > 8}
-              searchPlaceholder="Buscar janela…"
-              placeholder="Selecione uma janela"
-              emptyLabel="Nenhuma janela encontrada."
+              searchPlaceholder={tr("Buscar janela…")}
+              placeholder={tr("Selecione uma janela")}
+              emptyLabel={tr("Nenhuma janela encontrada.")}
             />
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
-                className="flex-1 rounded-lg border border-slate-200 bg-white py-1.5 font-medium text-slate-700 hover:bg-slate-100 cursor-pointer"
+                className="flex-1 rounded-lg border border-hairline bg-raised py-1.5 font-medium text-control hover:bg-shell cursor-pointer"
                 onClick={() => setWindowTargetMode(null)}
               >
-                Cancelar
+                {tr("Cancelar")}
               </button>
               <button
                 type="button"
-                className="flex-1 rounded-lg bg-slate-900 py-1.5 font-medium text-white hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
+                className="flex-1 rounded-lg bg-ink py-1.5 font-medium text-white hover:bg-ink-hover disabled:opacity-40 cursor-pointer"
                 disabled={!selectedCaptureTarget || capturing || recording || finalizingRecording}
                 onClick={() => {
                   if (windowTargetMode === "recording") void startRecording(selectedCaptureTarget);
                   else void takeWindowScreenshot();
                 }}
               >
-                {windowTargetMode === "recording" ? "Gravar janela" : capturing ? "Capturando…" : "Capturar janela"}
+                {windowTargetMode === "recording" ? tr("Gravar janela") : capturing ? tr("Capturando…") : tr("Capturar janela")}
               </button>
             </div>
           </div>
@@ -991,20 +992,20 @@ export function DesktopRunCompanion({
 
         {/* COMENTÁRIO / MOTIVO DO RESULTADO (DRAWER INLINE) */}
         {showResultReason && (
-          <div id="step-comment-editor" className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
+          <div id="step-comment-editor" className="rounded-xl border border-hairline bg-surface p-3 text-xs">
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="step-comment" className="font-semibold text-slate-800">
+              <label htmlFor="step-comment" className="font-semibold text-control">
                 {currentStatus === "blocked"
-                  ? "Motivo do bloqueio"
+                  ? tr("Motivo do bloqueio")
                   : currentStatus === "failed"
-                    ? "Resultado observado / falha"
-                    : "Comentário do passo"}
+                    ? tr("Resultado observado / falha")
+                    : tr("Comentário do passo")}
               </label>
               <button
                 type="button"
-                aria-label="Fechar comentário"
+                aria-label={tr("Fechar comentário")}
                 onClick={() => setShowResultReason(false)}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="text-muted hover:text-subtle cursor-pointer"
               >
                 <X size={13} />
               </button>
@@ -1012,12 +1013,12 @@ export function DesktopRunCompanion({
             <textarea
               ref={resultCommentRef}
               id="step-comment"
-              className="w-full min-h-18 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-800 outline-none focus:border-slate-400"
+              className="w-full min-h-18 rounded-lg border border-hairline bg-raised p-2 text-xs text-control outline-none focus:border-faint"
               placeholder={currentStatus === "blocked"
-                ? "Descreva o impedimento..."
+                ? tr("Descreva o impedimento...")
                 : currentStatus === "failed"
-                  ? "Descreva a discrepância observada..."
-                  : "Adicione contexto ou observações sobre esta validação..."}
+                  ? tr("Descreva a discrepância observada...")
+                  : tr("Adicione contexto ou observações sobre esta validação...")}
               value={resultReasonText}
               onChange={(e) => setResultReasonText(e.target.value)}
               disabled={!editable}
@@ -1025,22 +1026,22 @@ export function DesktopRunCompanion({
             <div className="mt-2 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1 font-medium text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="rounded-lg border border-hairline bg-raised px-3 py-1 font-medium text-subtle hover:bg-shell cursor-pointer"
                 onClick={() => setShowResultReason(false)}
               >
-                Fechar
+                {tr("Fechar")}
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-slate-900 px-3 py-1 font-medium text-white hover:bg-slate-800 cursor-pointer"
+                className="rounded-lg bg-ink px-3 py-1 font-medium text-white hover:bg-ink-hover cursor-pointer"
                 disabled={!editable || savingResult}
                 onClick={() => void handleSaveResultReason()}
               >
                 {savingResult
-                  ? "Salvando…"
+                  ? tr("Salvando…")
                   : currentStatus === "failed" || currentStatus === "blocked"
-                    ? "Salvar observação"
-                    : "Salvar comentário"}
+                    ? tr("Salvar observação")
+                    : tr("Salvar comentário")}
               </button>
             </div>
           </div>
@@ -1048,7 +1049,7 @@ export function DesktopRunCompanion({
       </div>
 
       {/* FOOTER: BOTÕES DE STATUS E NAVEGAÇÃO */}
-      <footer className="shrink-0 border-t border-slate-100 bg-white px-5 pt-3 pb-4 space-y-3">
+      <footer className="shrink-0 border-t border-hairline bg-raised px-5 pt-3 pb-4 space-y-3">
         {/* BOTÕES DE STATUS DO PASSO (Passou, Falhou, Bloqueado, Pular) */}
         <div className="grid grid-cols-4 gap-2.5">
           {/* PASSOU */}
@@ -1058,11 +1059,11 @@ export function DesktopRunCompanion({
             onClick={() => void handleSetStatus("passed")}
             className={`flex items-center justify-center rounded-xl py-2 px-3 text-xs sm:text-sm font-semibold transition shadow-2xs cursor-pointer ${
               currentStatus === "passed"
-                ? "bg-[#059669] text-white hover:bg-[#047857]"
-                : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40 hover:text-emerald-700"
+                ? "bg-pass-mark text-ink hover:bg-pass"
+                : "border border-hairline bg-raised text-control hover:border-pass-line hover:bg-pass-tint/40 hover:text-pass-deep"
             }`}
           >
-            Passou
+            {tr("Passou")}
           </button>
 
           {/* FALHOU */}
@@ -1072,11 +1073,11 @@ export function DesktopRunCompanion({
             onClick={() => void handleSetStatus("failed")}
             className={`flex items-center justify-center rounded-xl py-2 px-3 text-xs sm:text-sm font-semibold transition shadow-2xs cursor-pointer ${
               currentStatus === "failed"
-                ? "bg-rose-600 text-white hover:bg-rose-700"
-                : "border border-slate-200 bg-white text-slate-700 hover:border-rose-300 hover:bg-rose-50/40 hover:text-rose-700"
+                ? "bg-solid-fail text-on-solid hover:bg-fail-mark"
+                : "border border-hairline bg-raised text-control hover:border-fail-line hover:bg-fail-tint/70 hover:text-fail-deep"
             }`}
           >
-            Falhou
+            {tr("Falhou")}
           </button>
 
           {/* BLOQUEADO */}
@@ -1086,11 +1087,11 @@ export function DesktopRunCompanion({
             onClick={() => void handleSetStatus("blocked")}
             className={`flex items-center justify-center rounded-xl py-2 px-3 text-xs sm:text-sm font-semibold transition shadow-2xs cursor-pointer ${
               currentStatus === "blocked"
-                ? "bg-amber-500 text-white hover:bg-amber-600"
-                : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:bg-amber-50/40 hover:text-amber-700"
+                ? "bg-solid-warn text-on-solid hover:bg-warn"
+                : "border border-hairline bg-raised text-control hover:border-warn-line hover:bg-warn-tint/40 hover:text-warn-deep"
             }`}
           >
-            Bloqueado
+            {tr("Bloqueado")}
           </button>
 
           {/* PULAR */}
@@ -1100,11 +1101,11 @@ export function DesktopRunCompanion({
             onClick={() => void handleSetStatus("skipped")}
             className={`flex items-center justify-center rounded-xl py-2 px-3 text-xs sm:text-sm font-semibold transition shadow-2xs cursor-pointer ${
               currentStatus === "skipped"
-                ? "bg-slate-600 text-white hover:bg-slate-700"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                ? "bg-solid-explore text-on-solid hover:bg-explore"
+                : "border border-hairline bg-raised text-subtle hover:border-hairline-strong hover:bg-surface"
             }`}
           >
-            Pular
+            {tr("Pular")}
           </button>
         </div>
 
@@ -1115,9 +1116,9 @@ export function DesktopRunCompanion({
             type="button"
             disabled={activeIndex === 0 || recording}
             onClick={() => selectStep(-1)}
-            className="font-medium text-slate-400 transition hover:text-slate-800 disabled:pointer-events-none disabled:opacity-30 cursor-pointer"
+            className="font-medium text-muted transition hover:text-control disabled:pointer-events-none disabled:opacity-30 cursor-pointer"
           >
-            Anterior
+            {tr("Anterior")}
           </button>
 
           <div className="flex items-center gap-3">
@@ -1127,19 +1128,19 @@ export function DesktopRunCompanion({
               aria-expanded={showResultReason}
               aria-controls="step-comment-editor"
               onClick={handleOpenResultComment}
-              className="inline-flex items-center gap-1 font-medium text-slate-500 transition hover:text-slate-900 hover:underline cursor-pointer disabled:opacity-40"
+              className="inline-flex items-center gap-1 font-medium text-muted transition hover:text-body hover:underline cursor-pointer disabled:opacity-40"
             >
               <MessageSquareText size={13} aria-hidden="true" />
-              {storedResult?.actualResult ? "Editar comentário" : "Comentário"}
+              {storedResult?.actualResult ? tr("Editar comentário") : tr("Comentário")}
             </button>
 
             <button
               type="button"
               disabled={!editable}
               onClick={handleOpenDefect}
-              className="font-medium text-slate-500 transition hover:text-rose-600 hover:underline cursor-pointer disabled:opacity-40"
+              className="font-medium text-muted transition hover:text-fail hover:underline cursor-pointer disabled:opacity-40"
             >
-              Criar defeito
+              {tr("Criar defeito")}
             </button>
           </div>
 
@@ -1148,9 +1149,9 @@ export function DesktopRunCompanion({
             type="button"
             disabled={activeIndex >= steps.length - 1 || recording}
             onClick={() => selectStep(1)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-1.5 font-medium text-slate-800 shadow-2xs transition hover:bg-slate-50 hover:border-slate-300 disabled:pointer-events-none disabled:opacity-30 cursor-pointer"
+            className="rounded-xl border border-hairline bg-raised px-4 py-1.5 font-medium text-control shadow-2xs transition hover:bg-surface hover:border-hairline-strong disabled:pointer-events-none disabled:opacity-30 cursor-pointer"
           >
-            Próximo
+            {tr("Próximo")}
           </button>
         </div>
       </footer>
@@ -1158,21 +1159,21 @@ export function DesktopRunCompanion({
       {/* MODAL DE CRIAÇÃO RÁPIDA DE DEFEITO */}
       {showDefectModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setShowDefectModal(false);
           }}
         >
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+          <div className="w-full max-w-sm rounded-2xl border border-hairline bg-raised p-4 shadow-xl">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
-                <Bug size={16} className="text-rose-600" />
-                <span>Registrar Defeito</span>
+              <div className="flex items-center gap-1.5 text-sm font-bold text-body">
+                <Bug size={16} className="text-fail" />
+                <span>{tr("Registrar Defeito")}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowDefectModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                className="rounded-lg p-1 text-muted hover:bg-shell hover:text-control cursor-pointer"
               >
                 <X size={15} />
               </button>
@@ -1180,26 +1181,26 @@ export function DesktopRunCompanion({
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1" htmlFor="defect-title">
-                  Título do defeito
+                <label className="block font-semibold text-control mb-1" htmlFor="defect-title">
+                  {tr("Título do defeito")}
                 </label>
                 <input
                   id="defect-title"
                   type="text"
                   value={defectTitle}
                   onChange={(e) => setDefectTitle(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white p-2 text-slate-800 outline-none focus:border-rose-400"
-                  placeholder="Ex: Contador não zera ao clicar no sino"
+                  className="w-full rounded-lg border border-hairline bg-raised p-2 text-control outline-none focus:border-fail-mark"
+                  placeholder={tr("Ex: Contador não zera ao clicar no sino")}
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Severidade
+                <label className="block font-semibold text-control mb-1">
+                  {tr("Severidade")}
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {(["low", "medium", "high", "critical"] as const).map((sev) => {
-                    const labels = { low: "Baixa", medium: "Média", high: "Alta", critical: "Crítica" };
+                    const labels = { low: tr("Baixa"), medium: tr("Média"), high: tr("Alta"), critical: tr("Crítica") };
                     return (
                       <button
                         key={sev}
@@ -1207,8 +1208,8 @@ export function DesktopRunCompanion({
                         onClick={() => setDefectSeverity(sev)}
                         className={`rounded-lg py-1 text-center font-medium border transition cursor-pointer ${
                           defectSeverity === sev
-                            ? "bg-rose-50 border-rose-300 text-rose-700 font-bold"
-                            : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                            ? "bg-fail-tint border-fail-line text-fail-deep font-bold"
+                            : "bg-raised border-hairline text-subtle hover:bg-surface"
                         }`}
                       >
                         {labels[sev]}
@@ -1219,15 +1220,15 @@ export function DesktopRunCompanion({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1" htmlFor="defect-notes">
-                  Descrição / Detalhes
+                <label className="block font-semibold text-control mb-1" htmlFor="defect-notes">
+                  {tr("Descrição / Detalhes")}
                 </label>
                 <textarea
                   id="defect-notes"
                   value={defectNotes}
                   onChange={(e) => setDefectNotes(e.target.value)}
-                  className="w-full min-h-24 resize-y rounded-lg border border-slate-200 bg-white p-2 text-slate-800 outline-none focus:border-rose-400 font-sans"
-                  placeholder="Descreva o comportamento inesperado..."
+                  className="w-full min-h-24 resize-y rounded-lg border border-hairline bg-raised p-2 text-control outline-none focus:border-fail-mark font-sans"
+                  placeholder={tr("Descreva o comportamento inesperado...")}
                 />
               </div>
             </div>
@@ -1236,17 +1237,17 @@ export function DesktopRunCompanion({
               <button
                 type="button"
                 onClick={() => setShowDefectModal(false)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100 cursor-pointer"
+                className="rounded-xl border border-hairline bg-raised px-3 py-1.5 font-medium text-control hover:bg-shell cursor-pointer"
               >
-                Cancelar
+                {tr("Cancelar")}
               </button>
               <button
                 type="button"
                 disabled={savingDefect || !defectTitle.trim()}
                 onClick={() => void handleSaveDefect()}
-                className="rounded-xl bg-rose-600 px-3.5 py-1.5 font-semibold text-white hover:bg-rose-700 disabled:opacity-40 cursor-pointer"
+                className="rounded-xl bg-solid-fail px-3.5 py-1.5 font-semibold text-on-solid hover:bg-fail-mark disabled:opacity-40 cursor-pointer"
               >
-                {savingDefect ? "Salvando…" : "Criar defeito"}
+                {savingDefect ? tr("Salvando…") : tr("Criar defeito")}
               </button>
             </div>
           </div>

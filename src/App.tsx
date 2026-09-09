@@ -11,6 +11,8 @@ import { ConfirmProvider } from "./ui/ConfirmProvider";
 import { Skeleton } from "./ui/Skeleton";
 import { ToastProvider } from "./ui/ToastProvider";
 import { useQaStore } from "./store/useQaStore";
+import { tr } from "./i18n";
+import { useActiveUiPreferences } from "./useActiveUiPreferences";
 
 /**
  * Carregamento inicial no formato do layout que vai aparecer, em vez de uma tela cheia
@@ -19,10 +21,10 @@ import { useQaStore } from "./store/useQaStore";
 function BootSkeleton() {
   return (
     <div className="min-h-screen bg-shell" role="status" aria-live="polite">
-      <span className="sr-only">Preparando o workspace: validando o armazenamento e procurando dados da versão anterior.</span>
-      <aside aria-hidden="true" className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-neutral-200 bg-white p-4 lg:flex">
-        <div className="flex items-center gap-3 border-b border-neutral-100 pb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-950 text-sm font-black text-white">QA</div>
+      <span className="sr-only">{tr("Preparando o workspace: validando o armazenamento e procurando dados da versão anterior.")}</span>
+      <aside aria-hidden="true" className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-hairline bg-raised p-4 lg:flex">
+        <div className="flex items-center gap-3 border-b border-hairline pb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-sm font-black text-white">QA</div>
           <div className="min-w-0 flex-1 space-y-1.5">
             <Skeleton className="h-3.5 w-16" />
             <Skeleton className="h-2.5 w-24" />
@@ -69,17 +71,18 @@ function App({ runtimeMarker }: AppProps) {
   const runtimeInfo = useQaStore((state) => state.runtimeInfo);
   const sidebarCollapsed = useQaStore((state) => state.preferences.sidebarCollapsed === true);
   const setPreference = useQaStore((state) => state.setPreference);
+  useActiveUiPreferences();
 
   useEffect(() => { void initialize(); }, [initialize]);
 
   if (storageError) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-shell p-5" role="alert">
-        <section className="w-full max-w-xl rounded-2xl border border-danger-line bg-raised p-6 shadow-sm">
-          <h1 className="text-xl font-bold text-body">Não foi possível abrir o workspace</h1>
+        <section className="w-full max-w-xl rounded-2xl border border-fail-line bg-raised p-6 shadow-sm">
+          <h1 className="text-xl font-bold text-body">{tr("Não foi possível abrir o workspace")}</h1>
           <p className="mt-2 text-sm leading-relaxed text-subtle">{storageError}</p>
-          <p className="mt-3 text-xs leading-relaxed text-muted">Nenhum workspace vazio foi aplicado sobre os dados existentes.</p>
-          <button type="button" className="mt-5 min-h-11 rounded-xl bg-run px-4 text-sm font-bold text-white" onClick={() => void initialize()}>Tentar novamente</button>
+          <p className="mt-3 text-xs leading-relaxed text-muted">{tr("Nenhum workspace vazio foi aplicado sobre os dados existentes.")}</p>
+          <button type="button" className="mt-5 min-h-11 rounded-xl bg-run px-4 text-sm font-bold text-white" onClick={() => void initialize()}>{tr("Tentar novamente")}</button>
         </section>
       </main>
     );
@@ -98,14 +101,14 @@ function App({ runtimeMarker }: AppProps) {
   };
 
   const persistenceLabel = saveState.kind === "saving"
-    ? "Salvando…"
+    ? tr("Salvando…")
     : saveState.kind === "conflict"
-      ? "Conflito de gravação"
+      ? tr("Conflito de gravação")
       : saveState.kind === "error"
-        ? "Falha ao salvar"
+        ? tr("Falha ao salvar")
         : runtimeInfo?.persistence === "memory"
-          ? "Sessão temporária"
-          : "Salvo localmente";
+          ? tr("Sessão temporária")
+          : tr("Salvo localmente");
 
   return (
     <div data-runtime={runtimeMarker ?? "qaflow-web"}>

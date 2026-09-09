@@ -1,6 +1,7 @@
 import type {
   CaseDefinition,
   DemandColumn,
+  DemandColumnColor,
   DemandColumnSemantic,
   EvidenceMeta,
   ExploratoryRecord,
@@ -77,11 +78,16 @@ export interface QaActions {
   saveDemand: (demand: QaDemand) => Promise<ApplicationResult<QaDemand>>;
   deleteDemand: (demandId: string) => Promise<ApplicationResult>;
   moveDemand: (demandId: string, columnId: string, order?: number) => Promise<ApplicationResult<QaDemand>>;
-  addDemandColumn: (name: string, semantic: DemandColumnSemantic) => Promise<ApplicationResult<DemandColumn>>;
+  addDemandColumn: (
+    name: string,
+    semantic: DemandColumnSemantic,
+    color?: DemandColumnColor,
+  ) => Promise<ApplicationResult<DemandColumn>>;
   updateDemandColumn: (
     columnId: string,
     name: string,
     semantic: DemandColumnSemantic,
+    color?: DemandColumnColor,
   ) => Promise<ApplicationResult<DemandColumn>>;
   moveDemandColumn: (columnId: string, direction: -1 | 1) => Promise<ApplicationResult>;
   deleteDemandColumn: (columnId: string) => Promise<ApplicationResult>;

@@ -57,6 +57,15 @@
   --color-explore: oklch(49.1% 0.27 292.581);
   --color-explore-line: oklch(89.4% 0.057 293.283);
   --color-explore-tint: oklch(96.9% 0.016 293.756);
+
+  /* Fundos de ação com texto de contraste, independentes do tema. */
+  --color-solid-run: oklch(46% 0.1 223);
+  --color-solid-pass: oklch(46% 0.12 166);
+  --color-solid-warn: oklch(48% 0.15 49);
+  --color-solid-fail: oklch(48% 0.2 17);
+  --color-solid-explore: oklch(46% 0.22 293);
+  --color-on-solid: #ffffff;
+  --color-on-ink: #ffffff;
 }
 
 * {
@@ -68,6 +77,62 @@
   color-scheme: light;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-ink: oklch(10.5% 0.025 256);
+  --color-ink-hover: oklch(27% 0.04 256);
+  --color-body: oklch(95% 0.012 255);
+  --color-control: oklch(88% 0.02 255);
+  --color-subtle: oklch(78% 0.025 255);
+  --color-muted: oklch(67% 0.03 255);
+  --color-faint: oklch(55% 0.032 255);
+  --color-hairline-strong: oklch(43% 0.035 255);
+  --color-hairline: oklch(34% 0.03 255);
+  --color-shell: oklch(15% 0.025 255);
+  --color-surface: oklch(18% 0.027 255);
+  --color-raised: oklch(21.5% 0.032 255);
+
+  --color-run-deep: oklch(86% 0.08 214);
+  --color-run: oklch(75% 0.12 216);
+  --color-run-mark: oklch(72% 0.14 215);
+  --color-run-accent: oklch(79% 0.15 211);
+  --color-run-line: oklch(43% 0.08 216);
+  --color-run-halo: oklch(31% 0.06 216);
+  --color-run-tint: oklch(24% 0.045 216);
+
+  --color-pass-deep: oklch(87% 0.09 165);
+  --color-pass: oklch(75% 0.14 163);
+  --color-pass-mark: oklch(70% 0.17 162);
+  --color-pass-line: oklch(42% 0.09 164);
+  --color-pass-tint: oklch(23.5% 0.045 165);
+
+  --color-warn-deep: oklch(88% 0.1 86);
+  --color-warn: oklch(78% 0.15 75);
+  --color-warn-line: oklch(45% 0.1 68);
+  --color-warn-tint: oklch(25% 0.05 63);
+
+  --color-fail-deep: oklch(88% 0.075 18);
+  --color-fail: oklch(74% 0.17 18);
+  --color-fail-mark: oklch(68% 0.22 17);
+  --color-fail-line: oklch(44% 0.11 16);
+  --color-fail-halo: oklch(31% 0.075 16);
+  --color-fail-tint: oklch(24% 0.055 14);
+
+  --color-explore-deep: oklch(88% 0.08 294);
+  --color-explore: oklch(77% 0.15 294);
+  --color-explore-line: oklch(45% 0.1 293);
+  --color-explore-tint: oklch(25% 0.055 293);
+
+  --color-solid-run: oklch(75% 0.12 216);
+  --color-solid-pass: oklch(72% 0.14 163);
+  --color-solid-warn: oklch(78% 0.15 75);
+  --color-solid-fail: oklch(72% 0.17 18);
+  --color-solid-explore: oklch(74% 0.15 294);
+  --color-on-solid: var(--color-ink);
+  --color-on-ink: #ffffff;
+}
+
 body {
   @apply bg-surface text-body;
   margin: 0;
@@ -76,18 +141,18 @@ body {
 }
 
 ::selection {
-  background: rgb(103 232 249 / 0.55);
-  color: rgb(2 6 23);
+  background: color-mix(in oklab, var(--color-run-accent) 62%, transparent);
+  color: var(--color-ink);
 }
 
 * {
-  scrollbar-color: rgb(148 163 184) rgb(241 245 249);
+  scrollbar-color: var(--color-faint) var(--color-shell);
   scrollbar-width: thin;
 }
 
 input,
 textarea {
-  caret-color: rgb(8 145 178);
+  caret-color: var(--color-run-mark);
 }
 
 .qa-demand-surface {
@@ -95,11 +160,11 @@ textarea {
 }
 
 .qa-demand-surface :is(button, input, select, textarea, summary):focus-visible {
-  outline-color: rgb(34 197 94);
+  outline-color: var(--color-pass-mark);
 }
 
 .qa-board-scroll {
-  scrollbar-color: rgb(163 163 163) rgb(229 229 229);
+  scrollbar-color: var(--color-faint) var(--color-hairline);
   scrollbar-width: thin;
 }
 
@@ -108,18 +173,18 @@ textarea {
 }
 
 .qa-board-scroll::-webkit-scrollbar-track {
-  background: rgb(229 229 229);
+  background: var(--color-hairline);
   border-radius: 9999px;
 }
 
 .qa-board-scroll::-webkit-scrollbar-thumb {
-  background: rgb(163 163 163);
-  border: 2px solid rgb(229 229 229);
+  background: var(--color-faint);
+  border: 2px solid var(--color-hairline);
   border-radius: 9999px;
 }
 
 .qa-board-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgb(115 115 115);
+  background: var(--color-muted);
 }
 
 button,
@@ -129,16 +194,22 @@ textarea {
   font: inherit;
 }
 
+input,
+select,
+textarea {
+  color-scheme: inherit;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgb(8 145 178);
+  outline: 3px solid var(--color-run-mark);
   outline-offset: 2px;
 }
 
 summary:focus-visible {
-  outline: 3px solid rgb(8 145 178);
+  outline: 3px solid var(--color-run-mark);
   outline-offset: 2px;
 }
 

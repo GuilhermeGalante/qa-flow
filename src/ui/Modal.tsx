@@ -2,6 +2,7 @@ import { useId, useRef, type ReactNode, type RefObject } from "react";
 import { X } from "lucide-react";
 import { useDialogBehavior } from "./useDialogBehavior";
 import { focusRing } from "./styles";
+import { tr } from "../i18n";
 
 const sizes = {
   sm: "sm:max-w-lg",
@@ -71,13 +72,13 @@ export function Modal({
       >
         <header className={`flex shrink-0 items-start justify-between gap-4 border-b px-5 py-4 sm:px-7 ${tone === "danger" ? "border-fail-line bg-fail-tint" : "border-hairline bg-raised"}`}>
           <div className="min-w-0">
-            <h2 id={titleId} className={`text-lg font-extrabold ${tone === "danger" ? "text-fail-deep" : "text-body"}`}>{title}</h2>
-            {description && <p id={descriptionId} className={`mt-1 text-sm leading-relaxed ${tone === "danger" ? "text-fail" : "text-muted"}`}>{description}</p>}
+            <h2 id={titleId} className={`text-lg font-extrabold ${tone === "danger" ? "text-fail-deep" : "text-body"}`}>{tr(title)}</h2>
+            {description && <p id={descriptionId} className={`mt-1 text-sm leading-relaxed ${tone === "danger" ? "text-fail" : "text-muted"}`}>{tr(description)}</p>}
           </div>
           {showClose && (
             <button
               type="button"
-              aria-label="Fechar"
+              aria-label={tr("Fechar")}
               onClick={onClose}
               className={`-mr-2 shrink-0 rounded-lg p-2 text-muted transition hover:bg-shell hover:text-body ${focusRing}`}
             >

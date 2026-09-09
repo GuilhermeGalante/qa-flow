@@ -3,6 +3,7 @@ import { isImageDataSource, isRasterImageSource } from "../domain/reporting.ts";
 import type { PdfReportData } from "../domain/reporting";
 import type { OperationResult, StepStatus } from "../domain/types";
 import type { GeneratedFileRequest, TransferResult } from "../platform/contracts/dtos";
+import { getActiveLocale, tr } from "../i18n.ts";
 
 type GeneratedFileSaver = (
   request: GeneratedFileRequest,
@@ -54,22 +55,22 @@ function safeName(name: string): string {
 }
 
 function formatDate(value?: string): string {
-  if (!value) return "Não informado";
+  if (!value) return tr("Não informado");
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Não informado" : date.toLocaleString("pt-BR");
+  return Number.isNaN(date.getTime()) ? tr("Não informado") : date.toLocaleString(getActiveLocale());
 }
 
 function metaItem(label: string, value: string): string {
-  return `<div class="meta-item"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "Não informado")}</dd></div>`;
+  return `<div class="meta-item"><dt>${escapeHtml(tr(label))}</dt><dd>${escapeHtml(value || tr("Não informado"))}</dd></div>`;
 }
 
 function evidenceMarkup(source: string, index: number, caseId: string, stepIndex: number): string {
-  const caption = `Evidência ${index + 1} · ${caseId} · passo ${stepIndex + 1}`;
+  const caption = tr(`Evidência ${index + 1} · ${caseId} · passo ${stepIndex + 1}`);
   if (!isImageDataSource(source)) return "";
-  if (!isRasterImageSource(source)) return `<div class="evidence-unsupported" role="note"><strong>${escapeHtml(caption)}</strong><span>Formato de imagem não compatível com a visualização incorporada.</span></div>`;
-  return `<button class="evidence-button" type="button" aria-label="Ampliar ${escapeHtml(caption)}">
+  if (!isRasterImageSource(source)) return `<div class="evidence-unsupported" role="note"><strong>${escapeHtml(caption)}</strong><span>${escapeHtml(tr("Formato de imagem não compatível com a visualização incorporada."))}</span></div>`;
+  return `<button class="evidence-button" type="button" aria-label="${escapeHtml(tr(`Ampliar ${caption}`))}">
     <img src="${source}" alt="${escapeHtml(caption)}" loading="lazy">
-    <span>${escapeHtml(caption)}<strong>Ver imagem</strong></span>
+    <span>${escapeHtml(caption)}<strong>${escapeHtml(tr("Ver imagem"))}</strong></span>
   </button>`;
 }
 
@@ -85,42 +86,42 @@ export function buildHtmlReport(report: PdfReportData, logoSrc: string): string 
   ), 0);
   const cases = report.cases.map((testCase) => {
     const caseImages = testCase.steps.reduce((total, step) => total + step.evidence.filter(isImageDataSource).length, 0);
-    const searchable = [testCase.id, testCase.title, testCase.path, testCase.precondition, ...testCase.steps.flatMap((step) => [step.action, step.expectedResult, step.actualResult])].join(" ").toLocaleLowerCase("pt-BR");
+    const searchable = [testCase.id, testCase.title, testCase.path, testCase.precondition, ...testCase.steps.flatMap((step) => [step.action, step.expectedResult, step.actualResult])].join(" ").toLocaleLowerCase(getActiveLocale());
     const steps = testCase.steps.map((step, stepIndex) => {
       const images = step.evidence.map((source, index) => evidenceMarkup(source, index, testCase.id, stepIndex)).join("");
       return `<section class="step">
-        <header class="step-header"><span>Passo ${stepIndex + 1} · ${escapeHtml(step.type)}</span><span class="status status-${step.status}">${escapeHtml(STATUS_LABEL[step.status])}</span></header>
+        <header class="step-header"><span>${escapeHtml(tr("Passo"))} ${stepIndex + 1} · ${escapeHtml(tr(step.type))}</span><span class="status status-${step.status}">${escapeHtml(tr(STATUS_LABEL[step.status]))}</span></header>
         <div class="step-grid">
-          <div><h4>Ação</h4><p>${escapeHtml(step.action)}</p></div>
-          <div><h4>Resultado esperado</h4><p>${escapeHtml(step.expectedResult)}</p></div>
+          <div><h4>${escapeHtml(tr("Ação"))}</h4><p>${escapeHtml(step.action)}</p></div>
+          <div><h4>${escapeHtml(tr("Resultado esperado"))}</h4><p>${escapeHtml(step.expectedResult)}</p></div>
         </div>
-        ${step.actualResult ? `<div class="actual actual-${step.status}"><h4>Resultado obtido / observação</h4><p>${escapeHtml(step.actualResult)}</p></div>` : ""}
+        ${step.actualResult ? `<div class="actual actual-${step.status}"><h4>${escapeHtml(tr("Resultado obtido / observação"))}</h4><p>${escapeHtml(step.actualResult)}</p></div>` : ""}
         ${images ? `<div class="evidence-gallery">${images}</div>` : ""}
       </section>`;
     }).join("");
     return `<article class="case" data-status="${testCase.status}" data-images="${caseImages}" data-search="${escapeHtml(searchable)}">
       <header class="case-header">
         <div><p class="case-id">${escapeHtml(testCase.id)}</p><h3>${escapeHtml(testCase.title)}</h3></div>
-        <span class="status status-${testCase.status}">${escapeHtml(STATUS_LABEL[testCase.status])}</span>
+        <span class="status status-${testCase.status}">${escapeHtml(tr(STATUS_LABEL[testCase.status]))}</span>
       </header>
       <dl class="case-meta">
-        ${metaItem("Prioridade", PRIORITY_LABEL[testCase.priority])}
+        ${metaItem("Prioridade", tr(PRIORITY_LABEL[testCase.priority]))}
         ${metaItem("Caminho", testCase.path)}
         ${metaItem("Pré-condição", testCase.precondition)}
         ${metaItem("Imagens", String(caseImages))}
       </dl>
-      ${testCase.references.length ? `<p class="references"><strong>Referências:</strong> ${escapeHtml(testCase.references.join(" · "))}</p>` : ""}
-      ${steps || '<p class="empty">Nenhum passo cadastrado.</p>'}
+      ${testCase.references.length ? `<p class="references"><strong>${escapeHtml(tr("Referências"))}:</strong> ${escapeHtml(testCase.references.join(" · "))}</p>` : ""}
+      ${steps || `<p class="empty">${escapeHtml(tr("Nenhum passo cadastrado."))}</p>`}
     </article>`;
   }).join("");
 
   return `<!doctype html>
-<html lang="pt-BR">
+<html lang="${getActiveLocale()}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
-  <title>Relatório QA Flow · ${escapeHtml(report.planName)}</title>
+  <title>${escapeHtml(tr("Relatório"))} QA Flow · ${escapeHtml(report.planName)}</title>
   <style>
     :root{color-scheme:light;--ink:#101828;--body:#344054;--muted:#667085;--line:#d0d5dd;--shell:#f2f4f7;--cyan:#0891b2;--cyan-soft:#ecfeff;--success:#067647;--success-soft:#ecfdf3;--danger:#b42318;--danger-soft:#fef3f2;--warning:#b54708;--warning-soft:#fffaeb;--violet:#6941c6;--violet-soft:#f4f3ff;--focus:#06b6d4}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#e9edf2;color:var(--body);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}::selection{background:#a5f3fc;color:var(--ink)}button,input,select{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
@@ -136,27 +137,27 @@ export function buildHtmlReport(report: PdfReportData, logoSrc: string): string 
   <div class="page">
     <header class="report-header">
       <div class="brand"><img src="${logoSrc}" alt="Logo do QA Flow"><strong>QA <span>Flow</span></strong></div>
-      <div><h1>${escapeHtml(report.planName)}</h1><p class="subtitle">Relatório interativo · Tentativa ${report.attempt} · Plano rev. ${report.planRevision} · ${escapeHtml(RUN_STATUS_LABEL[report.status])}</p></div>
+      <div><h1>${escapeHtml(report.planName)}</h1><p class="subtitle">${escapeHtml(tr("Relatório interativo"))} · ${escapeHtml(tr("Tentativa"))} ${report.attempt} · ${escapeHtml(tr("Plano rev."))} ${report.planRevision} · ${escapeHtml(tr(RUN_STATUS_LABEL[report.status]))}</p></div>
     </header>
     <main>
       <dl class="meta-grid">
         ${metaItem("Projeto", report.project)}${metaItem("Ambiente", report.environment)}${metaItem("Build", report.build)}
         ${metaItem("Responsável", report.tester || report.createdBy)}${metaItem("Início", formatDate(report.startedAt))}${metaItem("Imagens", String(imageCount))}
       </dl>
-      ${(report.objective || report.description) ? `<section class="objective"><strong>Objetivo</strong><p>${escapeHtml(report.objective || report.description)}</p></section>` : ""}
-      <div class="section-heading"><h2>Visão geral</h2><p>${report.cases.length} caso(s) no snapshot</p></div>
-      <div class="metrics">${STATUS_ORDER.map((status) => `<div class="metric metric-${status}"><strong>${counts[status]}</strong><span>${escapeHtml(STATUS_LABEL[status])}</span></div>`).join("")}</div>
-      <div class="toolbar" aria-label="Filtros do relatório">
-        <input id="search" type="search" placeholder="Buscar caso, passo ou resultado" aria-label="Buscar no relatório">
-        <select id="status-filter" aria-label="Filtrar por resultado"><option value="all">Todos os resultados</option>${STATUS_ORDER.map((status) => `<option value="${status}">${escapeHtml(STATUS_LABEL[status])}</option>`).join("")}</select>
-        <label class="result-count"><input id="images-only" type="checkbox"> Somente com imagens · <strong id="visible-count" aria-live="polite">${report.cases.length}</strong></label>
+      ${(report.objective || report.description) ? `<section class="objective"><strong>${escapeHtml(tr("Objetivo"))}</strong><p>${escapeHtml(report.objective || report.description)}</p></section>` : ""}
+      <div class="section-heading"><h2>${escapeHtml(tr("Visão geral"))}</h2><p>${escapeHtml(tr(`${report.cases.length} caso(s) no snapshot`))}</p></div>
+      <div class="metrics">${STATUS_ORDER.map((status) => `<div class="metric metric-${status}"><strong>${counts[status]}</strong><span>${escapeHtml(tr(STATUS_LABEL[status]))}</span></div>`).join("")}</div>
+      <div class="toolbar" aria-label="${escapeHtml(tr("Filtros do relatório"))}">
+        <input id="search" type="search" placeholder="${escapeHtml(tr("Buscar caso, passo ou resultado"))}" aria-label="${escapeHtml(tr("Buscar no relatório"))}">
+        <select id="status-filter" aria-label="${escapeHtml(tr("Filtrar por resultado"))}"><option value="all">${escapeHtml(tr("Todos os resultados"))}</option>${STATUS_ORDER.map((status) => `<option value="${status}">${escapeHtml(tr(STATUS_LABEL[status]))}</option>`).join("")}</select>
+        <label class="result-count"><input id="images-only" type="checkbox"> ${escapeHtml(tr("Somente com imagens"))} · <strong id="visible-count" aria-live="polite">${report.cases.length}</strong></label>
       </div>
-      <div class="case-list">${cases || '<p class="empty">Nenhum caso registrado no snapshot desta tentativa.</p>'}</div>
-      <p id="no-results" class="empty" hidden>Nenhum resultado encontrado para os filtros atuais.<br><button id="clear-filters" type="button">Limpar busca e filtros</button></p>
+      <div class="case-list">${cases || `<p class="empty">${escapeHtml(tr("Nenhum caso registrado no snapshot desta tentativa."))}</p>`}</div>
+      <p id="no-results" class="empty" hidden>${escapeHtml(tr("Nenhum resultado encontrado para os filtros atuais."))}<br><button id="clear-filters" type="button">${escapeHtml(tr("Limpar busca e filtros"))}</button></p>
     </main>
-    <footer class="report-footer">QA Flow · ${escapeHtml(report.id)} · Gerado do snapshot imutável</footer>
+    <footer class="report-footer">QA Flow · ${escapeHtml(report.id)} · ${escapeHtml(tr("Gerado do snapshot imutável"))}</footer>
   </div>
-  <dialog id="image-viewer" aria-labelledby="image-caption"><div class="dialog-header"><p id="image-caption"></p><button class="dialog-close" type="button">Fechar</button></div><div id="image-stage"></div></dialog>
+  <dialog id="image-viewer" aria-labelledby="image-caption"><div class="dialog-header"><p id="image-caption"></p><button class="dialog-close" type="button">${escapeHtml(tr("Fechar"))}</button></div><div id="image-stage"></div></dialog>
   <script>
     (() => {
       const cases = [...document.querySelectorAll('.case')];
@@ -167,7 +168,7 @@ export function buildHtmlReport(report: PdfReportData, logoSrc: string): string 
       const noResults = document.querySelector('#no-results');
       const clearFilters = document.querySelector('#clear-filters');
       const filter = () => {
-        const query = search.value.trim().toLocaleLowerCase('pt-BR');
+        const query = search.value.trim().toLocaleLowerCase('${getActiveLocale()}');
         let visible = 0;
         for (const item of cases) {
           const matchesStatus = status.value === 'all' || item.dataset.status === status.value;
@@ -216,7 +217,7 @@ let logoDataUrlPromise: Promise<string> | null = null;
 
 function brandLogoDataUrl(): Promise<string> {
   logoDataUrlPromise ??= fetch("/qa-flow-logo.png").then(async (response) => {
-    if (!response.ok) throw new Error("Não foi possível carregar a logo do QA Flow.");
+    if (!response.ok) throw new Error(tr("Não foi possível carregar a logo do QA Flow."));
     const bytes = new Uint8Array(await response.arrayBuffer());
     let binary = "";
     for (let offset = 0; offset < bytes.length; offset += 0x8000) {
@@ -235,17 +236,17 @@ export async function generateHtmlReport(
     const logoSrc = await brandLogoDataUrl();
     const result = await saveGeneratedFile(
       {
-        suggestedName: `QAFlow_Relatorio_Interativo_${safeName(report.planName)}.html`,
+        suggestedName: `QAFlow_${safeName(tr("Relatório interativo"))}_${safeName(report.planName)}.html`,
         mimeType: "text/html;charset=utf-8",
         extension: ".html",
       },
       new TextEncoder().encode(buildHtmlReport(report, logoSrc)),
     );
     return result.ok
-      ? { ok: true, message: "Relatório interativo HTML gerado e salvo." }
+      ? { ok: true, message: tr("Relatório interativo HTML gerado e salvo.") }
       : { ok: false, message: result.message };
   } catch (error) {
     console.error("[generateHtmlReport]", error);
-    return { ok: false, message: `Falha ao gerar o relatório HTML: ${error instanceof Error ? error.message : "erro desconhecido."}` };
+    return { ok: false, message: tr(`Falha ao gerar o relatório HTML: ${error instanceof Error ? error.message : tr("erro desconhecido.")}`) };
   }
 }

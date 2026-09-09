@@ -10,7 +10,7 @@
 const controlBase =
   "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40";
 
-export const buttonPrimary = `${controlBase} bg-ink text-raised shadow-sm hover:bg-ink-hover`;
+export const buttonPrimary = `${controlBase} bg-ink text-on-ink shadow-sm hover:bg-ink-hover`;
 
 export const buttonSecondary = `${controlBase} border border-hairline-strong bg-raised text-control shadow-sm hover:border-faint hover:bg-surface`;
 

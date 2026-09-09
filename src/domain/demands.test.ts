@@ -21,6 +21,11 @@ function demand(overrides: Partial<QaDemand> = {}): QaDemand {
   };
 }
 
+test("cria todas as colunas padrão sem cor", () => {
+  const columns = createDefaultDemandColumns("2026-08-24T10:00:00.000Z");
+  assert.equal(columns.every((column) => column.color === undefined), true);
+});
+
 test("calcula abertas, bloqueadas, vencidas e concluídas na semana", () => {
   const columns = createDefaultDemandColumns("2026-08-24T10:00:00.000Z");
   const metrics = demandMetrics([
