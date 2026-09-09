@@ -8,6 +8,7 @@ import {
 } from "@react-pdf/renderer";
 import { isImageDataSource, isRasterImageSource } from "../domain/reporting";
 import type { PdfReportData } from "../domain/reporting";
+import { getActiveLocale, tr } from "../i18n";
 import {
   C,
   formatDate,
@@ -105,24 +106,24 @@ const T = StyleSheet.create({
 
 export function TechnicalReportDocument({ report, logoSrc }: { report: PdfReportData; logoSrc: string }) {
   return (
-    <Document author="QA Flow" title={`Relatório técnico - ${report.planName}`} subject={`Tentativa ${report.attempt}`}>
+    <Document author="QA Flow" title={`${tr("Relatório técnico")} - ${report.planName}`} subject={`${tr("Tentativa")} ${report.attempt}`}>
       <Page size="A4" style={shared.page}>
-        <ReportHeader report={report} logoSrc={logoSrc} kind="RELATÓRIO TÉCNICO DE EVIDÊNCIAS" />
+        <ReportHeader report={report} logoSrc={logoSrc} kind="Relatório técnico de evidências" />
 
         <View style={T.context}>
-          <View style={T.contextItem}><Text style={T.contextLabel}>PROJETO</Text><Text style={T.contextValue}>{report.project || "Não informado"}</Text></View>
-          <View style={T.contextItem}><Text style={T.contextLabel}>AMBIENTE</Text><Text style={T.contextValue}>{report.environment || "Não informado"}</Text></View>
-          <View style={T.contextItem}><Text style={T.contextLabel}>BUILD</Text><Text style={T.contextValue}>{report.build || "Não informada"}</Text></View>
-          <View style={T.contextItem}><Text style={T.contextLabel}>PLATAFORMA</Text><Text style={T.contextValue}>{report.platform || "Não informada"}</Text></View>
-          <View style={T.contextItem}><Text style={T.contextLabel}>DISPOSITIVO / NAVEGADOR</Text><Text style={T.contextValue}>{[report.device, report.browser].filter(Boolean).join(" / ") || "Não informado"}</Text></View>
-          <View style={T.contextItem}><Text style={T.contextLabel}>RESPONSÁVEL / INÍCIO</Text><Text style={T.contextValue}>{report.tester || report.createdBy} | {formatDate(report.startedAt)}</Text></View>
+          <View style={T.contextItem}><Text style={T.contextLabel}>{tr("Projeto").toLocaleUpperCase(getActiveLocale())}</Text><Text style={T.contextValue}>{report.project || tr("Não informado")}</Text></View>
+          <View style={T.contextItem}><Text style={T.contextLabel}>{tr("Ambiente").toLocaleUpperCase(getActiveLocale())}</Text><Text style={T.contextValue}>{report.environment || tr("Não informado")}</Text></View>
+          <View style={T.contextItem}><Text style={T.contextLabel}>BUILD</Text><Text style={T.contextValue}>{report.build || tr("Não informada")}</Text></View>
+          <View style={T.contextItem}><Text style={T.contextLabel}>{tr("Plataforma").toLocaleUpperCase(getActiveLocale())}</Text><Text style={T.contextValue}>{report.platform || tr("Não informada")}</Text></View>
+          <View style={T.contextItem}><Text style={T.contextLabel}>{tr("Dispositivo / Navegador").toLocaleUpperCase(getActiveLocale())}</Text><Text style={T.contextValue}>{[report.device, report.browser].filter(Boolean).join(" / ") || tr("Não informado")}</Text></View>
+          <View style={T.contextItem}><Text style={T.contextLabel}>{tr("Responsável / Início").toLocaleUpperCase(getActiveLocale())}</Text><Text style={T.contextValue}>{report.tester || report.createdBy} | {formatDate(report.startedAt)}</Text></View>
         </View>
 
-        <Text style={shared.sectionTitle}>Casos, passos e evidências</Text>
-        <Text style={T.intro}>Este relatório foi materializado a partir do snapshot imutável da tentativa. Cada resultado abaixo pertence à revisão registrada no início da execução.</Text>
+        <Text style={shared.sectionTitle}>{tr("Casos, passos e evidências")}</Text>
+        <Text style={T.intro}>{tr("Este relatório foi materializado a partir do snapshot imutável da tentativa. Cada resultado abaixo pertence à revisão registrada no início da execução.")}</Text>
 
         {report.cases.length === 0 ? (
-          <Text style={T.noSteps}>Nenhum caso registrado no snapshot desta tentativa.</Text>
+          <Text style={T.noSteps}>{tr("Nenhum caso registrado no snapshot desta tentativa.")}</Text>
         ) : report.cases.map((testCase) => (
           <View key={testCase.id} style={T.caseCard} wrap={false}>
             <View wrap={false}>
@@ -132,39 +133,39 @@ export function TechnicalReportDocument({ report, logoSrc }: { report: PdfReport
                   <Text style={T.caseTitle}>{testCase.title}</Text>
                 </View>
                 <View style={[T.badge, { backgroundColor: STATUS_SOFT[testCase.status] }]}>
-                  <Text style={[T.badgeText, { color: STATUS_COLOR[testCase.status] }]}>{STATUS_LABEL[testCase.status]}</Text>
+                  <Text style={[T.badgeText, { color: STATUS_COLOR[testCase.status] }]}>{tr(STATUS_LABEL[testCase.status])}</Text>
                 </View>
               </View>
 
               <View style={T.caseMeta}>
-                <View style={T.metaLine}><Text style={T.metaLabel}>Prioridade</Text><Text style={T.metaValue}>{PRIORITY_LABEL[testCase.priority]}</Text></View>
-                {testCase.path && <View style={T.metaLine}><Text style={T.metaLabel}>Caminho</Text><Text style={T.metaValue}>{testCase.path}</Text></View>}
-                {testCase.precondition && <View style={T.metaLine}><Text style={T.metaLabel}>Pré-condição</Text><Text style={T.metaValue}>{testCase.precondition}</Text></View>}
-                {testCase.references.length > 0 && <View style={T.metaLine}><Text style={T.metaLabel}>Referências</Text><Text style={T.metaValue}>{testCase.references.join(" | ")}</Text></View>}
+                <View style={T.metaLine}><Text style={T.metaLabel}>{tr("Prioridade")}</Text><Text style={T.metaValue}>{tr(PRIORITY_LABEL[testCase.priority])}</Text></View>
+                {testCase.path && <View style={T.metaLine}><Text style={T.metaLabel}>{tr("Caminho")}</Text><Text style={T.metaValue}>{testCase.path}</Text></View>}
+                {testCase.precondition && <View style={T.metaLine}><Text style={T.metaLabel}>{tr("Pré-condição")}</Text><Text style={T.metaValue}>{testCase.precondition}</Text></View>}
+                {testCase.references.length > 0 && <View style={T.metaLine}><Text style={T.metaLabel}>{tr("Referências")}</Text><Text style={T.metaValue}>{testCase.references.join(" | ")}</Text></View>}
               </View>
             </View>
 
             {testCase.steps.length === 0 ? (
-              <Text style={T.noSteps}>Nenhum passo cadastrado.</Text>
+              <Text style={T.noSteps}>{tr("Nenhum passo cadastrado.")}</Text>
             ) : testCase.steps.map((step, stepIndex) => (
               <View key={step.id}>
                 <View style={[T.step, stepIndex === testCase.steps.length - 1 && step.evidence.length === 0 ? T.stepLast : {}]} wrap={false}>
                   <View style={T.stepHeader}>
-                    <Text style={T.stepNumber}>PASSO {stepIndex + 1}</Text>
-                    <Text style={[T.stepType, { color: TYPE_COLOR[step.type] ?? C.muted }]}>{step.type}</Text>
-                    <Text style={[T.stepStatus, { color: STATUS_COLOR[step.status] }]}>{STATUS_LABEL[step.status]}</Text>
+                    <Text style={T.stepNumber}>{tr("Passo").toLocaleUpperCase(getActiveLocale())} {stepIndex + 1}</Text>
+                    <Text style={[T.stepType, { color: TYPE_COLOR[step.type] ?? C.muted }]}>{tr(step.type)}</Text>
+                    <Text style={[T.stepStatus, { color: STATUS_COLOR[step.status] }]}>{tr(STATUS_LABEL[step.status])}</Text>
                   </View>
                   <View style={T.field}>
-                    <Text style={T.fieldLabel}>AÇÃO</Text>
+                    <Text style={T.fieldLabel}>{tr("Ação").toLocaleUpperCase(getActiveLocale())}</Text>
                     <Text style={T.fieldText}>{step.action}</Text>
                   </View>
                   <View style={[T.field, T.fieldExpected]}>
-                    <Text style={T.fieldLabel}>RESULTADO ESPERADO</Text>
+                    <Text style={T.fieldLabel}>{tr("Resultado esperado").toLocaleUpperCase(getActiveLocale())}</Text>
                     <Text style={T.fieldText}>{step.expectedResult}</Text>
                   </View>
                   {step.actualResult && (
                     <View style={[T.actual, { backgroundColor: STATUS_SOFT[step.status] }]}>
-                      <Text style={[T.actualLabel, { color: STATUS_COLOR[step.status] }]}>RESULTADO OBTIDO / OBSERVAÇÃO</Text>
+                      <Text style={[T.actualLabel, { color: STATUS_COLOR[step.status] }]}>{tr("Resultado obtido / observação").toLocaleUpperCase(getActiveLocale())}</Text>
                       <Text style={T.actualText}>{step.actualResult}</Text>
                     </View>
                   )}
@@ -176,12 +177,12 @@ export function TechnicalReportDocument({ report, logoSrc }: { report: PdfReport
                     style={[T.evidence, stepIndex === testCase.steps.length - 1 && evidenceIndex === step.evidence.length - 1 ? T.evidenceLast : {}]}
                     wrap={false}
                   >
-                    <Text style={T.evidenceLabel}>EVIDÊNCIA {evidenceIndex + 1} DO PASSO {stepIndex + 1}</Text>
+                    <Text style={T.evidenceLabel}>{tr(`Evidência ${evidenceIndex + 1} do passo ${stepIndex + 1}`).toLocaleUpperCase(getActiveLocale())}</Text>
                     <Image src={source} style={T.evidenceImage} />
                   </View>
                 ) : null)}
                 {step.evidence.some((source) => isImageDataSource(source) && !isRasterImageSource(source)) && (
-                  <Text style={[T.evidenceLabel, { marginHorizontal: 10, marginBottom: 8, color: C.muted }]}>Há evidência de imagem em formato não compatível com a visualização no PDF.</Text>
+                  <Text style={[T.evidenceLabel, { marginHorizontal: 10, marginBottom: 8, color: C.muted }]}>{tr("Há evidência de imagem em formato não compatível com a visualização no PDF.")}</Text>
                 )}
               </View>
             ))}

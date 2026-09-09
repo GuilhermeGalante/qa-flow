@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildHtmlReport } from "./generateHtmlReport.ts";
 import type { PdfReportData } from "../domain/reporting.ts";
+import { setActiveLocale } from "../i18n.ts";
 
 const report: PdfReportData = {
   id: "RUN-HTML-1",
@@ -58,4 +59,24 @@ test("HTML é autocontido, escapa conteúdo e oferece ampliação apenas para im
   assert.match(html, /aria-live="polite"/);
   assert.match(html, /Nenhum resultado encontrado/);
   assert.match(html, /Limpar busca e filtros/);
+});
+
+test("HTML acompanha o idioma ativo sem traduzir conteúdo do usuário", () => {
+  try {
+    setActiveLocale("en-US");
+    const english = buildHtmlReport(report, "data:image/png;base64,LOGO=");
+    assert.match(english, /<html lang="en-US">/);
+    assert.match(english, /Interactive report/);
+    assert.match(english, /Search cases, steps, or results/);
+    assert.match(english, /Regressão &lt;Core&gt;/);
+
+    setActiveLocale("es-ES");
+    const spanish = buildHtmlReport(report, "data:image/png;base64,LOGO=");
+    assert.match(spanish, /<html lang="es-ES">/);
+    assert.match(spanish, /Informe interactivo/);
+    assert.match(spanish, /Solo con imágenes/);
+    assert.match(spanish, /Login &lt;válido&gt;/);
+  } finally {
+    setActiveLocale("pt-BR");
+  }
 });

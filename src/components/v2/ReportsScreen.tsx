@@ -10,8 +10,10 @@ import { useConfirm } from "../../ui/ConfirmProvider";
 import { Select, type SelectOption } from "../../ui/Select";
 import { useToast } from "../../ui/ToastProvider";
 import { EmptyState, PageHeader, StatusBadge, buttonDanger, buttonSecondary, inputClass, runStatusLabel, stepStatusLabel } from "./Shared";
+import { getActiveLocale, tr } from "../../i18n";
 
 export function ReportsScreen() {
+  const locale = getActiveLocale();
   const runs = useQaStore((state) => state.runs);
   const reports = useQaStore((state) => state.reports);
   const getEvidenceData = useQaStore((state) => state.getEvidenceData);
@@ -31,8 +33,9 @@ export function ReportsScreen() {
   const runOptions = useMemo<SelectOption[]>(() => runs.map((item) => ({
     value: item.id,
     label: item.snapshot.plan.name,
-    hint: `Tentativa ${item.attempt} · ${runStatusLabel[item.status]} · ${new Date(item.startedAt).toLocaleDateString("pt-BR")}`,
-  })), [runs]);
+    hint: `${tr("Tentativa")} ${item.attempt} · ${tr(runStatusLabel[item.status])} · ${new Date(item.startedAt).toLocaleDateString(locale)}`,
+    localizeLabel: false,
+  })), [locale, runs]);
 
   const counts = useMemo(() => run?.snapshot.cases.reduce<Record<StepStatus, number>>((accumulator, testCase) => {
     accumulator[deriveCaseStatus(run, testCase)] += 1;
@@ -55,12 +58,12 @@ export function ReportsScreen() {
             ? generateExecutiveSummary(reportData, saveGeneratedFile)
             : generateEvidenceReport(reportData, saveGeneratedFile)
         ));
-      toast.fromResult(result, { successDescription: "Gerado a partir do snapshot da tentativa selecionada." });
+      toast.fromResult(result, { successDescription: tr("Gerado a partir do snapshot da tentativa selecionada.") });
     } catch (error) {
       toast.show({
         tone: "error",
-        message: "Não foi possível preparar o relatório.",
-        description: error instanceof Error ? error.message : "Falha ao ler as evidências do snapshot.",
+        message: tr("Não foi possível preparar o relatório."),
+        description: error instanceof Error ? error.message : tr("Falha ao ler as evidências do snapshot."),
       });
     } finally {
       setGenerating(null);
@@ -89,10 +92,10 @@ export function ReportsScreen() {
 
   const remove = async (reportId: string, reportTitle: string) => {
     const confirmed = await confirm({
-      title: "Remover este registro?",
-      description: "Apenas o registro sai da lista. A execução e o snapshot permanecem no histórico.",
+      title: tr("Remover este registro?"),
+      description: tr("Apenas o registro sai da lista. A execução e o snapshot permanecem no histórico."),
       itemLabel: reportTitle,
-      confirmLabel: "Remover registro",
+      confirmLabel: tr("Remover registro"),
       tone: "danger",
     });
     if (!confirmed) return;
@@ -101,34 +104,34 @@ export function ReportsScreen() {
 
   return (
     <>
-      <PageHeader title="Relatórios" description="Gere artefatos diretamente de uma tentativa imutável. O resultado histórico não muda quando casos e planos evoluem." />
+      <PageHeader title={tr("Relatórios")} description={tr("Gere artefatos diretamente de uma tentativa imutável. O resultado histórico não muda quando casos e planos evoluem.")} />
       {runs.length === 0 ? (
-        <EmptyState title="Nenhuma execução disponível" description="Execute um plano para liberar resumos, relatórios técnicos e exportações auditáveis." />
+        <EmptyState title={tr("Nenhuma execução disponível")} description={tr("Execute um plano para liberar resumos, relatórios técnicos e exportações auditáveis.")} />
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
             <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-              <label htmlFor="report-run" className="text-sm font-bold text-control">Tentativa de origem</label>
-              <Select id="report-run" className="mt-1" value={runId} onChange={setRunId} options={runOptions} ariaLabel="Tentativa de origem" placeholder="Selecione a tentativa" />
+              <label htmlFor="report-run" className="text-sm font-bold text-control">{tr("Tentativa de origem")}</label>
+              <Select id="report-run" className="mt-1" value={runId} onChange={setRunId} options={runOptions} ariaLabel={tr("Tentativa de origem")} placeholder={tr("Selecione a tentativa")} />
               {run && (
                 <div className="mt-5">
-                  <div className="flex flex-wrap items-center gap-2"><StatusBadge value={run.status} label={runStatusLabel[run.status]} /><span className="text-xs text-muted">{run.context.environment || "Sem ambiente"} · {new Date(run.startedAt).toLocaleString("pt-BR")}</span></div>
+                  <div className="flex flex-wrap items-center gap-2"><StatusBadge value={run.status} label={runStatusLabel[run.status]} /><span className="text-xs text-muted">{run.context.environment || tr("Sem ambiente")} · {new Date(run.startedAt).toLocaleString(getActiveLocale())}</span></div>
                   <h2 className="mt-2 text-xl font-bold text-body">{run.snapshot.plan.name}</h2>
-                  <p className="mt-1 text-sm text-muted">Snapshot com {run.snapshot.cases.length} caso(s), plano rev. {run.planRevision}.</p>
+                  <p className="mt-1 text-sm text-muted">{tr(`Snapshot com ${run.snapshot.cases.length} caso(s), plano rev. ${run.planRevision}.`)}</p>
                 </div>
               )}
             </section>
 
             {run && counts && (
               <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-                <h2 className="font-bold text-body">Resultado por caso</h2>
+                <h2 className="font-bold text-body">{tr("Resultado por caso")}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                  {(Object.keys(counts) as StepStatus[]).map((status) => <div key={status} className="rounded-xl bg-surface p-3 text-center"><p className="text-2xl font-bold leading-none tabular-nums text-body">{counts[status]}</p><p className="mt-2 text-[11px] font-bold leading-tight text-muted">{stepStatusLabel[status]}</p></div>)}
+                  {(Object.keys(counts) as StepStatus[]).map((status) => <div key={status} className="rounded-xl bg-surface p-3 text-center"><p className="text-2xl font-bold leading-none tabular-nums text-body">{counts[status]}</p><p className="mt-2 text-[11px] font-bold leading-tight text-muted">{tr(stepStatusLabel[status])}</p></div>)}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
-                  <Button variant="primary" loading={generating === "executive"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileBarChart size={16} />} onClick={() => void generateReport("executive")}>Resumo executivo PDF</Button>
-                  <Button loading={generating === "evidence"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileText size={16} />} onClick={() => void generateReport("evidence")}>Relatório técnico PDF</Button>
-                  <Button loading={generating === "html"} loadingLabel="Gerando…" disabled={generating !== null} icon={<FileCode2 size={16} />} onClick={() => void generateReport("html")}>Relatório interativo HTML</Button>
+                  <Button variant="primary" loading={generating === "executive"} loadingLabel={tr("Gerando…")} disabled={generating !== null} icon={<FileBarChart size={16} />} onClick={() => void generateReport("executive")}>{tr("Resumo executivo PDF")}</Button>
+                  <Button loading={generating === "evidence"} loadingLabel={tr("Gerando…")} disabled={generating !== null} icon={<FileText size={16} />} onClick={() => void generateReport("evidence")}>{tr("Relatório técnico PDF")}</Button>
+                  <Button loading={generating === "html"} loadingLabel={tr("Gerando…")} disabled={generating !== null} icon={<FileCode2 size={16} />} onClick={() => void generateReport("html")}>{tr("Relatório interativo HTML")}</Button>
                   <button type="button" className={buttonSecondary} onClick={() => void saveTextExport(JSON.stringify(run, null, 2), "application/json", `${run.id}.json`)}><Download size={16} /> JSON</button>
                   <button type="button" className={buttonSecondary} onClick={() => void saveTextExport(Papa.unparse(runCsvRows(run)), "text/csv;charset=utf-8", `${run.id}.csv`)}><Download size={16} /> CSV</button>
                 </div>
@@ -138,16 +141,16 @@ export function ReportsScreen() {
 
           <aside className="space-y-5">
             <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-              <h2 className="font-bold text-body">Registrar relatório</h2>
-              <p className="mt-1 text-xs text-muted">Cria um registro rastreável; os PDFs podem ser regenerados do mesmo snapshot.</p>
-              <label className="mt-4 block text-xs font-bold text-subtle">Título<input className={`${inputClass} mt-1`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={run ? `Relatório — ${run.snapshot.plan.name}` : ""} /></label>
-              <label className="mt-3 block text-xs font-bold text-subtle">Notas<textarea className={`${inputClass} mt-1 min-h-24 resize-y`} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
-              <Button variant="primary" className="mt-4 w-full" loading={registering} loadingLabel="Registrando…" disabled={!run} icon={<Plus size={16} />} onClick={() => void register()}>Registrar</Button>
+              <h2 className="font-bold text-body">{tr("Registrar relatório")}</h2>
+              <p className="mt-1 text-xs text-muted">{tr("Cria um registro rastreável; os PDFs podem ser regenerados do mesmo snapshot.")}</p>
+              <label className="mt-4 block text-xs font-bold text-subtle">{tr("Título")}<input className={`${inputClass} mt-1`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={run ? `${tr("Relatório")} — ${run.snapshot.plan.name}` : ""} /></label>
+              <label className="mt-3 block text-xs font-bold text-subtle">{tr("Notas")}<textarea className={`${inputClass} mt-1 min-h-24 resize-y`} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
+              <Button variant="primary" className="mt-4 w-full" loading={registering} loadingLabel={tr("Registrando…")} disabled={!run} icon={<Plus size={16} />} onClick={() => void register()}>{tr("Registrar")}</Button>
             </section>
 
             <section>
-              <h2 className="mb-3 font-bold text-body">Registros desta tentativa</h2>
-              {runReports.length === 0 ? <p className="rounded-xl border border-dashed border-hairline-strong p-5 text-center text-sm text-muted">Nenhum registro.</p> : <div className="space-y-3">{runReports.map((report) => <article key={report.id} className="rounded-xl border border-hairline bg-raised p-4"><p className="font-bold text-body">{report.title}</p><p className="mt-1 text-xs text-muted">{new Date(report.createdAt).toLocaleString("pt-BR")}</p>{report.notes && <p className="mt-2 text-sm text-subtle">{report.notes}</p>}<button type="button" className={`${buttonDanger} mt-3`} onClick={() => void remove(report.id, report.title)}><Trash2 size={14} /> Remover registro</button></article>)}</div>}
+              <h2 className="mb-3 font-bold text-body">{tr("Registros desta tentativa")}</h2>
+              {runReports.length === 0 ? <p className="rounded-xl border border-dashed border-hairline-strong p-5 text-center text-sm text-muted">{tr("Nenhum registro.")}</p> : <div className="space-y-3">{runReports.map((report) => <article key={report.id} className="rounded-xl border border-hairline bg-raised p-4"><p className="font-bold text-body">{report.title}</p><p className="mt-1 text-xs text-muted">{new Date(report.createdAt).toLocaleString(getActiveLocale())}</p>{report.notes && <p className="mt-2 text-sm text-subtle">{report.notes}</p>}<button type="button" className={`${buttonDanger} mt-3`} onClick={() => void remove(report.id, report.title)}><Trash2 size={14} /> {tr("Remover registro")}</button></article>)}</div>}
             </section>
           </aside>
         </div>

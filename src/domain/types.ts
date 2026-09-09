@@ -17,12 +17,14 @@ export type RunStatus =
   | "aborted";
 export type WorkspaceMode = "browser" | "repository";
 export type DemandColumnSemantic = "neutral" | "active" | "blocked" | "done";
+export type DemandColumnColor = "cyan" | "green" | "amber" | "rose" | "violet";
 export type DemandLinkType = "case" | "plan" | "run" | "report";
 
 export interface DemandColumn {
   id: string;
   name: string;
   semantic: DemandColumnSemantic;
+  color?: DemandColumnColor;
   order: number;
   createdAt: string;
   updatedAt: string;

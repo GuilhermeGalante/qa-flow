@@ -35,6 +35,7 @@ import {
   statusTone,
   stepStatusLabel,
 } from "./Shared";
+import { getActiveLocale, tr } from "../../i18n";
 
 const stepTypeLabel = { given: "Dado", when: "Quando", then: "Então", and: "E" } as const;
 
@@ -84,7 +85,7 @@ function EvidencePreview({ meta, editable, onRemove }: { meta: EvidenceMeta; edi
           : <img src={source} alt={meta.name} className="h-28 w-full object-cover" />
       ) : <div className="flex h-28 items-center justify-center text-faint"><Image size={22} /></div>}
       <figcaption className="truncate px-2 py-1.5 text-[11px] text-subtle" title={`${meta.name} · SHA-256 ${meta.sha256}`}>{meta.name}</figcaption>
-      {editable && <button type="button" aria-label={`Remover evidência ${meta.name}`} onClick={onRemove} className="absolute right-2 top-2 rounded-lg bg-raised/90 p-1.5 text-fail opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100"><Trash2 size={14} /></button>}
+      {editable && <button type="button" aria-label={`${tr("Remover evidência")} ${meta.name}`} onClick={onRemove} className="absolute right-2 top-2 rounded-lg bg-raised/90 p-1.5 text-fail opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100"><Trash2 size={14} /></button>}
     </figure>
   );
 }
@@ -162,7 +163,7 @@ function StepCard({
     const result = await addEvidence(run.id, "step", key, file, name);
     setEvidenceBusy(false);
     toast.fromResult(result, {
-      successDescription: source === "clipboard" ? "Imagem colada e vinculada a este passo." : undefined,
+      successDescription: source === "clipboard" ? tr("Imagem colada e vinculada a este passo.") : undefined,
     });
   };
 
@@ -184,7 +185,7 @@ function StepCard({
   const readClipboardEvidence = async () => {
     if (!editable || evidenceBusy) return;
     if (!navigator.clipboard?.read) {
-      toast.show({ tone: "warning", message: "Seu navegador não permite ler imagens pelo botão.", description: "Selecione a área de evidências e pressione Ctrl+V." });
+      toast.show({ tone: "warning", message: tr("Seu navegador não permite ler imagens pelo botão."), description: tr("Selecione a área de evidências e pressione Ctrl+V.") });
       pasteTargetRef.current?.focus();
       return;
     }
@@ -197,20 +198,20 @@ function StepCard({
         await storeEvidence(await item.getType(imageType), "clipboard");
         return;
       }
-      toast.show({ tone: "warning", message: "A área de transferência não contém uma imagem.", description: "Copie uma captura e tente novamente." });
+      toast.show({ tone: "warning", message: tr("A área de transferência não contém uma imagem."), description: tr("Copie uma captura e tente novamente.") });
       pasteTargetRef.current?.focus();
     } catch {
-      toast.show({ tone: "error", message: "Não foi possível acessar a área de transferência.", description: "Selecione a área de evidências e pressione Ctrl+V." });
+      toast.show({ tone: "error", message: tr("Não foi possível acessar a área de transferência."), description: tr("Selecione a área de evidências e pressione Ctrl+V.") });
       pasteTargetRef.current?.focus();
     }
   };
 
   const removeWithConfirm = async (meta: EvidenceMeta) => {
     const confirmed = await confirm({
-      title: "Remover esta evidência?",
-      description: "A imagem sai do snapshot desta tentativa e não pode ser recuperada.",
+      title: tr("Remover esta evidência?"),
+      description: tr("A imagem sai do snapshot desta tentativa e não pode ser recuperada."),
       itemLabel: meta.name,
-      confirmLabel: "Remover evidência",
+      confirmLabel: tr("Remover evidência"),
       tone: "danger",
     });
     if (!confirmed) return;
@@ -245,23 +246,23 @@ function StepCard({
         <div id={contentId} className="border-t border-hairline">
           <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
             <div className="p-4 sm:p-5">
-              <p className="text-xs font-bold text-muted">Ação</p>
+              <p className="text-xs font-bold text-muted">{tr("Ação")}</p>
               <p className="mt-1 max-w-3xl text-base font-bold leading-relaxed text-body">{step.action}</p>
 
               <div className="mt-5 border-t border-hairline pt-4">
-                <p className="text-xs font-bold text-muted">Resultado esperado</p>
+                <p className="text-xs font-bold text-muted">{tr("Resultado esperado")}</p>
                 <p className="mt-1 max-w-3xl text-sm leading-relaxed text-control">{step.expectedResult}</p>
               </div>
             </div>
 
             <div className="border-t border-hairline bg-surface/70 p-4 sm:p-5 lg:border-l lg:border-t-0">
-              <h3 className="font-bold text-body">Registrar resultado</h3>
+              <h3 className="font-bold text-body">{tr("Registrar resultado")}</h3>
               <div className="mt-3 space-y-3">
                 <div>
-                  <p className="text-xs font-bold text-subtle" id={`${contentId}-status-label`}>Status do passo</p>
+                  <p className="text-xs font-bold text-subtle" id={`${contentId}-status-label`}>{tr("Status do passo")}</p>
                   <StatusPicker
                     className="mt-1.5"
-                    ariaLabel={`Status do passo ${stepIndex + 1}`}
+                    ariaLabel={tr(`Status do passo ${stepIndex + 1}`)}
                     value={status}
                     onChange={changeStatus}
                     options={stepStatusOptions}
@@ -269,12 +270,12 @@ function StepCard({
                     shortcutScopeRef={cardRef}
                   />
                 </div>
-                <label className="block text-xs font-bold text-subtle">Resultado obtido {(status === "failed" || status === "blocked") && <span className="text-fail">*</span>}
-                  <textarea className={`${inputClass} mt-1 min-h-24 resize-y`} disabled={!editable} value={actualResult} onChange={(event) => changeActualResult(event.target.value)} placeholder="Descreva o observado, uma diferença ou o motivo do bloqueio" />
+                <label className="block text-xs font-bold text-subtle">{tr("Resultado obtido")} {(status === "failed" || status === "blocked") && <span className="text-fail">*</span>}
+                  <textarea className={`${inputClass} mt-1 min-h-24 resize-y`} disabled={!editable} value={actualResult} onChange={(event) => changeActualResult(event.target.value)} placeholder={tr("Descreva o observado, uma diferença ou o motivo do bloqueio")} />
                 </label>
               </div>
               <div className="mt-3 flex items-center justify-end">
-                <Button variant="primary" loading={saving} loadingLabel="Salvando…" disabled={!editable} icon={<CheckCircle2 size={16} />} onClick={() => void save()}>Salvar resultado</Button>
+                <Button variant="primary" loading={saving} loadingLabel={tr("Salvando…")} disabled={!editable} icon={<CheckCircle2 size={16} />} onClick={() => void save()}>{tr("Salvar resultado")}</Button>
               </div>
             </div>
           </div>
@@ -284,26 +285,26 @@ function StepCard({
               ref={pasteTargetRef}
               tabIndex={editable ? 0 : -1}
               role="group"
-              aria-label="Adicionar evidência por colagem ou arquivo"
+              aria-label={tr("Adicionar evidência por colagem ou arquivo")}
               className="flex flex-col gap-4 rounded-xl border border-dashed border-hairline-strong bg-surface px-4 py-4 outline-none transition focus:border-run-mark focus:bg-run-tint/50 focus:ring-4 focus:ring-run-halo sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-raised text-run ring-1 ring-hairline"><ClipboardPaste size={18} /></span>
                 <div>
-                  <p className="text-sm font-bold text-body">Cole uma captura como evidência</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-subtle">Use Ctrl+V ou escolha PNG, JPEG, WebP ou GIF de até 10 MiB.</p>
+                  <p className="text-sm font-bold text-body">{tr("Cole uma captura como evidência")}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-subtle">{tr("Use Ctrl+V ou escolha PNG, JPEG, WebP ou GIF de até 10 MiB.")}</p>
                 </div>
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">
-                <Button variant="primary" loading={evidenceBusy} loadingLabel="Processando…" disabled={!editable} icon={<ClipboardPaste size={15} />} onClick={() => void readClipboardEvidence()}>Colar imagem</Button>
+                <Button variant="primary" loading={evidenceBusy} loadingLabel="Processando…" disabled={!editable} icon={<ClipboardPaste size={15} />} onClick={() => void readClipboardEvidence()}>{tr("Colar imagem")}</Button>
                 <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(event) => void attach(event)} />
-                <button type="button" className={buttonSecondary} disabled={!editable || evidenceBusy} onClick={() => fileRef.current?.click()}><Camera size={15} /> Escolher arquivo</button>
+                <button type="button" className={buttonSecondary} disabled={!editable || evidenceBusy} onClick={() => fileRef.current?.click()}><Camera size={15} /> {tr("Escolher arquivo")}</button>
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-bold text-subtle">Evidências anexadas <span className="ml-1 rounded-full bg-shell px-2 py-0.5 text-control">{evidence.length}</span></p>
-              <p className="text-[11px] text-muted">As imagens permanecem neste dispositivo e são vinculadas por hash.</p>
+              <p className="text-xs font-bold text-subtle">{tr("Evidências anexadas")} <span className="ml-1 rounded-full bg-shell px-2 py-0.5 text-control">{evidence.length}</span></p>
+              <p className="text-[11px] text-muted">{tr("As imagens permanecem neste dispositivo e são vinculadas por hash.")}</p>
             </div>
             {evidence.length > 0 && <div className="mt-3 grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">{evidence.map((meta) => <EvidencePreview key={meta.id} meta={meta} editable={editable} onRemove={() => void removeWithConfirm(meta)} />)}</div>}
           </div>
@@ -339,10 +340,10 @@ function ExploratorySection({ run }: { run: TestRun }) {
 
   const removeWithConfirm = async (meta: EvidenceMeta) => {
     const confirmed = await confirm({
-      title: "Remover esta evidência?",
-      description: "A imagem sai do registro exploratório e não pode ser recuperada.",
+      title: tr("Remover esta evidência?"),
+      description: tr("A imagem sai do registro exploratório e não pode ser recuperada."),
       itemLabel: meta.name,
-      confirmLabel: "Remover evidência",
+      confirmLabel: tr("Remover evidência"),
       tone: "danger",
     });
     if (!confirmed) return;
@@ -352,35 +353,35 @@ function ExploratorySection({ run }: { run: TestRun }) {
   return (
     <section className="mt-7 rounded-2xl border border-explore-line bg-explore-tint/60 p-5">
       <div>
-        <h2 className="text-lg font-bold text-explore-deep">Exploratório</h2>
-        <p className="text-sm text-explore-deep">Registre achados que surgiram fora dos passos previstos, sem misturá-los ao resultado formal.</p>
+        <h2 className="text-lg font-bold text-explore-deep">{tr("Exploratório")}</h2>
+        <p className="text-sm text-explore-deep">{tr("Registre achados que surgiram fora dos passos previstos, sem misturá-los ao resultado formal.")}</p>
       </div>
       {editable && (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="text-xs font-bold text-explore-deep">Título<input className={`${inputClass} mt-1`} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
+          <label className="text-xs font-bold text-explore-deep">{tr("Título")}<input className={`${inputClass} mt-1`} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
           <div className="grid grid-cols-2 gap-3">
             <div className="text-xs font-bold text-explore-deep">
-              <label htmlFor="exploratory-classification">Classificação</label>
-              <Select id="exploratory-classification" className="mt-1" ariaLabel="Classificação do achado" value={form.classification} onChange={(classification) => setForm({ ...form, classification })} options={classificationOptions} />
+              <label htmlFor="exploratory-classification">{tr("Classificação")}</label>
+              <Select id="exploratory-classification" className="mt-1" ariaLabel={tr("Classificação do achado")} value={form.classification} onChange={(classification) => setForm({ ...form, classification })} options={classificationOptions} />
             </div>
             <div className="text-xs font-bold text-explore-deep">
-              <label htmlFor="exploratory-severity">Severidade</label>
-              <Select id="exploratory-severity" className="mt-1" ariaLabel="Severidade do achado" value={form.severity} onChange={(severity) => setForm({ ...form, severity })} options={severityOptions} />
+              <label htmlFor="exploratory-severity">{tr("Severidade")}</label>
+              <Select id="exploratory-severity" className="mt-1" ariaLabel={tr("Severidade do achado")} value={form.severity} onChange={(severity) => setForm({ ...form, severity })} options={severityOptions} />
             </div>
           </div>
-          <label className="text-xs font-bold text-explore-deep md:col-span-2">Observação<textarea className={`${inputClass} mt-1 min-h-24 resize-y`} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></label>
-          <div className="md:col-span-2"><Button variant="primary" loading={saving} loadingLabel="Registrando…" icon={<Plus size={15} />} onClick={() => void submit()}>Adicionar registro</Button></div>
+          <label className="text-xs font-bold text-explore-deep md:col-span-2">{tr("Observação")}<textarea className={`${inputClass} mt-1 min-h-24 resize-y`} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></label>
+          <div className="md:col-span-2"><Button variant="primary" loading={saving} loadingLabel="Registrando…" icon={<Plus size={15} />} onClick={() => void submit()}>{tr("Adicionar registro")}</Button></div>
         </div>
       )}
       <div className="mt-5 space-y-3">
-        {run.exploratoryRecords.length === 0 && <p className="rounded-xl border border-dashed border-explore-line p-5 text-center text-sm text-explore">Nenhum registro exploratório.</p>}
+        {run.exploratoryRecords.length === 0 && <p className="rounded-xl border border-dashed border-explore-line p-5 text-center text-sm text-explore">{tr("Nenhum registro exploratório.")}</p>}
         {run.exploratoryRecords.map((record) => {
           const recordEvidence = evidence.filter((item) => record.evidenceIds.includes(item.id));
           return (
             <article key={record.id} className="rounded-xl border border-explore-line bg-raised p-4">
               <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-explore-tint px-2 py-1 text-xs font-bold text-explore">{record.classification}</span><span className="text-xs font-bold text-muted">{record.severity}</span></div>
               <h3 className="mt-2 font-bold text-body">{record.title}</h3><p className="mt-1 whitespace-pre-wrap text-sm text-subtle">{record.notes}</p>
-              {editable && <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-bold text-explore"><Camera size={15} /> Anexar imagem<input type="file" accept="image/*" capture="environment" className="hidden" onChange={(event) => {
+              {editable && <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-bold text-explore"><Camera size={15} /> {tr("Anexar imagem")}<input type="file" accept="image/*" capture="environment" className="hidden" onChange={(event) => {
                 const file = event.target.files?.[0];
                 // Antes o resultado era descartado: uma falha ao anexar não dizia nada.
                 if (file) void addEvidence(run.id, "exploratory", record.id, file).then((result) => toast.fromResult(result));
@@ -416,14 +417,15 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
     return accumulator;
   }, { not_run: 0, passed: 0, failed: 0, blocked: 0, skipped: 0 }), [run]);
 
-  const caseOptions = useMemo<SelectOption[]>(() => run.snapshot.cases.map((testCase, index) => {
+  const caseOptions: SelectOption[] = run.snapshot.cases.map((testCase, index) => {
     const status = deriveCaseStatus(run, testCase);
     return {
       value: testCase.id,
       label: testCase.title,
-      hint: `Caso ${index + 1} de ${run.snapshot.cases.length} · ${stepStatusLabel[status]}`,
+      hint: `${tr("Caso")} ${index + 1} ${tr("de")} ${run.snapshot.cases.length} · ${tr(stepStatusLabel[status])}`,
+      localizeLabel: false,
     };
-  }), [run]);
+  });
 
   const selectCase = (caseId: string) => {
     const nextCase = run.snapshot.cases.find((item) => item.id === caseId);
@@ -478,42 +480,42 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
 
   return (
     <>
-      <button type="button" className={`${buttonSecondary} mb-4`} onClick={onBack}><ArrowLeft size={16} /> Histórico</button>
+      <button type="button" className={`${buttonSecondary} mb-4`} onClick={onBack}><ArrowLeft size={16} /> {tr("Histórico")}</button>
       <header className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <div className="flex flex-wrap items-center gap-2"><StatusBadge value={run.status} label={runStatusLabel[run.status]} /><span className="text-xs font-bold text-muted">Tentativa {run.attempt}</span><span className="text-xs text-faint">plano rev. {run.planRevision}</span></div>
+            <div className="flex flex-wrap items-center gap-2"><StatusBadge value={run.status} label={runStatusLabel[run.status]} /><span className="text-xs font-bold text-muted">{tr("Tentativa")} {run.attempt}</span><span className="text-xs text-faint">{tr("plano rev.")} {run.planRevision}</span></div>
             <h1 className="mt-2 text-2xl font-black text-body">{run.snapshot.plan.name}</h1>
-            <p className="mt-1 text-sm text-muted">{run.context.environment || "Ambiente não informado"} · {run.context.tester || "Responsável não informado"} · iniciada em {new Date(run.startedAt).toLocaleString("pt-BR")}</p>
+            <p className="mt-1 text-sm text-muted">{run.context.environment || tr("Ambiente não informado")} · {run.context.tester || tr("Responsável não informado")} · {tr("iniciada em")} {new Date(run.startedAt).toLocaleString(getActiveLocale())}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {runtimeInfo?.runtime === "desktop" && isRunEditable(run) && <button type="button" className={buttonSecondary} onClick={() => void showCompanion()}><MonitorUp size={16} /> Mostrar assistente</button>}
-            {run.status === "in_progress" && <button type="button" className={buttonSecondary} onClick={() => void transition("paused")}><CirclePause size={16} /> Pausar</button>}
-            {run.status === "paused" && <button type="button" className={buttonPrimary} onClick={() => void transition("in_progress")}><CirclePlay size={16} /> Retomar</button>}
-            {(run.status === "in_progress" || run.status === "paused") && <button type="button" className={buttonDanger} onClick={() => setPendingFinalStatus("aborted")}><Square size={15} /> Abortar</button>}
-            {run.status === "in_progress" && <button type="button" className={buttonPrimary} onClick={() => setPendingFinalStatus("completed")}><CheckCircle2 size={16} /> Concluir</button>}
+            {runtimeInfo?.runtime === "desktop" && isRunEditable(run) && <button type="button" className={buttonSecondary} onClick={() => void showCompanion()}><MonitorUp size={16} /> {tr("Mostrar assistente")}</button>}
+            {run.status === "in_progress" && <button type="button" className={buttonSecondary} onClick={() => void transition("paused")}><CirclePause size={16} /> {tr("Pausar")}</button>}
+            {run.status === "paused" && <button type="button" className={buttonPrimary} onClick={() => void transition("in_progress")}><CirclePlay size={16} /> {tr("Retomar")}</button>}
+            {(run.status === "in_progress" || run.status === "paused") && <button type="button" className={buttonDanger} onClick={() => setPendingFinalStatus("aborted")}><Square size={15} /> {tr("Abortar")}</button>}
+            {run.status === "in_progress" && <button type="button" className={buttonPrimary} onClick={() => setPendingFinalStatus("completed")}><CheckCircle2 size={16} /> {tr("Concluir")}</button>}
           </div>
         </div>
         <div className="mt-5">
-          <div className="mb-1 flex justify-between text-xs font-bold text-muted"><span>{progress.executed} de {progress.total} passos registrados</span><span className="tabular-nums">{progress.percent}%</span></div>
+          <div className="mb-1 flex justify-between text-xs font-bold text-muted"><span>{tr(`${progress.executed} de ${progress.total} passos registrados`)}</span><span className="tabular-nums">{progress.percent}%</span></div>
           <div className="h-2 overflow-hidden rounded-full bg-shell"><div className="h-full rounded-full bg-run-mark transition-all" style={{ width: `${progress.percent}%` }} /></div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {(Object.keys(counts) as StepStatus[]).filter((status) => counts[status] > 0).map((status) => <span key={status} className="text-xs text-muted"><strong className="text-body">{counts[status]}</strong> {counts[status] === 1 ? "caso" : "casos"} {stepStatusLabel[status].toLowerCase()}</span>)}
-          <span className="flex items-center gap-1.5 text-xs text-muted"><Lock size={14} aria-hidden="true" /> Snapshot protegido: alterações futuras não mudam esta tentativa.</span>
+          {(Object.keys(counts) as StepStatus[]).filter((status) => counts[status] > 0).map((status) => <span key={status} className="text-xs text-muted"><strong className="text-body">{counts[status]}</strong> {counts[status] === 1 ? tr("caso") : tr("casos")} {tr(stepStatusLabel[status]).toLocaleLowerCase(getActiveLocale())}</span>)}
+          <span className="flex items-center gap-1.5 text-xs text-muted"><Lock size={14} aria-hidden="true" /> {tr("Snapshot protegido: alterações futuras não mudam esta tentativa.")}</span>
         </div>
       </header>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[300px_1fr]">
         <aside className="xl:sticky xl:top-22 xl:self-start">
           <div className="mb-3 xl:hidden">
-            <label htmlFor="runner-case" className="block text-xs font-bold text-subtle">Caso atual</label>
-            <Select id="runner-case" className="mt-1" ariaLabel="Caso atual" value={selectedCase?.id ?? ""} onChange={selectCase} options={caseOptions} searchable={caseOptions.length > 8} searchPlaceholder="Buscar caso…" />
+            <label htmlFor="runner-case" className="block text-xs font-bold text-subtle">{tr("Caso atual")}</label>
+            <Select id="runner-case" className="mt-1" ariaLabel={tr("Caso atual")} value={selectedCase?.id ?? ""} onChange={selectCase} options={caseOptions} searchable={caseOptions.length > 8} searchPlaceholder={tr("Buscar caso…")} />
           </div>
           <div className="hidden max-h-[calc(100vh-8rem)] space-y-2 overflow-y-auto rounded-2xl border border-hairline bg-raised p-3 shadow-sm xl:block">
             {run.snapshot.cases.map((testCase, index) => {
               const status = deriveCaseStatus(run, testCase);
-              return <button key={testCase.id} type="button" onClick={() => selectCase(testCase.id)} className={`w-full rounded-xl border p-3 text-left transition ${selectedCase?.id === testCase.id ? "border-run-line bg-run-tint" : "border-transparent hover:bg-surface"}`}><div className="flex items-center gap-2"><span className="text-xs font-bold text-faint">{index + 1}</span><StatusBadge value={status} label={stepStatusLabel[status]} /></div><p className="mt-2 text-sm font-bold text-body">{testCase.title}</p><p className="mt-1 text-[11px] text-muted">{testCase.id} · {testCase.steps.length} passo(s)</p></button>;
+              return <button key={testCase.id} type="button" onClick={() => selectCase(testCase.id)} className={`w-full rounded-xl border p-3 text-left transition ${selectedCase?.id === testCase.id ? "border-run-line bg-run-tint" : "border-transparent hover:bg-surface"}`}><div className="flex items-center gap-2"><span className="text-xs font-bold text-faint">{index + 1}</span><StatusBadge value={status} label={stepStatusLabel[status]} /></div><p className="mt-2 text-sm font-bold text-body">{testCase.title}</p><p className="mt-1 text-[11px] text-muted">{testCase.id} · {testCase.steps.length} {tr("passo(s)")}</p></button>;
             })}
           </div>
         </aside>
@@ -528,12 +530,12 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
                     <h2 className="mt-2 text-xl font-bold text-body">{selectedCase.title}</h2>
                   </div>
                   <div className="flex shrink-0 items-center justify-between gap-2 rounded-xl border border-hairline bg-surface p-1.5 sm:justify-start">
-                    <button type="button" aria-label="Passo anterior" className="rounded-lg p-2 text-subtle transition hover:bg-raised disabled:cursor-not-allowed disabled:opacity-35" disabled={activeStepIndex === 0} onClick={() => moveActiveStep(-1)}><ChevronLeft size={18} /></button>
-                    <span className="min-w-24 text-center text-xs font-bold text-control">Passo {activeStepIndex + 1} de {selectedCase.steps.length}</span>
-                    <button type="button" aria-label="Próximo passo" className="rounded-lg p-2 text-subtle transition hover:bg-raised disabled:cursor-not-allowed disabled:opacity-35" disabled={activeStepIndex >= selectedCase.steps.length - 1} onClick={() => moveActiveStep(1)}><ChevronRight size={18} /></button>
+                    <button type="button" aria-label={tr("Passo anterior")} className="rounded-lg p-2 text-subtle transition hover:bg-raised disabled:cursor-not-allowed disabled:opacity-35" disabled={activeStepIndex === 0} onClick={() => moveActiveStep(-1)}><ChevronLeft size={18} /></button>
+                    <span className="min-w-24 text-center text-xs font-bold text-control">{tr("Passo")} {activeStepIndex + 1} {tr("de")} {selectedCase.steps.length}</span>
+                    <button type="button" aria-label={tr("Próximo passo")} className="rounded-lg p-2 text-subtle transition hover:bg-raised disabled:cursor-not-allowed disabled:opacity-35" disabled={activeStepIndex >= selectedCase.steps.length - 1} onClick={() => moveActiveStep(1)}><ChevronRight size={18} /></button>
                   </div>
                 </div>
-                {selectedCase.precondition && <p className="mt-2 rounded-xl border border-hairline bg-raised p-3 text-sm text-subtle"><strong>Pré-condição:</strong> {selectedCase.precondition}</p>}
+                {selectedCase.precondition && <p className="mt-2 rounded-xl border border-hairline bg-raised p-3 text-sm text-subtle"><strong>{tr("Pré-condição:")}</strong> {selectedCase.precondition}</p>}
               </div>
               <div className="space-y-3">{selectedCase.steps.map((step) => {
                 const key = resultKey(selectedCase.id, step.id);
@@ -566,31 +568,31 @@ export function RunRunner({ run, onBack }: { run: TestRun; onBack: () => void })
       <Modal
         open={pendingFinalStatus !== null}
         onClose={() => { if (!ending) setPendingFinalStatus(null); }}
-        title={pendingFinalStatus === "aborted" ? "Abortar tentativa?" : "Concluir tentativa?"}
+        title={pendingFinalStatus === "aborted" ? tr("Abortar tentativa?") : tr("Concluir tentativa?")}
         description={pendingFinalStatus === "aborted"
-          ? "A tentativa será encerrada como abortada. O snapshot e os resultados já registrados continuarão no histórico."
-          : "Todos os resultados serão preservados e esta tentativa ficará bloqueada para edição."}
+          ? tr("A tentativa será encerrada como abortada. O snapshot e os resultados já registrados continuarão no histórico.")
+          : tr("Todos os resultados serão preservados e esta tentativa ficará bloqueada para edição.")}
         size="sm"
         tone={pendingFinalStatus === "aborted" ? "danger" : "default"}
         showClose={false}
         closeOnBackdrop={false}
         footer={(
           <>
-            <button type="button" className={buttonSecondary} disabled={ending} onClick={() => setPendingFinalStatus(null)}>Cancelar</button>
+            <button type="button" className={buttonSecondary} disabled={ending} onClick={() => setPendingFinalStatus(null)}>{tr("Cancelar")}</button>
             <Button
               variant={pendingFinalStatus === "aborted" ? "danger" : "primary"}
               loading={ending}
               loadingLabel={pendingFinalStatus === "completed" && pendingCount ? `Salvando ${flushed} de ${pendingCount}…` : "Encerrando…"}
               onClick={() => { if (pendingFinalStatus) void transition(pendingFinalStatus); }}
             >
-              {pendingFinalStatus === "aborted" ? "Confirmar aborto" : "Concluir e bloquear"}
+              {pendingFinalStatus === "aborted" ? tr("Confirmar aborto") : tr("Concluir e bloquear")}
             </Button>
           </>
         )}
       >
         {pendingFinalStatus === "completed" && pendingCount > 0
-          ? <p className="text-sm text-subtle">{pendingCount} resultado(s) de passo ainda não salvo(s) serão aplicados agora, antes do bloqueio.</p>
-          : <p className="text-sm text-subtle">Nenhuma alteração pendente. A tentativa será encerrada como está.</p>}
+          ? <p className="text-sm text-subtle">{tr(`${pendingCount} resultado(s) de passo ainda não salvo(s) serão aplicados agora, antes do bloqueio.`)}</p>
+          : <p className="text-sm text-subtle">{tr("Nenhuma alteração pendente. A tentativa será encerrada como está.")}</p>}
       </Modal>
     </>
   );

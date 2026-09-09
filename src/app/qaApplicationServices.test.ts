@@ -204,10 +204,42 @@ test("preferências locais não entram no snapshot portátil nem avançam storag
   const adapter = new MemoryWorkspaceAdapter({ initialWorkspace: createEmptyWorkspaceData() });
   const store = storeFor(adapter);
   await store.getState().initialize();
-  await store.getState().setPreference({ sidebarCollapsed: true });
+  await store.getState().setPreference({ sidebarCollapsed: true, theme: "dark", locale: "es-ES" });
   assert.equal(store.getState().preferences.sidebarCollapsed, true);
+  assert.equal(store.getState().preferences.theme, "dark");
+  assert.equal(store.getState().preferences.locale, "es-ES");
   assert.equal(store.getState().storageRevision, 0);
   assert.equal("preferences" in adapter.snapshot().workspace, false);
+});
+
+test("cor opcional da coluna persiste no adapter web e pode voltar para sem cor", async () => {
+  const values = new Map<string, unknown>();
+  const storage: AsyncKeyValueStorage = {
+    async get<T>(key: string) { return values.get(key) as T | undefined; },
+    async set<T>(key: string, value: T) { values.set(key, value); },
+    async delete(key: string) { values.delete(key); },
+  };
+
+  const writer = storeFor(new WebWorkspaceAdapter(storage));
+  await writer.getState().initialize();
+  assert.equal(writer.getState().demandColumns.every((column) => column.color === undefined), true);
+
+  const created = await writer.getState().addDemandColumn("Homologação", "active", "violet");
+  assert.equal(created.ok, true);
+  assert.equal(created.value?.color, "violet");
+
+  const reader = storeFor(new WebWorkspaceAdapter(storage));
+  await reader.getState().initialize();
+  const persisted = reader.getState().demandColumns.find((column) => column.id === created.value?.id);
+  assert.equal(persisted?.color, "violet");
+
+  const cleared = await reader.getState().updateDemandColumn(persisted!.id, persisted!.name, persisted!.semantic);
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.value?.color, undefined);
+
+  const reopened = storeFor(new WebWorkspaceAdapter(storage));
+  await reopened.getState().initialize();
+  assert.equal(reopened.getState().demandColumns.find((column) => column.id === persisted!.id)?.color, undefined);
 });
 
 test("gravação MP4 é persistida como evidência do passo sem passar pela compactação de imagens", async () => {

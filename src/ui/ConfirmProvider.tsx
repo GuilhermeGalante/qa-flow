@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { Modal } from "./Modal";
 import { buttonDanger, buttonPrimary, buttonSecondary } from "./styles";
+import { tr } from "../i18n";
 
 export interface ConfirmOptions {
   title: string;
@@ -63,10 +64,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           footer={(
             <>
               <button ref={cancelRef} type="button" className={buttonSecondary} onClick={() => settle(false)}>
-                {options.cancelLabel ?? "Cancelar"}
+                {tr(options.cancelLabel ?? "Cancelar")}
               </button>
               <button type="button" className={danger ? buttonDanger : buttonPrimary} onClick={() => settle(true)}>
-                {options.confirmLabel ?? "Confirmar"}
+                {tr(options.confirmLabel ?? "Confirmar")}
               </button>
             </>
           )}
@@ -79,7 +80,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           {options.impact && options.impact.length > 0 && (
             <div className={options.itemLabel ? "mt-4" : undefined}>
               <p className="text-xs font-bold text-muted">
-                {options.impactTitle ?? `Impacto em ${options.impact.length} ${options.impact.length === 1 ? "item" : "itens"}`}
+                {tr(options.impactTitle ?? `Impacto em ${options.impact.length} ${options.impact.length === 1 ? "item" : "itens"}`)}
               </p>
               <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-xl border border-warn-line bg-warn-tint px-4 py-3 text-sm text-warn-deep">
                 {options.impact.map((item) => <li key={item} className="truncate" title={item}>{item}</li>)}
@@ -87,7 +88,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             </div>
           )}
           {!options.itemLabel && !options.impact?.length && !options.description && (
-            <p className="text-sm text-muted">Esta ação precisa da sua confirmação.</p>
+            <p className="text-sm text-muted">{tr("Esta ação precisa da sua confirmação.")}</p>
           )}
         </Modal>
       )}

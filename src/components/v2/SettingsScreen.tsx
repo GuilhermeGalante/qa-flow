@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
-import { Database, Download, FolderGit2, RefreshCw, Upload } from "lucide-react";
+import { Database, Download, FolderGit2, Languages, RefreshCw, Upload } from "lucide-react";
 import type { ImportPreview, RepositoryPreview, UpdateState } from "../../platform/contracts/dtos";
+import { getActiveLocale, normalizeUiLocale, tr, type UiLocale } from "../../i18n";
 import { useQaStore } from "../../store/useQaStore";
 import { Button } from "../../ui/Button";
 import { useConfirm } from "../../ui/ConfirmProvider";
+import { SegmentedControl } from "../../ui/SegmentedControl";
+import { Select } from "../../ui/Select";
 import { useToast } from "../../ui/ToastProvider";
+import { CountryFlag } from "../../ui/CountryFlag";
+import { normalizeUiTheme, type UiTheme } from "../../uiPreferences";
 import { Notice, PageHeader, buttonDanger, buttonSecondary, inputClass } from "./Shared";
 
 export function SettingsScreen() {
@@ -40,6 +45,8 @@ export function SettingsScreen() {
   const [updateBusy, setUpdateBusy] = useState<"check" | "install" | null>(null);
   const workspaceTransfersPending = runtimeInfo?.runtime === "desktop"
     && runtimeInfo.workspaceTransfers !== true;
+  const theme = normalizeUiTheme(preferences.theme);
+  const locale = normalizeUiLocale(preferences.locale, navigator.language);
 
   useEffect(() => setWorkspaceNameDraft(settings.name), [settings.name]);
   useEffect(() => setRecoveryCountDraft(String(preferences.recoveryRetentionCount ?? 20)), [preferences.recoveryRetentionCount]);
@@ -73,17 +80,17 @@ export function SettingsScreen() {
     if (!preview) return;
     if (mode === "replace") {
       const confirmed = await confirm({
-        title: "Substituir todo o workspace local?",
-        description: "O conteúdo atual deste dispositivo será trocado pelo backup validado. O desktop criará uma cópia de recuperação automática antes da substituição.",
-        impactTitle: "Será substituído",
+        title: tr("Substituir todo o workspace local?"),
+        description: tr("O conteúdo atual deste dispositivo será trocado pelo backup validado. O desktop criará uma cópia de recuperação automática antes da substituição."),
+        impactTitle: tr("Será substituído"),
         impact: [
-          `${cases.length} caso(s) → ${preview.summary.cases}`,
-          `${plans.length} plano(s) → ${preview.summary.plans}`,
-          `${runs.length} execução(ões) → ${preview.summary.runs}`,
-          `${demands.length} demanda(s) → ${preview.summary.demands}`,
-          `${evidence.length} evidência(s) → ${preview.summary.evidence}`,
+          tr(`${cases.length} caso(s) → ${preview.summary.cases}`),
+          tr(`${plans.length} plano(s) → ${preview.summary.plans}`),
+          tr(`${runs.length} execução(ões) → ${preview.summary.runs}`),
+          tr(`${demands.length} demanda(s) → ${preview.summary.demands}`),
+          tr(`${evidence.length} evidência(s) → ${preview.summary.evidence}`),
         ],
-        confirmLabel: "Substituir workspace",
+        confirmLabel: tr("Substituir workspace"),
         tone: "danger",
       });
       if (!confirmed) return;
@@ -132,77 +139,122 @@ export function SettingsScreen() {
   const applyUpdate = async () => {
     if (updateState?.status !== "available") return;
     const accepted = await confirm({
-      title: `Instalar QA Flow ${updateState.version}?`,
-      description: "O pacote será baixado por HTTPS, terá a assinatura do updater validada e fechará o aplicativo durante a instalação.",
-      impactTitle: "Antes de continuar",
-      impact: ["Conclua qualquer edição em andamento.", "O Windows poderá exibir o progresso do instalador."],
-      confirmLabel: "Baixar e instalar",
+      title: tr(`Instalar QA Flow ${updateState.version}?`),
+      description: tr("O pacote será baixado por HTTPS, terá a assinatura do updater validada e fechará o aplicativo durante a instalação."),
+      impactTitle: tr("Antes de continuar"),
+      impact: [tr("Conclua qualquer edição em andamento."), tr("O Windows poderá exibir o progresso do instalador.")],
+      confirmLabel: tr("Baixar e instalar"),
     });
     if (!accepted) return;
     setUpdateBusy("install");
     try { toast.fromResult(await installUpdate(updateState.version)); } finally { setUpdateBusy(null); }
   };
 
+  const updateInterfacePreference = async (changes: { theme?: UiTheme; locale?: UiLocale }) => {
+    const result = await setPreference(changes);
+    if (!result.ok) toast.fromResult(result);
+  };
+
   return (
     <>
-      <PageHeader title="Configurações" description="Controle o workspace local, sincronize uma estrutura versionável e mantenha backups portáteis." />
-      {storageError && <div className="mb-5"><Notice tone="error" title="Problema de armazenamento">{storageError}</Notice></div>}
+      <PageHeader title={tr("Configurações")} description={tr("Controle o workspace local, sincronize uma estrutura versionável e mantenha backups portáteis.")} />
+      {storageError && <div className="mb-5"><Notice tone="error" title={tr("Problema de armazenamento")}>{storageError}</Notice></div>}
       {workspaceTransfersPending && (
         <div className="mb-5">
-          <Notice tone="warning" title="Transferências na próxima fase">
-            Evidências e arquivos gerados já usam armazenamento nativo. Backup, importação e repositório .qaflow entram na Fase 6.
+          <Notice tone="warning" title={tr("Transferências na próxima fase")}>
+            {tr("Evidências e arquivos gerados já usam armazenamento nativo. Backup, importação e repositório .qaflow entram na Fase 6.")}
           </Notice>
         </div>
       )}
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-          <div className="flex items-start gap-3"><span className="rounded-xl bg-run-tint p-2.5 text-run"><Database size={20} /></span><div><h2 className="font-bold text-body">Workspace</h2><p className="mt-1 text-sm text-muted">Dados portáteis e preferências locais ficam em categorias separadas.</p></div></div>
-          <div className="mt-5 rounded-xl border border-hairline p-4 text-sm text-subtle">
-            <strong className="text-body">Runtime atual</strong>
-            <p className="mt-1">{runtimeInfo?.runtime === "desktop" ? "Aplicativo desktop" : "Navegador"} · {runtimeInfo?.persistence === "memory" ? "memória temporária" : "persistência local"}</p>
+        <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm xl:col-span-2">
+          <div className="flex items-start gap-3">
+            <span className="rounded-xl bg-run-tint p-2.5 text-run"><Languages size={20} aria-hidden="true" /></span>
+            <div>
+              <h2 className="font-bold text-body">{tr("Aparência e idioma")}</h2>
+              <p className="mt-1 max-w-3xl text-sm text-muted">{tr("Escolha como o QA Flow aparece neste dispositivo. Essas preferências não entram no backup do workspace.")}</p>
+            </div>
           </div>
-          <label className="mt-4 block text-xs font-bold text-subtle">Nome do workspace<input className={`${inputClass} mt-1`} value={workspaceNameDraft} onChange={(event) => setWorkspaceNameDraft(event.target.value)} onBlur={() => { if (workspaceNameDraft !== settings.name) void updateSettings({ name: workspaceNameDraft }); }} /></label>
-          <label className="mt-4 flex items-start gap-3 rounded-xl border border-hairline p-3 text-sm text-control"><input type="checkbox" checked={settings.compactEvidence} onChange={(event) => { void updateSettings({ compactEvidence: event.target.checked }); }} className="mt-1 h-4 w-4 accent-run" /><span><strong className="block text-body">Compactar novas evidências</strong><span className="mt-1 block text-xs text-muted">Reduz imagens antes de enviá-las ao adapter do runtime.</span></span></label>
-          <div className="mt-5 rounded-xl bg-surface p-4 text-sm text-subtle"><strong className="text-body">Estado confirmado</strong><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>{cases.length} caso(s)</span><span>{plans.length} plano(s)</span><span>{runs.length} execução(ões)</span><span>{demands.length} demanda(s)</span><span>{evidence.length} evidência(s)</span></div></div>
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div>
+              <p className="mb-2 text-xs font-bold text-subtle">{tr("Tema")}</p>
+              <SegmentedControl
+                value={theme}
+                onChange={(value) => void updateInterfacePreference({ theme: value })}
+                ariaLabel={tr("Tema da interface")}
+                options={[
+                  { value: "light", label: tr("Claro") },
+                  { value: "dark", label: tr("Escuro") },
+                  { value: "system", label: tr("Sistema") },
+                ]}
+              />
+            </div>
+            <div>
+              <label htmlFor="interface-locale" className="mb-2 block text-xs font-bold text-subtle">{tr("Idioma")}</label>
+              <Select
+                id="interface-locale"
+                value={locale}
+                onChange={(value) => void updateInterfacePreference({ locale: value })}
+                ariaLabel={tr("Idioma da interface")}
+                options={[
+                  { value: "pt-BR", label: tr("Português (Brasil)"), icon: <CountryFlag country="BR" /> },
+                  { value: "en-US", label: tr("Inglês"), icon: <CountryFlag country="US" /> },
+                  { value: "es-ES", label: tr("Espanhol"), icon: <CountryFlag country="ES" /> },
+                ]}
+              />
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-muted">{tr("A alteração é aplicada imediatamente e fica salva apenas neste dispositivo.")}</p>
         </section>
 
         <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
-          <div className="flex items-start gap-3"><span className="rounded-xl bg-explore-tint p-2.5 text-explore"><FolderGit2 size={20} /></span><div><h2 className="font-bold text-body">Adaptador de repositório</h2><p className="mt-1 text-sm text-muted">O runtime cuida da seleção e do acesso à pasta; a tela não recebe paths internos.</p></div></div>
+          <div className="flex items-start gap-3"><span className="rounded-xl bg-run-tint p-2.5 text-run"><Database size={20} /></span><div><h2 className="font-bold text-body">Workspace</h2><p className="mt-1 text-sm text-muted">{tr("Dados portáteis e preferências locais ficam em categorias separadas.")}</p></div></div>
+          <div className="mt-5 rounded-xl border border-hairline p-4 text-sm text-subtle">
+            <strong className="text-body">{tr("Runtime atual")}</strong>
+            <p className="mt-1">{runtimeInfo?.runtime === "desktop" ? tr("Aplicativo desktop") : tr("Navegador")} · {runtimeInfo?.persistence === "memory" ? tr("memória temporária") : tr("persistência local")}</p>
+          </div>
+          <label className="mt-4 block text-xs font-bold text-subtle">{tr("Nome do workspace")}<input className={`${inputClass} mt-1`} value={workspaceNameDraft} onChange={(event) => setWorkspaceNameDraft(event.target.value)} onBlur={() => { if (workspaceNameDraft !== settings.name) void updateSettings({ name: workspaceNameDraft }); }} /></label>
+          <label className="mt-4 flex items-start gap-3 rounded-xl border border-hairline p-3 text-sm text-control"><input type="checkbox" checked={settings.compactEvidence} onChange={(event) => { void updateSettings({ compactEvidence: event.target.checked }); }} className="mt-1 h-4 w-4 accent-run" /><span><strong className="block text-body">{tr("Compactar novas evidências")}</strong><span className="mt-1 block text-xs text-muted">{tr("Reduz imagens antes de enviá-las ao adapter do runtime.")}</span></span></label>
+          <div className="mt-5 rounded-xl bg-surface p-4 text-sm text-subtle"><strong className="text-body">{tr("Estado confirmado")}</strong><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>{cases.length} {tr("caso(s)")}</span><span>{plans.length} {tr("plano(s)")}</span><span>{runs.length} {tr("execução(ões)")}</span><span>{demands.length} {tr("demanda(s)")}</span><span>{evidence.length} {tr("evidência(s)")}</span></div></div>
+        </section>
+
+        <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm">
+          <div className="flex items-start gap-3"><span className="rounded-xl bg-explore-tint p-2.5 text-explore"><FolderGit2 size={20} /></span><div><h2 className="font-bold text-body">{tr("Adaptador de repositório")}</h2><p className="mt-1 text-sm text-muted">{tr("O runtime cuida da seleção e do acesso à pasta; a tela não recebe paths internos.")}</p></div></div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Button variant="primary" loading={busy === "push"} loadingLabel="Gravando…" disabled={workspaceTransfersPending || busy !== null} icon={<Upload size={16} />} onClick={() => void pushCurrentRepository()}>Gravar .qaflow</Button>
-            <Button loading={busy === "pull"} loadingLabel="Validando…" disabled={workspaceTransfersPending || busy !== null} icon={<RefreshCw size={16} />} onClick={() => void selectRepository()}>Selecionar para mesclar</Button>
+            <Button variant="primary" loading={busy === "push"} loadingLabel="Gravando…" disabled={workspaceTransfersPending || busy !== null} icon={<Upload size={16} />} onClick={() => void pushCurrentRepository()}>{tr("Gravar .qaflow")}</Button>
+            <Button loading={busy === "pull"} loadingLabel="Validando…" disabled={workspaceTransfersPending || busy !== null} icon={<RefreshCw size={16} />} onClick={() => void selectRepository()}>{tr("Selecionar para mesclar")}</Button>
           </div>
           {repositoryPreview && (
-            <div className="mt-4"><Notice tone="warning" title={`Repositório validado: ${repositoryPreview.repositoryName}`}><p>{repositoryPreview.summary.cases} casos, {repositoryPreview.summary.plans} planos e {repositoryPreview.summary.runs} execuções.</p><div className="mt-3 flex gap-2"><Button variant="primary" disabled={busy !== null} onClick={() => void mergeRepository()}>Mesclar agora</Button><button type="button" className={buttonSecondary} onClick={() => setRepositoryPreview(null)}>Cancelar</button></div></Notice></div>
+            <div className="mt-4"><Notice tone="warning" title={tr(`Repositório validado: ${repositoryPreview.repositoryName}`)}><p>{tr(`${repositoryPreview.summary.cases} casos, ${repositoryPreview.summary.plans} planos e ${repositoryPreview.summary.runs} execuções.`)}</p><div className="mt-3 flex gap-2"><Button variant="primary" disabled={busy !== null} onClick={() => void mergeRepository()}>{tr("Mesclar agora")}</Button><button type="button" className={buttonSecondary} onClick={() => setRepositoryPreview(null)}>{tr("Cancelar")}</button></div></Notice></div>
           )}
         </section>
 
         <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm xl:col-span-2">
-          <h2 className="font-bold text-body">Backup e restauração</h2><p className="mt-1 text-sm text-muted">O adapter valida o backup antes de devolver uma prévia tokenizada.</p>
+          <h2 className="font-bold text-body">{tr("Backup e restauração")}</h2><p className="mt-1 text-sm text-muted">{tr("O adapter valida o backup antes de devolver uma prévia tokenizada.")}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="primary" loading={busy === "export"} loadingLabel="Exportando…" disabled={workspaceTransfersPending || busy !== null} icon={<Download size={16} />} onClick={() => void exportCurrentBackup()}>Exportar backup</Button>
-            <button type="button" className={buttonSecondary} disabled={workspaceTransfersPending || busy !== null} onClick={() => void selectBackup()}><Upload size={16} /> Selecionar backup</button>
+            <Button variant="primary" loading={busy === "export"} loadingLabel="Exportando…" disabled={workspaceTransfersPending || busy !== null} icon={<Download size={16} />} onClick={() => void exportCurrentBackup()}>{tr("Exportar backup")}</Button>
+            <button type="button" className={buttonSecondary} disabled={workspaceTransfersPending || busy !== null} onClick={() => void selectBackup()}><Upload size={16} /> {tr("Selecionar backup")}</button>
           </div>
           {runtimeInfo?.runtime === "desktop" && (
             <div className="mt-4 grid gap-3 rounded-xl border border-hairline bg-surface p-4 sm:grid-cols-2">
-              <label className="text-xs font-bold text-subtle">Máximo de cópias
+              <label className="text-xs font-bold text-subtle">{tr("Máximo de cópias")}
                 <input type="number" min={1} max={100} className={`${inputClass} mt-1`} value={recoveryCountDraft} onChange={(event) => setRecoveryCountDraft(event.target.value)} onBlur={() => void saveRetention("recoveryRetentionCount", recoveryCountDraft)} />
               </label>
-              <label className="text-xs font-bold text-subtle">Idade máxima em dias
+              <label className="text-xs font-bold text-subtle">{tr("Idade máxima em dias")}
                 <input type="number" min={1} max={3650} className={`${inputClass} mt-1`} value={recoveryDaysDraft} onChange={(event) => setRecoveryDaysDraft(event.target.value)} onBlur={() => void saveRetention("recoveryRetentionDays", recoveryDaysDraft)} />
               </label>
-              <p className="text-xs text-muted sm:col-span-2">A limpeza ocorre após importações e ao alterar esta política. A cópia válida mais recente nunca é removida.</p>
+              <p className="text-xs text-muted sm:col-span-2">{tr("A limpeza ocorre após importações e ao alterar esta política. A cópia válida mais recente nunca é removida.")}</p>
             </div>
           )}
           {preview && (
             <div className="mt-4">
-              <Notice tone="warning" title={`Prévia validada: ${preview.sourceName}`}>
-                <p>{preview.summary.cases} casos, {preview.summary.plans} planos, {preview.summary.runs} execuções, {preview.summary.demands} demandas, {preview.summary.evidence} evidências.</p>
+              <Notice tone="warning" title={tr(`Prévia validada: ${preview.sourceName}`)}>
+                <p>{tr(`${preview.summary.cases} casos, ${preview.summary.plans} planos, ${preview.summary.runs} execuções, ${preview.summary.demands} demandas, ${preview.summary.evidence} evidências.`)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button variant="primary" loading={busy === "import"} loadingLabel="Mesclando…" disabled={busy !== null} onClick={() => void importPreview("merge")}>Mesclar por ID</Button>
-                  <button type="button" className={buttonDanger} disabled={busy !== null} onClick={() => void importPreview("replace")}>Substituir workspace</button>
-                  <button type="button" className={buttonSecondary} disabled={busy !== null} onClick={() => setPreview(null)}>Cancelar</button>
+                  <Button variant="primary" loading={busy === "import"} loadingLabel={tr("Mesclando…")} disabled={busy !== null} onClick={() => void importPreview("merge")}>{tr("Mesclar por ID")}</Button>
+                  <button type="button" className={buttonDanger} disabled={busy !== null} onClick={() => void importPreview("replace")}>{tr("Substituir workspace")}</button>
+                  <button type="button" className={buttonSecondary} disabled={busy !== null} onClick={() => setPreview(null)}>{tr("Cancelar")}</button>
                 </div>
               </Notice>
             </div>
@@ -211,19 +263,19 @@ export function SettingsScreen() {
 
         {runtimeInfo?.runtime === "desktop" && (
           <section className="rounded-2xl border border-hairline bg-raised p-5 shadow-sm xl:col-span-2">
-            <h2 className="font-bold text-body">Atualizações do aplicativo</h2>
-            <p className="mt-1 text-sm text-muted">O backend consulta somente o endpoint HTTPS incorporado na build e valida a assinatura antes de instalar.</p>
+            <h2 className="font-bold text-body">{tr("Atualizações do aplicativo")}</h2>
+            <p className="mt-1 text-sm text-muted">{tr("O backend consulta somente o endpoint HTTPS incorporado na build e valida a assinatura antes de instalar.")}</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button loading={updateBusy === "check"} loadingLabel="Verificando…" disabled={updateBusy !== null} icon={<RefreshCw size={16} />} onClick={() => void checkUpdates()}>Verificar atualização</Button>
-              {updateState?.status === "available" && <Button variant="primary" loading={updateBusy === "install"} loadingLabel="Instalando…" disabled={updateBusy !== null} icon={<Download size={16} />} onClick={() => void applyUpdate()}>Instalar {updateState.version}</Button>}
+              <Button loading={updateBusy === "check"} loadingLabel={tr("Verificando…")} disabled={updateBusy !== null} icon={<RefreshCw size={16} />} onClick={() => void checkUpdates()}>{tr("Verificar atualização")}</Button>
+              {updateState?.status === "available" && <Button variant="primary" loading={updateBusy === "install"} loadingLabel={tr("Instalando…")} disabled={updateBusy !== null} icon={<Download size={16} />} onClick={() => void applyUpdate()}>{tr("Instalar")} {updateState.version}</Button>}
             </div>
-            {updateState?.status === "upToDate" && <div className="mt-4"><Notice tone="success" title="Aplicativo atualizado">Nenhuma versão mais recente foi encontrada.</Notice></div>}
-            {updateState?.status === "disabled" && <div className="mt-4"><Notice tone="warning" title="Updater não ativado nesta build">{updateState.reason}</Notice></div>}
-            {updateState?.status === "available" && <div className="mt-4"><Notice tone="warning" title={`Versão ${updateState.version} disponível`}>{updateState.notes || "Uma atualização assinada está pronta para instalação."}</Notice></div>}
+            {updateState?.status === "upToDate" && <div className="mt-4"><Notice tone="success" title={tr("Aplicativo atualizado")}>{tr("Nenhuma versão mais recente foi encontrada.")}</Notice></div>}
+            {updateState?.status === "disabled" && <div className="mt-4"><Notice tone="warning" title={tr("Updater não ativado nesta build")}>{updateState.reason}</Notice></div>}
+            {updateState?.status === "available" && <div className="mt-4"><Notice tone="warning" title={tr(`Versão ${updateState.version} disponível`)}>{updateState.notes || tr("Uma atualização assinada está pronta para instalação.")}</Notice></div>}
           </section>
         )}
 
-        {migrationReport && <section className="rounded-2xl border border-pass-line bg-pass-tint p-5 xl:col-span-2"><h2 className="font-bold text-pass-deep">Migração v1 concluída</h2><p className="mt-1 text-sm text-pass-deep">Em {new Date(migrationReport.migratedAt).toLocaleString("pt-BR")}: {migrationReport.casesCreated} casos, {migrationReport.plansCreated} planos e {migrationReport.runsCreated} execuções.</p>{migrationReport.warnings.length > 0 && <ul className="mt-3 list-disc pl-5 text-xs text-pass-deep">{migrationReport.warnings.slice(0, 10).map((warning) => <li key={warning}>{warning}</li>)}</ul>}</section>}
+        {migrationReport && <section className="rounded-2xl border border-pass-line bg-pass-tint p-5 xl:col-span-2"><h2 className="font-bold text-pass-deep">{tr("Migração v1 concluída")}</h2><p className="mt-1 text-sm text-pass-deep">{tr("Em")} {new Date(migrationReport.migratedAt).toLocaleString(getActiveLocale())}: {tr(`${migrationReport.casesCreated} casos, ${migrationReport.plansCreated} planos e ${migrationReport.runsCreated} execuções.`)}</p>{migrationReport.warnings.length > 0 && <ul className="mt-3 list-disc pl-5 text-xs text-pass-deep">{migrationReport.warnings.slice(0, 10).map((warning) => <li key={warning}>{warning}</li>)}</ul>}</section>}
       </div>
     </>
   );

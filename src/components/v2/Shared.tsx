@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import type { CasePriority, LifecycleStatus, RunStatus, StepStatus } from "../../domain/types";
 import { focusRing, type SemanticTone } from "../../ui/styles";
+import { localizeReactNode, tr } from "../../i18n";
 
 /*
  * Vocabulário do produto: rótulos em português e a cor de cada estado.
@@ -76,15 +77,15 @@ const statusStyles: Record<string, string> = {
 };
 
 export function StatusBadge({ value, label }: { value: string; label: string }) {
-  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${statusStyles[value] ?? statusStyles.draft}`}>{label}</span>;
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${statusStyles[value] ?? statusStyles.draft}`}>{tr(label)}</span>;
 }
 
 export function PageHeader({ title, description, actions }: { title: string; description: string; actions?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <h1 className="text-2xl font-black tracking-[-0.035em] text-body md:text-3xl">{title}</h1>
-        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-subtle">{description}</p>
+        <h1 className="text-2xl font-black tracking-[-0.035em] text-body md:text-3xl">{tr(title)}</h1>
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-subtle">{tr(description)}</p>
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
     </div>
@@ -115,9 +116,9 @@ export function MetricCard({
   return (
     <article className="flex min-h-28 items-start justify-between gap-4 rounded-2xl border border-hairline bg-raised p-4 shadow-[0_8px_24px_rgb(15_23_42/0.035)] sm:p-5">
       <div className="min-w-0">
-        <p className="text-xs font-bold text-muted">{label}</p>
+        <p className="text-xs font-bold text-muted">{tr(label)}</p>
         <p className="mt-2 text-2xl font-black tracking-[-0.035em] tabular-nums text-body">{value}</p>
-        <div className="mt-1 text-xs leading-relaxed text-muted">{detail}</div>
+        <div className="mt-1 text-xs leading-relaxed text-muted">{localizeReactNode(detail)}</div>
       </div>
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${metricToneStyles[tone]}`} aria-hidden="true">{icon}</span>
     </article>
@@ -127,8 +128,8 @@ export function MetricCard({
 export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-hairline-strong bg-raised px-6 py-14 text-center">
-      <h2 className="text-lg font-bold text-body">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-muted">{description}</p>
+      <h2 className="text-lg font-bold text-body">{tr(title)}</h2>
+      <p className="mx-auto mt-2 max-w-xl text-sm text-muted">{tr(description)}</p>
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
@@ -166,13 +167,13 @@ export function Notice({
       className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${noticeTones[tone]}`}
     >
       <div className="min-w-0 flex-1">
-        {title && <p className="font-bold">{title}</p>}
-        <div className={title ? "mt-1" : undefined}>{children}</div>
+        {title && <p className="font-bold">{tr(title)}</p>}
+        <div className={title ? "mt-1" : undefined}>{localizeReactNode(children)}</div>
       </div>
       {onDismiss && (
         <button
           type="button"
-          aria-label="Dispensar mensagem"
+          aria-label={tr("Dispensar mensagem")}
           onClick={onDismiss}
           className={`-mr-1 shrink-0 rounded-lg p-1 opacity-70 transition hover:opacity-100 ${focusRing}`}
         >

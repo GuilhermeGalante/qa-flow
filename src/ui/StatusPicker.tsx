@@ -1,5 +1,6 @@
 import { useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 import { focusRing, toneSelected, type SemanticTone } from "./styles";
+import { tr } from "../i18n";
 
 export interface StatusOption<T extends string = string> {
   value: T;
@@ -104,7 +105,7 @@ export function StatusPicker<T extends string>({
     <div
       ref={containerRef}
       role="radiogroup"
-      aria-label={ariaLabel}
+      aria-label={tr(ariaLabel)}
       onKeyDown={handleKeyDown}
       className={`flex flex-wrap gap-1.5 ${className}`}
     >
@@ -121,7 +122,7 @@ export function StatusPicker<T extends string>({
             onClick={() => onChange(option.value)}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${focusRing} ${active ? toneSelected[option.tone] : "border-hairline bg-raised text-subtle hover:border-hairline-strong hover:text-body"}`}
           >
-            {option.label}
+            {tr(option.label)}
             {option.shortcut && (
               <kbd className={`hidden rounded border px-1 text-[10px] font-bold sm:inline ${active ? "border-current/25 opacity-70" : "border-hairline text-faint"}`}>
                 {option.shortcut}

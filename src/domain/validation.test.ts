@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { QA_FLOW_SCHEMA_VERSION, type CaseDefinition, type PlanDefinition, type TestRun } from "./types.ts";
-import { cloneJson, deriveCaseStatus, resultKey, runProgress, validateCaseDefinition, validatePlanDefinition } from "./validation.ts";
+import { createDefaultDemandColumns } from "./demands.ts";
+import { QA_FLOW_SCHEMA_VERSION, type CaseDefinition, type PlanDefinition, type TestRun, type WorkspaceBundle } from "./types.ts";
+import { cloneJson, deriveCaseStatus, resultKey, runProgress, validateCaseDefinition, validatePlanDefinition, validateWorkspaceBundle } from "./validation.ts";
 
 const now = "2026-08-25T12:00:00.000Z";
 
@@ -42,6 +43,26 @@ function validPlan(): PlanDefinition {
   };
 }
 
+function validWorkspaceBundle(): WorkspaceBundle {
+  return {
+    schemaVersion: QA_FLOW_SCHEMA_VERSION,
+    exportedAt: now,
+    cases: [],
+    plans: [],
+    runs: [],
+    reports: [],
+    demandColumns: createDefaultDemandColumns(now),
+    demands: [],
+    evidence: [],
+    settings: {
+      mode: "browser",
+      name: "Workspace",
+      repositoryPath: ".qaflow",
+      compactEvidence: true,
+    },
+  };
+}
+
 test("caso válido passa na validação", () => {
   assert.equal(validateCaseDefinition(validCase()).ok, true);
 });
@@ -60,6 +81,21 @@ test("plano rejeita referências duplicadas", () => {
   const result = validatePlanDefinition(candidate);
   assert.equal(result.ok, false);
   assert.ok(result.issues.some((issue) => issue.message.includes("duplicado")));
+});
+
+test("backup aceita cor de coluna opcional e rejeita valor fora da paleta", () => {
+  const neutral = validWorkspaceBundle();
+  assert.equal(validateWorkspaceBundle(neutral).ok, true);
+
+  const colored = cloneJson(neutral);
+  colored.demandColumns![0].color = "violet";
+  assert.equal(validateWorkspaceBundle(colored).ok, true);
+
+  const invalid = cloneJson(neutral);
+  (invalid.demandColumns![0] as { color?: string }).color = "blue";
+  const result = validateWorkspaceBundle(invalid);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((issue) => issue.path === "demandColumns[0].color"));
 });
 
 test("snapshot clonado não deriva da definição alterada depois", () => {

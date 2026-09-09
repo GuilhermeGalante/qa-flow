@@ -37,6 +37,7 @@ import {
   lifecycleLabel,
   priorityLabel,
 } from "./Shared";
+import { getActiveLocale, tr } from "../../i18n";
 
 interface CasesScreenProps {
   newCaseRequested?: boolean;
@@ -123,7 +124,7 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
       const key = testCase.path[0] || "Sem pasta";
       grouped.set(key, [...(grouped.get(key) ?? []), testCase]);
     });
-    return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right, "pt-BR"));
+    return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right, getActiveLocale()));
   }, [filtered]);
 
   const activeCases = cases.filter((testCase) => testCase.status === "active");
@@ -141,14 +142,14 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
           header: true,
           skipEmptyLines: false,
           complete: (result) => setImportPreview(parseCsvCases(result.data.filter((row) => Object.values(row).some((value) => value?.trim())))),
-          error: (error) => toast.show({ tone: "error", message: "Falha ao ler o CSV.", description: error.message }),
+          error: (error) => toast.show({ tone: "error", message: tr("Falha ao ler o CSV."), description: error.message }),
         });
       } else {
         const parsed = JSON.parse(await file.text()) as unknown;
         setImportPreview((Array.isArray(parsed) ? parsed : [parsed]) as CaseDefinition[]);
       }
     } catch (error) {
-      toast.show({ tone: "error", message: "Arquivo inválido.", description: error instanceof Error ? error.message : undefined });
+      toast.show({ tone: "error", message: tr("Arquivo inválido."), description: error instanceof Error ? error.message : undefined });
     } finally {
       event.target.value = "";
     }
@@ -164,7 +165,7 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
         const normalized = { ...candidate, description: candidate.description ?? "" };
         const validation = validateCaseDefinition(normalized);
         if (!validation.ok) {
-          errors.push(`${candidate.title || candidate.id || "Caso"}: ${validation.issues[0]?.message}`);
+          errors.push(`${candidate.title || candidate.id || tr("Caso")}: ${tr(validation.issues[0]?.message ?? "")}`);
           continue;
         }
         const result = await saveCase(normalized, null);
@@ -176,8 +177,8 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
     }
     toast.show({
       tone: errors.length ? "warning" : "success",
-      message: `${imported} caso(s) importado(s).`,
-      description: errors.length ? `${errors.length} rejeitado(s): ${errors.slice(0, 3).join("; ")}` : undefined,
+      message: tr(`${imported} caso(s) importado(s).`),
+      description: errors.length ? tr(`${errors.length} rejeitado(s): ${errors.slice(0, 3).join("; ")}`) : undefined,
     });
     setImportPreview(null);
   };
@@ -187,12 +188,12 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
       .filter((plan) => plan.status !== "archived" && plan.caseRefs.some((reference) => reference.caseId === testCase.id))
       .map((plan) => plan.name);
     const confirmed = await confirm({
-      title: "Arquivar este caso?",
-      description: "Ele sai do catálogo ativo. Snapshots de execuções e referências de planos continuam preservados.",
+      title: tr("Arquivar este caso?"),
+      description: tr("Ele sai do catálogo ativo. Snapshots de execuções e referências de planos continuam preservados."),
       itemLabel: testCase.title,
       impact,
-      impactTitle: `Referenciado por ${impact.length} plano(s) ativo(s)`,
-      confirmLabel: "Arquivar caso",
+      impactTitle: tr(`Referenciado por ${impact.length} plano(s) ativo(s)`),
+      confirmLabel: tr("Arquivar caso"),
       tone: "danger",
     });
     if (!confirmed) return;
@@ -209,59 +210,59 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
   return (
     <>
       <PageHeader
-        title="Casos de teste"
-        description="Definições reutilizáveis e versionadas. Pastas organizam o catálogo; planos e execuções preservam a revisão utilizada."
+        title={tr("Casos de teste")}
+        description={tr("Definições reutilizáveis e versionadas. Pastas organizam o catálogo; planos e execuções preservam a revisão utilizada.")}
         actions={(
           <>
             <input ref={fileRef} type="file" accept=".json,.csv,application/json,text/csv" className="hidden" onChange={(event) => void handleFile(event)} />
-            <button type="button" className={buttonSecondary} onClick={() => fileRef.current?.click()}><FileUp size={17} /> Importar</button>
-            <button type="button" className={buttonPrimary} onClick={() => setEditing(createBlankCase())}><Plus size={17} /> Novo caso</button>
+            <button type="button" className={buttonSecondary} onClick={() => fileRef.current?.click()}><FileUp size={17} /> {tr("Importar")}</button>
+            <button type="button" className={buttonPrimary} onClick={() => setEditing(createBlankCase())}><Plus size={17} /> {tr("Novo caso")}</button>
           </>
         )}
       />
 
-      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Indicadores do catálogo">
-        <MetricCard label="Total de casos" value={cases.length} detail={`${activeCases.length} ativo(s)`} icon={<BarChart3 size={18} />} />
-        <MetricCard label="Cobertura de automação" value={`${automationCoverage}%`} detail={`${automatedCases} caso(s) automatizado(s)`} icon={<Bot size={18} />} tone="pass" />
-        <MetricCard label="Casos críticos" value={criticalCases} detail="prioridade crítica no catálogo ativo" icon={<AlertTriangle size={18} />} tone={criticalCases ? "fail" : "neutral"} />
-        <MetricCard label="Sem pasta" value={unfiledCases} detail="caso(s) aguardando organização" icon={<FolderOpen size={18} />} tone={unfiledCases ? "warn" : "neutral"} />
+      <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label={tr("Indicadores do catálogo")}>
+        <MetricCard label={tr("Total de casos")} value={cases.length} detail={`${activeCases.length} ${tr("ativo(s)")}`} icon={<BarChart3 size={18} />} />
+        <MetricCard label={tr("Cobertura de automação")} value={`${automationCoverage}%`} detail={tr(`${automatedCases} caso(s) automatizado(s)`)} icon={<Bot size={18} />} tone="pass" />
+        <MetricCard label={tr("Casos críticos")} value={criticalCases} detail={tr("prioridade crítica no catálogo ativo")} icon={<AlertTriangle size={18} />} tone={criticalCases ? "fail" : "neutral"} />
+        <MetricCard label={tr("Sem pasta")} value={unfiledCases} detail={tr("caso(s) aguardando organização")} icon={<FolderOpen size={18} />} tone={unfiledCases ? "warn" : "neutral"} />
       </section>
 
       {importPreview && (
         <section className="mb-5 rounded-2xl border border-run-line bg-run-tint p-5" aria-labelledby="import-preview-title">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 id="import-preview-title" className="font-bold text-run-deep">Pré-visualização da importação</h2>
-              <p className="mt-1 text-sm text-run-deep">{importPreview.length} caso(s) detectado(s). Itens inválidos serão rejeitados com diagnóstico.</p>
+              <h2 id="import-preview-title" className="font-bold text-run-deep">{tr("Pré-visualização da importação")}</h2>
+              <p className="mt-1 text-sm text-run-deep">{tr(`${importPreview.length} caso(s) detectado(s). Itens inválidos serão rejeitados com diagnóstico.`)}</p>
             </div>
             <div className="flex gap-2">
-              <button type="button" className={buttonSecondary} disabled={importing} onClick={() => setImportPreview(null)}>Cancelar</button>
-              <Button variant="primary" loading={importing} loadingLabel="Importando…" onClick={() => void importCases()}>Validar e importar</Button>
+              <button type="button" className={buttonSecondary} disabled={importing} onClick={() => setImportPreview(null)}>{tr("Cancelar")}</button>
+              <Button variant="primary" loading={importing} loadingLabel={tr("Importando…")} onClick={() => void importCases()}>{tr("Validar e importar")}</Button>
             </div>
           </div>
           <ul className="mt-3 max-h-32 space-y-1 overflow-y-auto text-xs text-run-deep">
-            {importPreview.slice(0, 20).map((item, index) => <li key={`${item.id}-${index}`}>{item.id || "Sem ID"} · {item.title || "Sem título"} · {item.steps?.length ?? 0} passo(s)</li>)}
+            {importPreview.slice(0, 20).map((item, index) => <li key={`${item.id}-${index}`}>{item.id || tr("Sem ID")} · {item.title || tr("Sem título")} · {item.steps?.length ?? 0} {tr("passo(s)")}</li>)}
           </ul>
         </section>
       )}
 
       <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-hairline bg-raised p-3 shadow-[0_8px_24px_rgb(15_23_42/0.03)] xl:flex-row xl:items-center">
         <label className="relative xl:w-80">
-          <span className="sr-only">Buscar casos</span>
+          <span className="sr-only">{tr("Buscar casos")}</span>
           <Search className="pointer-events-none absolute left-3 top-3 text-muted" size={18} />
-          <input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por ID, título, pasta ou tag" />
+          <input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tr("Buscar por ID, título, pasta ou tag")} />
         </label>
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 xl:justify-end">
-          <SegmentedControl size="sm" ariaLabel="Filtrar prioridade" value={priority} onChange={setPriority} options={priorityOptions} />
-          <SegmentedControl size="sm" ariaLabel="Filtrar status" value={status} onChange={setStatus} options={statusOptions} />
+          <SegmentedControl size="sm" ariaLabel={tr("Filtrar prioridade")} value={priority} onChange={setPriority} options={priorityOptions} />
+          <SegmentedControl size="sm" ariaLabel={tr("Filtrar status")} value={status} onChange={setStatus} options={statusOptions} />
         </div>
       </div>
 
       {groups.length === 0 ? (
         <EmptyState
-          title="Nenhum caso encontrado"
-          description={cases.length ? "Ajuste a busca ou os filtros." : "Crie manualmente ou importe JSON/CSV. O catálogo fica salvo no seu dispositivo."}
-          action={!cases.length ? <button type="button" className={buttonPrimary} onClick={() => setEditing(createBlankCase())}>Criar primeiro caso</button> : undefined}
+          title={tr("Nenhum caso encontrado")}
+          description={cases.length ? tr("Ajuste a busca ou os filtros.") : tr("Crie manualmente ou importe JSON/CSV. O catálogo fica salvo no seu dispositivo.")}
+          action={!cases.length ? <button type="button" className={buttonPrimary} onClick={() => setEditing(createBlankCase())}>{tr("Criar primeiro caso")}</button> : undefined}
         />
       ) : (
         <div className="space-y-3">
@@ -287,16 +288,16 @@ export function CasesScreen({ newCaseRequested = false, onNewCaseRequestHandled,
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-xs font-bold text-run">{testCase.id}</span>
                             <StatusBadge value={testCase.status} label={lifecycleLabel[testCase.status]} />
-                            <span className="text-xs font-bold text-subtle">{priorityLabel[testCase.priority]}</span>
+                            <span className="text-xs font-bold text-subtle">{tr(priorityLabel[testCase.priority])}</span>
                             <span className="text-xs text-muted">rev. {testCase.revision}</span>
                           </div>
                           <h2 className="mt-1 truncate font-bold text-body">{testCase.title}</h2>
-                          <p className="mt-1 text-xs text-muted">{testCase.path.join(" / ") || "Sem pasta"} · {testCase.steps.length} passo(s){testCase.automationLinks.length ? " · automatizado" : ""}</p>
+                          <p className="mt-1 text-xs text-muted">{testCase.path.join(" / ") || tr("Sem pasta")} · {testCase.steps.length} {tr("passo(s)")}{testCase.automationLinks.length ? " · automatizado" : ""}</p>
                         </div>
                         <div className="flex shrink-0 flex-wrap gap-2">
                           <button type="button" aria-label={`Exportar ${testCase.title}`} className={buttonSecondary} onClick={() => void downloadJson(testCase, `${testCase.id}.json`)}><Download size={15} /><span className="hidden xl:inline">JSON</span></button>
-                          <button type="button" aria-label={`Editar ${testCase.title}`} className={buttonSecondary} onClick={() => setEditing(testCase)}><Pencil size={15} /> Editar</button>
-                          {testCase.status !== "archived" && <button type="button" aria-label={`Arquivar ${testCase.title}`} className={buttonDanger} onClick={() => void handleArchive(testCase)}><Archive size={15} /><span className="hidden xl:inline">Arquivar</span></button>}
+                          <button type="button" aria-label={`Editar ${testCase.title}`} className={buttonSecondary} onClick={() => setEditing(testCase)}><Pencil size={15} /> {tr("Editar")}</button>
+                          {testCase.status !== "archived" && <button type="button" aria-label={`Arquivar ${testCase.title}`} className={buttonDanger} onClick={() => void handleArchive(testCase)}><Archive size={15} /><span className="hidden xl:inline">{tr("Arquivar")}</span></button>}
                         </div>
                       </article>
                     ))}

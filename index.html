@@ -5,8 +5,25 @@
     <link rel="icon" type="image/png" href="/qa-flow-logo.png" />
     <link rel="apple-touch-icon" href="/qa-flow-logo.png" />
     <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QA Flow</title>
+    <script data-web-preferences>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem("qa-flow-theme") || "system";
+          const dark = savedTheme === "dark"
+            || (savedTheme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          const savedLocale = localStorage.getItem("qa-flow-locale");
+          if (savedLocale === "pt-BR" || savedLocale === "en-US" || savedLocale === "es-ES") {
+            document.documentElement.lang = savedLocale;
+          }
+        } catch {
+          document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <!--

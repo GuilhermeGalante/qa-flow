@@ -451,6 +451,8 @@ impl WorkspaceService {
                     if value
                         .as_u64()
                         .is_some_and(|days| (1..=3_650).contains(&days)) => {}
+                "theme" if matches!(value.as_str(), Some("light" | "dark" | "system")) => {}
+                "locale" if matches!(value.as_str(), Some("pt-BR" | "en-US" | "es-ES")) => {}
                 _ => {
                     return Err(DesktopError::validation(
                         "Uma preferência local é inválida.",
@@ -562,7 +564,9 @@ mod tests {
             .set_preferences(serde_json::json!({
                 "sidebarCollapsed": true,
                 "recoveryRetentionCount": 12,
-                "recoveryRetentionDays": 45
+                "recoveryRetentionDays": 45,
+                "theme": "dark",
+                "locale": "es-ES"
             }))
             .expect("valid preference");
         let error = service
@@ -576,6 +580,14 @@ mod tests {
         assert_eq!(
             service.preferences().expect("read preferences")["recoveryRetentionCount"],
             12
+        );
+        assert_eq!(
+            service.preferences().expect("read preferences")["theme"],
+            "dark"
+        );
+        assert_eq!(
+            service.preferences().expect("read preferences")["locale"],
+            "es-ES"
         );
         assert_eq!(error.code, DesktopErrorCode::Validation);
     }

@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CheckCircle2, CircleAlert, Info, TriangleAlert, X } from "lucide-react";
 import { focusRing } from "./styles";
+import { tr } from "../i18n";
 
 export type ToastTone = "success" | "error" | "warning" | "info";
 
@@ -80,12 +81,12 @@ function ToastCard({ toast, dismiss }: { toast: Toast; dismiss: (id: string) => 
     >
       <Icon size={18} aria-hidden="true" className={`mt-0.5 shrink-0 ${styles.icon}`} />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold">{toast.message}</p>
-        {toast.description && <p className="mt-1 text-xs leading-relaxed opacity-90">{toast.description}</p>}
+        <p className="text-sm font-bold">{tr(toast.message)}</p>
+        {toast.description && <p className="mt-1 text-xs leading-relaxed opacity-90">{tr(toast.description)}</p>}
       </div>
       <button
         type="button"
-        aria-label="Dispensar aviso"
+        aria-label={tr("Dispensar aviso")}
         onClick={() => dismiss(toast.id)}
         className={`-mr-1 shrink-0 rounded-lg p-1 opacity-70 transition hover:opacity-100 ${focusRing}`}
       >

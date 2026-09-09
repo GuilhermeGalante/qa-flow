@@ -202,6 +202,8 @@ export type LocalPreferences = Record<string, unknown> & {
   demandSidebarWidth?: number;
   recoveryRetentionCount?: number;
   recoveryRetentionDays?: number;
+  theme?: "light" | "dark" | "system";
+  locale?: "pt-BR" | "en-US" | "es-ES";
 };
 
 export type UpdateState =

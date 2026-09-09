@@ -9,6 +9,7 @@ import {
 } from "@react-pdf/renderer";
 import type { PdfReportData } from "../domain/reporting";
 import type { CasePriority, RunStatus, StepStatus } from "../domain/types";
+import { getActiveLocale, tr } from "../i18n";
 
 export const C = {
   ink: "#101828",
@@ -75,7 +76,7 @@ export function formatDate(value?: string): string {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString("pt-BR", {
+  return date.toLocaleString(getActiveLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -85,7 +86,7 @@ export function formatDate(value?: string): string {
 }
 
 function formatDuration(startedAt: string, finishedAt?: string): string {
-  if (!finishedAt) return "Em andamento";
+  if (!finishedAt) return tr("Em andamento");
   const milliseconds = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
   if (!Number.isFinite(milliseconds) || milliseconds < 0) return "-";
   const minutes = Math.max(1, Math.round(milliseconds / 60_000));
@@ -225,9 +226,9 @@ export function ReportHeader({ report, logoSrc, kind }: { report: PdfReportData;
         <Text style={shared.brandName}>QA <Text style={shared.brandFlow}>Flow</Text></Text>
       </View>
       <View style={shared.headerCopy}>
-        <Text style={shared.documentKind}>{kind}</Text>
+        <Text style={shared.documentKind}>{tr(kind).toLocaleUpperCase(getActiveLocale())}</Text>
         <Text style={shared.planTitle}>{report.planName}</Text>
-        <Text style={shared.headerMeta}>Tentativa {report.attempt} | Plano rev. {report.planRevision} | {RUN_STATUS_LABEL[report.status]}</Text>
+        <Text style={shared.headerMeta}>{tr("Tentativa")} {report.attempt} | {tr("Plano rev.")} {report.planRevision} | {tr(RUN_STATUS_LABEL[report.status])}</Text>
       </View>
     </View>
   );
@@ -239,7 +240,7 @@ export function ReportFooter({ report }: { report: PdfReportData }) {
       fixed
       style={shared.footer}
       render={({ pageNumber, totalPages }) => (
-        `QA Flow | ${report.id} | Gerado do snapshot imutável | Página ${pageNumber} de ${totalPages}`
+        `QA Flow | ${report.id} | ${tr("Gerado do snapshot imutável")} | ${tr("Página")} ${pageNumber} ${tr("de")} ${totalPages}`
       )}
     />
   );
@@ -257,38 +258,38 @@ export function ExecutiveSummaryDocument({ report, logoSrc }: { report: PdfRepor
   const distribution = STATUS_ORDER.filter((status) => counts[status] > 0);
 
   return (
-    <Document author="QA Flow" title={`Resumo executivo - ${report.planName}`} subject={`Tentativa ${report.attempt}`}>
+    <Document author="QA Flow" title={`${tr("Resumo executivo")} - ${report.planName}`} subject={`${tr("Tentativa")} ${report.attempt}`}>
       <Page size="A4" style={shared.page}>
-        <ReportHeader report={report} logoSrc={logoSrc} kind="RESUMO EXECUTIVO" />
+        <ReportHeader report={report} logoSrc={logoSrc} kind="Resumo executivo" />
 
         <View style={S.metaGrid}>
-          <View style={S.metaItem}><Text style={S.metaLabel}>PROJETO</Text><Text style={S.metaValue}>{report.project || "Não informado"}</Text></View>
-          <View style={S.metaItem}><Text style={S.metaLabel}>AMBIENTE</Text><Text style={S.metaValue}>{report.environment || "Não informado"}</Text></View>
-          <View style={S.metaItem}><Text style={S.metaLabel}>BUILD</Text><Text style={S.metaValue}>{report.build || "Não informada"}</Text></View>
-          <View style={S.metaItem}><Text style={S.metaLabel}>RESPONSÁVEL</Text><Text style={S.metaValue}>{report.tester || report.createdBy}</Text></View>
-          <View style={S.metaItem}><Text style={S.metaLabel}>INÍCIO</Text><Text style={S.metaValue}>{formatDate(report.startedAt)}</Text></View>
-          <View style={S.metaItem}><Text style={S.metaLabel}>DURAÇÃO</Text><Text style={S.metaValue}>{formatDuration(report.startedAt, report.finishedAt)}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>{tr("Projeto").toLocaleUpperCase(getActiveLocale())}</Text><Text style={S.metaValue}>{report.project || tr("Não informado")}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>{tr("Ambiente").toLocaleUpperCase(getActiveLocale())}</Text><Text style={S.metaValue}>{report.environment || tr("Não informado")}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>BUILD</Text><Text style={S.metaValue}>{report.build || tr("Não informada")}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>{tr("Responsável").toLocaleUpperCase(getActiveLocale())}</Text><Text style={S.metaValue}>{report.tester || report.createdBy}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>{tr("Início").toLocaleUpperCase(getActiveLocale())}</Text><Text style={S.metaValue}>{formatDate(report.startedAt)}</Text></View>
+          <View style={S.metaItem}><Text style={S.metaLabel}>{tr("Duração").toLocaleUpperCase(getActiveLocale())}</Text><Text style={S.metaValue}>{formatDuration(report.startedAt, report.finishedAt)}</Text></View>
         </View>
 
         {(report.objective || report.description) && (
           <View style={S.objective}>
-            <Text style={S.objectiveLabel}>OBJETIVO</Text>
+            <Text style={S.objectiveLabel}>{tr("Objetivo").toLocaleUpperCase(getActiveLocale())}</Text>
             <Text style={S.objectiveText}>{report.objective || report.description}</Text>
           </View>
         )}
 
-        <Text style={shared.sectionTitle}>Visão geral</Text>
+        <Text style={shared.sectionTitle}>{tr("Visão geral")}</Text>
         <View style={S.metrics}>
           {STATUS_ORDER.map((status, index) => (
             <View key={status} style={[S.metric, index === 0 ? S.metricFirst : {}, index === STATUS_ORDER.length - 1 ? S.metricLast : {}]}>
               <Text style={[S.metricValue, { color: STATUS_COLOR[status] }]}>{counts[status]}</Text>
-              <Text style={S.metricLabel}>{STATUS_LABEL[status].toUpperCase()}</Text>
+              <Text style={S.metricLabel}>{tr(STATUS_LABEL[status]).toLocaleUpperCase(getActiveLocale())}</Text>
             </View>
           ))}
         </View>
 
         <View style={S.distribution}>
-          <Text style={shared.sectionTitle}>Distribuição por caso</Text>
+          <Text style={shared.sectionTitle}>{tr("Distribuição por caso")}</Text>
           <View style={S.distributionBar}>
             {distribution.map((status) => (
               <View key={status} style={{ width: `${(counts[status] / Math.max(total, 1)) * 100}%`, backgroundColor: STATUS_COLOR[status] }} />
@@ -298,33 +299,33 @@ export function ExecutiveSummaryDocument({ report, logoSrc }: { report: PdfRepor
             {STATUS_ORDER.map((status) => (
               <View key={status} style={S.legendItem}>
                 <View style={[S.legendDot, { backgroundColor: STATUS_COLOR[status] }]} />
-                <Text style={S.legendText}>{STATUS_LABEL[status]}: {counts[status]} ({total ? Math.round((counts[status] / total) * 100) : 0}%)</Text>
+                <Text style={S.legendText}>{tr(STATUS_LABEL[status])}: {counts[status]} ({total ? Math.round((counts[status] / total) * 100) : 0}%)</Text>
               </View>
             ))}
           </View>
         </View>
 
-        <Text style={shared.sectionTitle}>Resultado por caso</Text>
+        <Text style={shared.sectionTitle}>{tr("Resultado por caso")}</Text>
         <View style={S.table}>
           <View style={[S.tableRow, S.tableHeader]} fixed>
             <Text style={[S.th, { width: "18%" }]}>ID</Text>
-            <Text style={[S.th, { width: "42%" }]}>CASO DE TESTE</Text>
-            <Text style={[S.th, { width: "13%" }]}>PRIORIDADE</Text>
-            <Text style={[S.th, { width: "17%" }]}>RESULTADO</Text>
+            <Text style={[S.th, { width: "42%" }]}>{tr("Caso de teste").toLocaleUpperCase(getActiveLocale())}</Text>
+            <Text style={[S.th, { width: "13%" }]}>{tr("Prioridade").toLocaleUpperCase(getActiveLocale())}</Text>
+            <Text style={[S.th, { width: "17%" }]}>{tr("Resultado").toLocaleUpperCase(getActiveLocale())}</Text>
             <Text style={[S.th, { width: "10%", textAlign: "center" }]}>EVID.</Text>
           </View>
           {report.cases.length === 0 ? (
-            <Text style={S.empty}>Nenhum caso registrado no snapshot desta tentativa.</Text>
+            <Text style={S.empty}>{tr("Nenhum caso registrado no snapshot desta tentativa.")}</Text>
           ) : report.cases.map((item, index) => {
             const itemEvidence = item.steps.reduce((sum, step) => sum + step.evidence.length, 0);
             return (
               <View key={item.id} style={[S.tableRow, index === report.cases.length - 1 ? S.tableRowLast : {}]} wrap={false}>
                 <Text style={[S.td, S.idText, { width: "18%" }]}>{item.id}</Text>
                 <Text style={[S.td, S.titleText, { width: "42%" }]}>{item.title}</Text>
-                <Text style={[S.td, { width: "13%" }]}>{PRIORITY_LABEL[item.priority]}</Text>
+                <Text style={[S.td, { width: "13%" }]}>{tr(PRIORITY_LABEL[item.priority])}</Text>
                 <View style={[S.td, { width: "17%" }]}>
                   <View style={[S.status, { backgroundColor: STATUS_SOFT[item.status] }]}>
-                    <Text style={[S.statusText, { color: STATUS_COLOR[item.status] }]}>{STATUS_LABEL[item.status]}</Text>
+                    <Text style={[S.statusText, { color: STATUS_COLOR[item.status] }]}>{tr(STATUS_LABEL[item.status])}</Text>
                   </View>
                 </View>
                 <Text style={[S.td, { width: "10%", textAlign: "center" }]}>{itemEvidence}</Text>
@@ -333,8 +334,8 @@ export function ExecutiveSummaryDocument({ report, logoSrc }: { report: PdfRepor
           })}
         </View>
 
-        {report.notes && <Text style={S.note}>Notas da execução: {report.notes}</Text>}
-        <Text style={{ marginTop: 7, color: C.muted, fontSize: 7 }}>Total de evidências vinculadas: {evidenceCount}</Text>
+        {report.notes && <Text style={S.note}>{tr("Notas da execução")}: {report.notes}</Text>}
+        <Text style={{ marginTop: 7, color: C.muted, fontSize: 7 }}>{tr("Total de evidências vinculadas")}: {evidenceCount}</Text>
         <ReportFooter report={report} />
       </Page>
     </Document>

@@ -4,6 +4,7 @@ import {
   type CasePriority,
   type CaseStep,
   type DemandColumn,
+  type DemandColumnColor,
   type QaDemand,
   type LifecycleStatus,
   type PlanDefinition,
@@ -15,6 +16,7 @@ import {
 } from "./types.ts";
 
 const priorities: CasePriority[] = ["low", "medium", "high", "critical"];
+const demandColumnColors: DemandColumnColor[] = ["cyan", "green", "amber", "rose", "violet"];
 const lifecycleStatuses: LifecycleStatus[] = ["active", "draft", "archived"];
 const stepStatuses: StepStatus[] = [
   "not_run",
@@ -241,6 +243,7 @@ function validateDemandColumn(column: Partial<DemandColumn>, index: number, ids:
   }
   requiredString(issues, `${path}.name`, column.name, "Nome da coluna");
   if (!column.semantic || !["neutral", "active", "blocked", "done"].includes(column.semantic)) issues.push({ path: `${path}.semantic`, message: "Significado de coluna inválido." });
+  if (column.color !== undefined && !demandColumnColors.includes(column.color)) issues.push({ path: `${path}.color`, message: "Cor de coluna inválida." });
   if (!Number.isInteger(column.order) || Number(column.order) < 0) issues.push({ path: `${path}.order`, message: "Ordem de coluna inválida." });
 }
 
